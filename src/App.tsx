@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { CartProvider } from './contexts/CartContext'; // ← PRIDAJ
-import Hero from './components/Hero';
+import { CartProvider } from './contexts/CartContext';
+import Hero from './components/Hero';  // ← Pôvodné Hero
 import Services from './components/Services';
 import Tipy from './components/Tipy';
 import Benefits from './components/Benefits';
@@ -17,8 +17,7 @@ import SpeakerCleaner from './components/SpeakerCleaner';
 import MapPage from './components/MapPage';
 import Footer from './components/Footer';
 
-// ← PRIDAJ SHOP KOMPONENTY
-import ShopHero from './components/shop/ShopHero';
+// Shop komponenty
 import ProductGrid from './components/shop/ProductGrid';
 import ProductDetail from './components/shop/ProductDetail';
 import Checkout from './components/shop/Checkout';
@@ -62,7 +61,7 @@ function App() {
   }, []);
 
   return (
-    <CartProvider> {/* ← OBAL VŠETKO DO CartProvider */}
+    <CartProvider>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/tipy" element={<TipyPage />} />
@@ -74,8 +73,8 @@ function App() {
         <Route path="/mapa" element={<MapPage />} />
         <Route path="/bonusy" element={<SpeakerCleaner />} />
         
-        {/* ← SHOP ROUTES */}
-        <Route path="/store" element={<><ShopHero /><ProductGrid /><Footer /></>} />
+        {/* SHOP ROUTES - POUŽÍVA PÔVODNÉ HERO */}
+        <Route path="/store" element={<><Hero /><ProductGrid /><Footer /></>} />
         <Route path="/store/:id" element={<><ProductDetail /><Footer /></>} />
         <Route path="/store/checkout" element={<Checkout />} />
         <Route path="/store/confirmation/:orderId" element={<OrderConfirmation />} />
