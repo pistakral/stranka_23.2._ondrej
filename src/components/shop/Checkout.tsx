@@ -11,7 +11,7 @@ const IBAN_DISPLAY = 'LT56 3250 0347 0476 1008';
 const RECIPIENT_NAME = 'Fixanto';
 
 const SHIPPING_OPTIONS = [
-  { id: 'packeta', label: 'Packeta – výdajné miesto', price: 5.5 },
+  { id: 'packeta', label: 'Packeta – výdajné miesto', price: 0.5 },
   { id: 'gls', label: 'GLS – doručenie na adresu', price: 7 },
   { id: 'posta', label: 'Slovenská pošta – doručenie na adresu', price: 7 },
 ];
