@@ -1,70 +1,226 @@
-Effects on cognitive behaviors
-Although we observed a main effect of time in some instances involving improved cognitive functioning as a specific manifestation of gaining skills and learning, we did not detect a group effect anywhere. Moreover, none of the interactions of time and group were significant.
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { useCart } from '../../contexts/CartContext';
+import productsData from '../../data/products.json';
+import Navbar from '../Navbar';
 
-For sustained attention, an improvement occurred in the accuracy of responses to Go stimuli (F1,42 = 5.377, p = 0.025, η²p = 0.113) as such that the participants improved their score by an average 0.57% (from 98.41% to 98.98%, t = 2.319, df = 42, Tukey’s p = 0.025). However, the group effect was not significant here (F2,42 = 1.481, p = 0.239, η²p = 0.066). Also, the time × group interaction was not significant (F2,42 = 0.267, p = 0.767, η²p = 0.013; Fig. 4a). The mean reaction time to Go stimuli (Fig. 4b) did not improve in terms of speed (F1,42 = 0.171, p = 0.682, η²p = 0.004), and this was a finding that did not differ between groups (F2,42 = 0.681, p = 0.512, η²p = 0.031). The same was observed for the accuracy of responses to No-Go stimuli (Fig. 4c). There was neither a time effect (F1,42 = 0.537, p = 0.468, η²p = 0.013) nor a group effect (F2,42 = 0.712, p = 0.193, η²p = 0.075). Ultimately, the analysis for the skill index (Fig. 4d) did not show a global change (improvement or deterioration) in sustained attention (F1,42 = 0.146, p = 0.705, η²p = 0.003) and no differences in this respect between groups (F2,42 = 1.480, p = 0.239, η²p = 0.066).
+export default function ProductDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showNotification, setShowNotification] = useState(false);
 
-Fig. 4: Effects of wind turbine noise on sustained attention compared to two other acoustic conditions.
-figure 4
-a The estimated marginal means plot shows a significant improvement in the accuracy of responses to Go stimuli across all groups (n = 45). b The estimated marginal means plot shows no change in the average reaction time to Go stimuli across all groups (n = 45). c The estimated marginal means plot shows no change in the ACC of responses to No-Go stimuli across all groups (n = 45). d The estimated marginal means plot shows no change in the overall ability to maintain attention across all groups (n = 45). ACC is an abbreviation for accuracy, while RT is for reaction time. Error bars represent standard errors of the means.
+  const product = productsData.products.find(p => p.id === id);
 
-Full size image
-Concerning inductive reasoning, improvement occurred in all of the three contexts analyzed (Fig. 5b–d). Regarding the accuracy of responses, the main effect of time was significant (F1,42 = 9.311, p = 0.004, η²p = 0.181), leading to an average improvement of 7.65% in participants’ performance during the second part of the test (from 60.74% to 68.39%, t = 3.051, df = 42, Tukey’s p = 0.004). This effect was also apparent in the execution speed of the test section (F1,42 = 16.293, p = 0.00023, η²p = 0.280), with participants completing the second part, on average, 1 min and 42 s faster (from the initial 10 min and 37 s to 8 min and 55 s, t = 4.036, df = 42, Tukey’s p = 0.00023). Moreover, the influence of time extended to the average response time (F1,42 = 37.926, p < 0.00001, η²p = 0.475), which was reduced by an average of 6 s in the second part (from 35 s to 29 s, t = 6.158, df = 42, Tukey’s p < 0.00001). Despite these observations, no group effect was detected (all F2,42 < 2.304, all p > 0.112, all η²p < 0.099), and the interaction between time and group remained consistently non-significant (all F2,42 < 1.179, all p > 0.318, all η²p < 0.053).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
-Fig. 5: Effects of wind turbine noise on inductive reasoning compared to two other acoustic conditions.
-figure 5
-a An example matrix of Matrix Reasoning Item Bank Test (the participant’s task is to select the missing shape from a set of four possible options; the correct answer, in this case, is “2”). b The estimated marginal means plot shows a significant improvement in the accuracy of responses across all groups (n = 45). c The estimated marginal means plot shows a significant enhancement in the execution speed of the test part across all groups (n = 45). d The estimated marginal means plot showing a significant reduction in the average response time across all groups (n = 45). ACC is an abbreviation for accuracy, while RT is for reaction time. Error bars represent standard errors of the means.
+  if (!product) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen pt-32 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Produkt nenájdený</h1>
+            <button
+              onClick={() => navigate('/store')}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold"
+            >
+              Späť na obchod
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
-Full size image
-Moreover, the group variable did not emerge as a differentiating factor for the mean Δ calculated from the behavioral measurements. Consequently, no differences were observed between groups in terms of the change in response accuracy to Go stimuli (F2,42 = 0.267, p = 0.767), the average reaction time to Go stimuli (F2,42 = 0.589, p = 0.560), the response accuracy to No-Go stimuli (F2,42 = 0.018, p = 0.982), and the sustained attention skill index (F2,42 = 0.051, p = 0.950). Similarly, no disparities were found between groups when it comes to change in the response accuracy during inductive reasoning (F2,42 = 0.395, p = 0.676) and the total test completion time (F2,42 = 0.305, p = 0.739), including the average response time (F2,42 = 1.179, p = 0.318).
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      capacity: product.capacity,
+      color: product.color,
+      price: product.price,
+      images: product.images,
+    });
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
+  };
 
-Assessment of stress and annoyance levels, and their psychological underpinnings
-Participants evaluated the stress induced by the acoustic conditions of the experiment as extremely low, both in terms of the stress subscale (mean=9.27 points, SD = 7.06 points) and the overall emotional score (mean=19.47 points, SD = 14.63 points). In both instances (Fig. 6a, b), no significant differences were detected between the groups (F1,28 = 0.023, p = 0.880 and F1,28 = 0.002, p = 0.961, respectively). A similar pattern was observed in the context of noise annoyance. Participants rated it as minimal (mean=2.00 points, SD = 2.03 points). Moreover, as Fig. 6c and Table 1 show, although wind turbine noise was reported as marginally more annoying than road traffic noise (the mean difference=0.80), this disparity was not significant (F1,28 = 1.167, p = 0.289).
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
+  };
 
-Fig. 6: Assessment of noise-induced stress and annoyance.
-figure 6
-a A one-way ANOVA shows no significant differences between groups concerning noise-induced stress (n = 30). b A one-way ANOVA shows no significant differences between groups concerning noise-induced overall emotional state (n = 30). c A one-way ANOVA shows no significant differences between groups concerning noise annoyance assessment (n = 30). DASS is an abbreviation for Depression, Anxiety, and Stress Scale, while DASS-S for its stress subscale. Error bars represent standard errors of the means.
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+  };
 
-Full size image
-Table 1 Assessment of noise-induced stress and annoyance, and the results of pairwise comparisons.
-Full size table
-Furthermore, the distributions of these three variables in response to wind turbine noise did not correlate with the values obtained from the scales of ambiguity tolerance (for the stress subscale r = −0.423 and p = 0.116, for the overall emotional score r = −0.243 and p = 0.382, for the noise annoyance r = −0.397 and p = 0.142; Fig. 7a), rumination (r = 0.252, p = 0.364, r = 0.317, p = 0.249, and r = −0.358, p = 0.191, respectively; Fig. 7b), and reflection (r = −0.265, p = 0.340, r = −0.061, p = 0.829, and r = −0.207, p = 0.460; Fig. 7c). Therefore, even a low tolerance for ambiguity or tendencies towards neurotic self-focused thoughts, as well as a diminished capacity for epistemic self-reflection, did not result in maladaptive perceptions of wind turbine noise, which could have an indirect impact on cognitive functioning.
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen pt-24 pb-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <button
+            onClick={() => navigate('/store')}
+            className="mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Späť na obchod
+          </button>
 
-Fig. 7: Psychological underpinnings of wind-turbine-noise-induced stress and annoyance.
-figure 7
-a Pearson’s correlation analyses show no relation between the level of ambiguity tolerance and wind-turbine-noise-induced stress and annoyance (n = 15). b Pearson’s correlation analyses show no relation between the level of rumination and wind-turbine-noise-induced stress and annoyance (n = 15). c Pearson’s correlation analyses show no relation between the level of reflection and wind-turbine-noise-induced stress and annoyance (n = 15). DASS is an abbreviation for Depression, Anxiety, and Stress Scale, while DASS-S for its stress subscale. The dark line represents regression of two variables, and shaded area shows standard error of the regression line.
+          <div className="grid lg:grid-cols-2 gap-12 mb-12">
+            {/* LEFT: Image Carousel */}
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="relative aspect-square">
+                  <img
+                    src={product.images[currentImageIndex]}
+                    alt={`${product.name} ${currentImageIndex + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="800"%3E%3Crect width="800" height="800" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="48" fill="%239ca3af"%3EPlaceholder Image%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                  
+                  {product.images.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevImage}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all"
+                      >
+                        <ChevronLeft className="w-6 h-6 text-gray-900" />
+                      </button>
+                      <button
+                        onClick={nextImage}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all"
+                      >
+                        <ChevronRight className="w-6 h-6 text-gray-900" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
 
-Full size image
-Discussion
-The limitations of previous research approaches leave open the question of whether wind turbine noise directly affects human functioning or if its possible negative impact results from non-acoustic variables, such as socio-culturally constructed beliefs (Michaud et al., 2016; Michaud et al., 2025; Ramalho et al., 2025; Tsionas et al., 2025; Woodland et al., 2024). Considering the social importance of this unresolved issue (Brouwer et al., 2025; le Maitre et al., 2024; Martinez and Iglesias, 2024), we described in this work how cognitive neuroscience techniques and tenets can be applied for a more objective and comprehensive assessment of the impact of wind turbine noise on various mental functions. Apart from outlining the assumptions of such a unique approach, we attempted to apply it in a pilot study. Overall, in line with the proposed approach, we conducted the study under highly controlled conditions (i.e., in a laboratory) while ensuring high ecological validity. Additionally, the primary dependent variable was measured not only at the behavioral level (using recognized psychological tests) but also at the neuronal level (via EEG). The dependent variable itself was cognitive processes associated with everyday mental tasks. The study was also blind regarding the independent variable (acoustic conditions). This was accompanied by controlling psychological and auditory factors, as well as measuring annoyance and stress levels.
+              {/* Thumbnail dots */}
+              {product.images.length > 1 && (
+                <div className="flex justify-center gap-2 mt-4">
+                  {product.images.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        index === currentImageIndex ? 'bg-blue-600 w-8' : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
 
-Our results did not show a negative impact of short-term exposure to wind turbine noise on cognitive functions when tested at the neuronal and behavioral levels. Wind turbine noise neither lowered cognitive efficiency nor interfered with learning mechanisms (Figs. 4 and 5), nor changed the natural dynamics of brain waves for a given state (cognitive or rest, Fig. 3). Furthermore, this noise was not perceived as significantly more annoying or stressful than road traffic noise (Fig. 6 and Table 1), even when individuals exhibited maladaptive traits, such as low ambiguity tolerance (Fig. 7a), decreased reflection/epistemic self-focused thoughts (Fig. 7c), and high rumination/neurotic self-focused thoughts (Fig. 7b). Therefore, our initial hypothesis that exposure to wind turbine noise would detrimentally affect cognitive functioning was not validated. The other two hypotheses, namely that wind turbine noise would be perceived as more bothersome and stressful than road traffic noise and that psychological traits moderate its perception, were also not supported.
+            {/* RIGHT: Product Info */}
+            <div>
+              <div className="bg-white rounded-2xl shadow-xl p-8">
+                <div className="inline-block bg-yellow-400 text-blue-900 px-4 py-2 rounded-lg font-bold text-sm mb-4">
+                  TRIEDA {product.grade}
+                </div>
 
-However, these null results do not negate the potential adverse influence of such noise on human brain processes or the fact that psychological diversity plays no role here. Instead, they indicate that under the conditions proposed in our approach, which are blind to the nature of the acoustic variable and thus detached from the social meanings attributed to wind turbine noise, such effects do not occur. It should be noted that, based on the ICBEN scale results, 14 out of 15 participants exposed to wind turbine noise rated their annoyance as either 0 (n = 4), 1 (n = 3), 3 (n = 2), or 4 (n = 5), indicating minimal disturbance, even in the presence of maladaptive or neurotic psychological traits. Only one individual rated their annoyance as high (at 7), despite a low score for rumination, but with low ambiguity tolerance and reflectivity. This implies that 93% of participants did not find wind turbine noise intrusive (Clark et al., 2021; Fields et al., 2001). As per previous studies, noise would negatively impact the neural dynamics of complex cognitive processes, sustained attention, and inductive reasoning only in case of high annoyance (Astuti et al., 2023; Muller et al., 2023; Pieper et al., 2021). The low annoyance (as well as stress) ratings observed in our exploration would be attributed to the fact that participants were unaware of the nature of the sounds they were exposed to (the procedure was blind, and no volunteers identified experimental sounds as wind turbine noise). Thus, they did not evaluate the noise from the perspective of socially constructed assertions or as a consequence of wind turbine syndrome mechanisms (Clark et al., 2020; Pierpont, 2009; Schaffer et al., 2016; Smith et al., 2020). As a result, they did not experience the nocebo effect (Crichton and Petrie, 2015), and we did not observe any impact of wind turbine noise on their cognitive functioning. This suggests that the sound pressure level of the wind turbine noise used in our study, i.e., 65 dB SPL, which mirrors real-world conditions and has no effect on the onset of hearing loss (Natarajan et al., 2023), does not directly threaten also human cognitive functioning. The real threat likely stems from socially constructed beliefs (Davy et al., 2020; Hanning and Evans, 2012; Hansen and Hansen, 2020; Lundheim et al., 2022; Takeuchi, 2023).
+                <h1 className="text-4xl font-black text-gray-900 mb-2">
+                  {product.name} ({product.capacity})
+                </h1>
+                <p className="text-2xl text-gray-600 mb-6">{product.color}</p>
 
-This interpretation is compatible with previous findings showing social contexts, such as socialization and misinformation, as a moderator of the interlinkage between wind turbine noise and human functioning (Miedema and Vos, 2003; Obuseh et al., 2025; Pohl et al., 2018; Ramalho et al., 2025; Schaffer et al., 2016). More broadly, it is consistent with approaches emphasizing that concerning wind turbines, the source of annoyance is rooted in non-acoustic variables (Ata Teneler and Hassoy, 2024; McCunney et al., 2014; Schmidt and Klokker, 2014). Nevertheless, further research is needed to confirm the proposed interpretation. For instance, our experiment could be replicated with a placebo-controlled condition, where beliefs are induced. Participants would be informed in one group that they would perform tasks amidst wind turbine noise. In another group, individuals would receive the same instruction but would not be exposed to wind turbine noise. Instead, they would listen to a non-annoying control sound (Klichowski et al., 2023). The results, correlated with psychological scales, could reveal the personality profile of individuals susceptible to wind turbine syndrome; however, it would be necessary to ensure a more diverse and extensive sample than in our experiment (Clark et al., 2020; Crichton and Petrie, 2015; Schaffer et al., 2016; Smith et al., 2020; Taylor et al., 2013; Woodland et al., 2024).
+                <div className="text-5xl font-black text-blue-600 mb-8">
+                  €{product.price}
+                </div>
 
-Future research should also address the problem of the duration of noise exposure (Alamir et al., 2019; Merino-Martinez et al., 2021). We are uncertain whether we would observe no adverse effects if participants were exposed to noise longer, for example, for several hours. Yet, it is essential to emphasize that our goal was to investigate the direct impact of wind turbine noise on the dynamics of mechanisms controlling cognitive processes. Therefore, short-term exposure to wind turbine noise was appropriate here. Moreover, it was ecologically valid, as people sometimes find themselves where they need to perform short cognitive tasks near wind farms (not while living next to them). However, the results of our study cannot be extrapolated to more frequent situations where exposure to wind turbine noise is much longer (such as for individuals who work or live close to wind farms). Thus, it remains an open question whether prolonged exposure would lead to annoyance and, as a consequence, impair cognitive functions; alternatively, whether or not some habituation may occur in a long-exposure situation and minimize the annoyance (Mutschler et al., 2010). New studies are needed to answer these questions. Duration of exposure should be manipulated in them. Such experiments may take into account, for example, conditions with short exposure (as in our experiment), more prolonged exposure (e.g., 3–5 h), and extremely long exposure (e.g., 24 h). To objectively evaluate the impact of different exposure durations to wind turbine noise on various cognitive functions, a between-group study design should be chosen, and the measurement of cognitive process efficiency should be run at the end of each exposure type.
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3">
+                    <Check className="w-6 h-6 text-green-600" />
+                    <span className="text-lg">Trieda: {product.grade} ✅</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-6 h-6 text-green-600" />
+                    <span className="text-lg">Batéria: {product.condition.battery} ⚡</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-6 h-6 text-green-600" />
+                    <span className="text-lg">Záruka: {product.warranty} 🛡️</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-6 h-6 text-green-600" />
+                    <span className="text-lg">Skladom: {product.stock} ks 📦</span>
+                  </div>
+                </div>
 
-Some technical and operational contexts should also be considered in further experiments. The wind turbine noise used in the study was recorded during operation at a hub wind speed above 8 m per second. At wind speeds of 8 m per second and above, the turbine generates maximum noise levels, and the sound power level, which uniquely characterizes any sound/noise source, including wind turbines, ranges from 104 to 108 dBA (Hoen et al., 2023). Since the sound power level of any wind turbine reaches its maximum value at a wind speed of 8 m per second, measurements are made at this wind speed (Keith et al., 2016). Additionally, the 2 MW wind turbine is now widely used in wind farms, including in Poland (Talarek et al., 2022), and (Hoen et al., 2023) show that the difference in sound power level between a 2 MW turbine and a larger turbine (up to 5 MW) is at most 4 dB. Thus, it can be assumed that the wind turbine noise recording used in our study represents the situation when the turbine is 500 m away from the observer, reflecting maximum noise levels for such a distance (importantly, without the noise reduction provided by the building facade, Hu et al., 2022). Future studies should use recordings from different wind turbine models or those prepared under different operational conditions, such as starting multiple turbines or varying weather conditions, as additional conditions.
+                <button
+                  onClick={handleAddToCart}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-5 rounded-xl font-black text-xl shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-105 flex items-center justify-center gap-3"
+                >
+                  🛒 PRIDAŤ DO KOŠÍKA
+                </button>
 
-Conclusions
-In this work, we proposed a cognitive neuroscience approach to experimentally and multifactorially explore the impact of wind turbine noise on various mental functions. The uniqueness of this approach lies in adopting multiple assumptions inspired by cognitive neuroscience methodologies while simultaneously adhering to psychoacoustic research standards previously used in wind energy development studies. In summary, this approach involves conducting highly controlled laboratory experiments using recognized tests and techniques to measure cognitive components associated with everyday mental tasks at both the behavioral and neuronal levels. Additionally, it requires constructing high ecological validity conditions, for example, by using actual recordings of wind turbine noise at volumes characteristic of natural situations as an experimental factor. The approach assumes that participants are blind to the nature and manipulation of acoustic variables and that all participants exhibit standard auditory perception across an extensive frequency spectrum. Furthermore, it includes the control of psychological variables (using reliable and standardized psychological tests) that could render wind turbine noise more annoying and stressful.
+                <p className="text-sm text-gray-500 text-center mt-4">
+                  Doprava zadarmo nad 500€
+                </p>
+              </div>
+            </div>
+          </div>
 
-Using this approach, we conducted a pilot study, the results of which indicate that when participants are exposed to wind turbine noise with a sound pressure level corresponding to real-world situations (i.e., 65 dB SPL) without knowing that it is the sound of an operating wind farm, the noise does not adversely affect brain functions and is not perceived maladaptively, even when individuals have tendencies towards maladaptive thoughts. These results cannot be generalized; however, they support the concept that the interlinkage between exposure to wind turbine noise and human cognitive functioning is not a cause-and-effect relationship but is mediated by socially constructed beliefs about wind farms. Further development of this promising approach could advance research on the wind industry’s impact on human cognition. Undoubtedly, subsequent studies must consider additional elements such as placebo-controlled conditions, manipulation of exposure duration, recordings from different wind turbine models prepared under various operational conditions, and diverse and extensive samples. The results of the studies using our approach extended with the above-mentioned additional procedure criteria could limit misinformation’s role in decision-making or opinion-forming and increase the share of evidence in discussions among stakeholder groups, such as residents, policymakers, and energy developers. Additionally, they could help formulate reliable recommendations regarding wind energy policy.
+          {/* Description */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Stav zariadenia</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-xl font-bold text-blue-600 mb-3">Vzhľad</h3>
+                <p className="text-gray-700">{product.condition.appearance}</p>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-blue-600 mb-3">Displej</h3>
+                <p className="text-gray-700">{product.condition.display}</p>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-blue-600 mb-3">Funkčnosť</h3>
+                <p className="text-gray-700">{product.condition.functionality}</p>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-blue-600 mb-3">Batéria</h3>
+                <p className="text-gray-700">{product.condition.battery}</p>
+              </div>
+            </div>
+          </div>
 
-Data availability
-The anonymized data generated in the current study is available in the Open Science Framework database: https://osf.io/wpk4c.
+          {/* Specifications */}
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Technické špecifikácie</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {Object.entries(product.specs).map(([key, value]) => (
+                <div key={key} className="flex border-b border-gray-200 pb-3">
+                  <span className="font-semibold text-gray-700 w-1/2">{key}:</span>
+                  <span className="text-gray-600 w-1/2">{value}</span>
+                </div>
+              ))}
+              <div className="flex border-b border-gray-200 pb-3">
+                <span className="font-semibold text-gray-700 w-1/2">Sériové číslo:</span>
+                <span className="text-gray-600 w-1/2">{product.serialNumber}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-References
-Ageborg Morsing J, Smith MG, Ogren M, Thorsson P, Pedersen E, Forssen J, Persson Waye K (2018) Wind turbine noise and sleep: Pilot studies on the influence of noise characteristics. Int J Environ Res Public Health 15(11):2573. https://doi.org/10.3390/ijerph15112573
-
-Article
- 
-PubMed
- 
-PubMed Central
- 
-Google Scholar
- 
-
-Alamir MA, Hansen KL, Zajamsek B, Catcheside P (2019) Subjective responses to wind farm noise: a review of laboratory listening test methods. Renew Sustain Energy Rev 114:109317. https://doi.org/10.1016/j.rser.2019.109317
+      {/* Notification Toast */}
+      {showNotification && (
+        <div className="fixed top-24 right-4 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-right">
+          <div className="flex items-center gap-3">
+            <Check className="w-6 h-6" />
+            <span className="font-bold">Pridané do košíka!</span>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
