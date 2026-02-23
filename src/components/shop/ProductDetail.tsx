@@ -75,11 +75,11 @@ export default function ProductDetail() {
             {/* LEFT: Image Carousel */}
             <div className="relative">
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div className="relative aspect-square">
+                <div className="relative aspect-square bg-gray-50">
                   <img
                     src={product.images[currentImageIndex]}
                     alt={`${product.name} ${currentImageIndex + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-8"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="800"%3E%3Crect width="800" height="800" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="48" fill="%239ca3af"%3EPlaceholder Image%3C/text%3E%3C/svg%3E';
