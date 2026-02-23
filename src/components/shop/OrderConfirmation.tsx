@@ -1,247 +1,212 @@
-import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, Package, CreditCard } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle, Home, ShoppingBag } from 'lucide-react';
 import Navbar from '../Navbar';
+import Footer from '../Footer';
+
+interface OrderData {
+  orderId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  city: string;
+  zip: string;
+  shipping: string;
+  shippingPrice: number;
+  total: number;
+  products: { id: string; name: string; capacity: string; color: string; price: number; images: string[] }[];
+  iban: string;
+  variableSymbol: string;
+  qrCodeDataUrl?: string;
+}
 
 export default function OrderConfirmation() {
-  const { orderId } = useParams();
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const navigate = useNavigate();
+  const [order, setOrder] = useState<OrderData | null>(null);
 
   useEffect(() => {
-    // Load order details from localStorage
-    const savedOrder = localStorage.getItem(`order-${orderId}`);
-    if (savedOrder) {
-      setOrderDetails(JSON.parse(savedOrder));
+    window.scrollTo(0, 0);
+    const stored = localStorage.getItem('lastOrder');
+    if (stored) {
+      setOrder(JSON.parse(stored));
+    } else {
+      navigate('/store');
     }
-  }, [orderId]);
+  }, []);
 
-  if (!orderDetails) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen pt-32 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-500">Načítavam objednávku...</p>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const { cart, shipping, shippingPrice, total, formData } = orderDetails;
-
-  const shippingLabels = {
-    packeta: 'Packeta - Výdajné miesto',
-    gls: 'GLS - Výdajné miesto',
-    posta: 'Slovenská pošta',
-  };
-
-  // Generate QR code data URL (placeholder - replace with real QR generation)
-  const qrCodeData = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23fff'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%23333'%3EQR KÓD%0AIBAN%0ASK31 1100 0000%0AVS: ${orderId}%3C/text%3E%3C/svg%3E`;
+  if (!order) return null;
 
   return (
     <>
       <Navbar />
       <div className="min-h-screen pt-24 pb-16 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          {/* Success Header */}
-          <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-2xl shadow-xl p-8 mb-8">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                <CheckCircle className="w-10 h-10 text-green-600" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold">Objednávka odoslaná</h1>
-                <p className="text-green-100 text-lg">
-                  Ďakujeme za Vašu objednávku číslo <span className="font-black">{orderId}</span>.
-                </p>
-              </div>
-            </div>
-            <p className="text-green-100">
-              Rekapituláciu Vám zasielame aj e-mailom na <span className="font-bold">{formData.email}</span>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* SUCCESS HEADER */}
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl shadow-xl p-8 text-center text-white mb-8">
+            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-200" />
+            <h1 className="text-3xl sm:text-4xl font-black mb-2">Objednávka odoslaná!</h1>
+            <p className="text-green-100 text-lg">
+              Ďakujeme za vašu objednávku číslo{' '}
+              <strong className="text-white text-xl">#{order.orderId}</strong>
+            </p>
+            <p className="text-green-100 mt-2">
+              Rekapituláciu sme zaslali na <strong className="text-white">{order.customerEmail}</strong>
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left: Payment & Delivery Details */}
-            <div className="lg:col-span-2 space-y-6">
-              
-              {/* Platba a doručenie */}
-              <div className="bg-white rounded-2xl shadow-lg p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                  <CreditCard className="w-7 h-7 text-blue-600" />
-                  Platba a doručenie
-                </h2>
+          <div className="grid md:grid-cols-2 gap-8">
 
-                <div className="space-y-6">
-                  {/* Doprava */}
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Zvolená doprava:</p>
-                    <p className="text-lg font-bold text-gray-900">{shippingLabels[shipping as keyof typeof shippingLabels]}</p>
+            {/* LEFT – PLATOBNÉ ÚDAJE + QR */}
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-xl p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">💳 Platba a doručenie</h2>
+                <div className="space-y-2 text-sm mb-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Zvolená doprava:</span>
+                    <span className="font-semibold text-gray-900">{order.shipping}</span>
                   </div>
-
-                  {/* Platba */}
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Zvolená platba:</p>
-                    <p className="text-lg font-bold text-gray-900">Prevodom na účet (platba vopred)</p>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Zvolená platba:</span>
+                    <span className="font-semibold text-gray-900">Prevodom na účet (vopred)</span>
                   </div>
-
-                  {/* Suma */}
-                  <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                    <p className="text-sm text-gray-600 mb-1">Čiastka k úhrade:</p>
-                    <p className="text-4xl font-black text-blue-600">€{total.toFixed(2)}</p>
-                  </div>
-
-                  {/* Bankové údaje */}
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">Údaje na platbu:</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between border-b border-gray-300 pb-2">
-                        <span className="text-gray-600 font-semibold">IBAN:</span>
-                        <span className="font-mono font-bold text-gray-900">SK31 1100 0000 0029 4803 7511</span>
-                      </div>
-                      <div className="flex justify-between border-b border-gray-300 pb-2">
-                        <span className="text-gray-600 font-semibold">Variabilný symbol:</span>
-                        <span className="font-mono font-bold text-blue-600 text-xl">{orderId}</span>
-                      </div>
-                      <div className="flex justify-between border-b border-gray-300 pb-2">
-                        <span className="text-gray-600 font-semibold">Suma:</span>
-                        <span className="font-bold text-gray-900 text-xl">€{total.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 font-semibold">Príjemca:</span>
-                        <span className="font-bold text-gray-900">Štefan Hupčík - Fixanto</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Instrukcie */}
-                  <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <Package className="w-6 h-6 text-yellow-600" />
-                      Ďalšie kroky:
-                    </h3>
-                    <ol className="space-y-2 text-gray-700 list-decimal list-inside">
-                      <li>Zaplaťte pomocou QR kódu alebo bankovým prevodom</li>
-                      <li>Po pripísaní platby vám zašleme zásielku</li>
-                      <li>Sledujte stav zásielky cez tracking číslo v emaili</li>
-                    </ol>
+                  <div className="flex justify-between text-lg font-black border-t pt-2 mt-2">
+                    <span className="text-gray-700">Čiastka k úhrade:</span>
+                    <span className="text-blue-600">€{order.total.toFixed(2)}</span>
                   </div>
                 </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Bankový účet:</span>
+                    <span className="font-mono font-bold text-blue-900 text-xs sm:text-sm">{order.iban}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Variabilný symbol:</span>
+                    <span className="font-bold text-blue-900 text-lg">{order.variableSymbol}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Suma:</span>
+                    <span className="font-black text-blue-900 text-xl">€{order.total.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3 text-center">
+                  ⚠️ Nezabudnite uviesť variabilný symbol – objednávku spárujeme podľa neho.
+                </p>
               </div>
 
-              {/* Obsah objednávky */}
-              <div className="bg-white rounded-2xl shadow-lg p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Obsah objednávky</h2>
-                
-                <div className="space-y-4">
-                  {cart.map((item: any) => (
-                    <div key={item.id} className="flex gap-4 border-b border-gray-200 pb-4">
+              {/* QR KÓD */}
+              {order.qrCodeDataUrl && (
+                <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">📱 QR kód na platbu</h2>
+                  <p className="text-gray-500 text-sm mb-4">Naskenujte v mobilnej appke vašej banky</p>
+                  <div className="flex justify-center">
+                    <div className="p-4 bg-white rounded-2xl shadow-inner border-2 border-blue-100 inline-block">
                       <img
-                        src={item.images[0]}
-                        alt={item.name}
-                        className="w-20 h-20 object-cover rounded-lg"
+                        src={order.qrCodeDataUrl}
+                        alt="QR kód na platbu"
+                        className="w-56 h-56"
                       />
-                      <div className="flex-1">
-                        <h3 className="font-bold text-gray-900">
-                          {item.name} ({item.capacity})
-                        </h3>
-                        <p className="text-sm text-gray-600">{item.color}</p>
-                        <p className="text-lg font-bold text-blue-600 mt-1">€{item.price}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-3">
+                    EPC / SEPA QR kód – funguje v appkách všetkých bánk
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT – OBSAH OBJEDNÁVKY + INFO */}
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-xl p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">📦 Obsah objednávky</h2>
+                <div className="space-y-3">
+                  {order.products.map((p) => (
+                    <div key={p.id} className="flex items-center gap-3">
+                      <img
+                        src={p.images[0]}
+                        alt={p.name}
+                        className="w-14 h-14 object-contain rounded-xl bg-gray-100"
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="56" height="56"%3E%3Crect width="56" height="56" fill="%23e5e7eb"/%3E%3C/svg%3E'; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900">{p.name} {p.capacity}</p>
+                        <p className="text-sm text-gray-500">{p.color} • Záruka 12 mesiacov</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-gray-600">1 ks</p>
-                      </div>
+                      <span className="font-bold text-blue-600">€{p.price}</span>
                     </div>
                   ))}
                 </div>
-
-                <div className="border-t-2 mt-6 pt-4 space-y-2">
-                  <div className="flex justify-between text-gray-700">
-                    <span>Produkty:</span>
-                    <span className="font-bold">€{(total - shippingPrice).toFixed(2)}</span>
+                <div className="border-t mt-4 pt-4 space-y-1 text-sm">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Doprava ({order.shipping})</span>
+                    <span>€{order.shippingPrice.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-700">
-                    <span>Doprava:</span>
-                    <span className="font-bold">€{shippingPrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-2xl font-black text-blue-600 pt-2 border-t-2">
-                    <span>Celkom:</span>
-                    <span>€{total.toFixed(2)}</span>
+                  <div className="flex justify-between font-black text-xl text-blue-600">
+                    <span>CELKOM</span>
+                    <span>€{order.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Kontakt */}
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Potrebujete pomoc?</h3>
-                <p className="text-gray-700 mb-4">
-                  Máte otázky k objednávke? Kontaktujte nás:
-                </p>
-                <div className="space-y-2">
-                  <p className="text-gray-700">
-                    📞 Telefón:{' '}
-                    <a href="tel:0949344600" className="text-blue-600 hover:underline font-semibold">
-                      0949 344 600
-                    </a>
-                  </p>
-                  <p className="text-gray-700">
-                    ✉️ Email:{' '}
-                    <a href="mailto:phoneservissk@gmail.com" className="text-blue-600 hover:underline font-semibold">
-                      phoneservissk@gmail.com
-                    </a>
-                  </p>
-                  <p className="text-gray-700">
-                    💬 WhatsApp:{' '}
-                    <a href="https://wa.me/421949344600" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-semibold">
-                      Napísať správu
-                    </a>
-                  </p>
-                </div>
+              {/* ĎALŠIE KROKY */}
+              <div className="bg-white rounded-2xl shadow-xl p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">📋 Čo bude ďalej?</h2>
+                <ol className="space-y-3">
+                  {[
+                    { n: 1, text: 'Uhraďte objednávku prevodom na účet (QR kód vľavo)' },
+                    { n: 2, text: 'Po prijatí platby vám zašleme potvrdzujúci email' },
+                    { n: 3, text: 'Zásielku expedujeme do 1-2 pracovných dní' },
+                    { n: 4, text: 'Dostanete tracking číslo pre sledovanie balíka' },
+                  ].map(({ n, text }) => (
+                    <li key={n} className="flex items-start gap-3">
+                      <span className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                        {n}
+                      </span>
+                      <span className="text-gray-700 text-sm">{text}</span>
+                    </li>
+                  ))}
+                </ol>
               </div>
-            </div>
 
-            {/* Right: QR Code */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-lg p-8 sticky top-24">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">
-                  QR kód na platbu
-                </h3>
-                
-                <div className="bg-gray-100 rounded-xl p-6 mb-6 flex items-center justify-center">
-                  <img
-                    src={qrCodeData}
-                    alt="QR kód"
-                    className="w-full max-w-[200px] h-auto"
-                  />
-                </div>
-
-                <div className="text-center mb-6">
-                  <p className="text-sm text-gray-600 mb-2">Variabilný symbol:</p>
-                  <p className="text-2xl font-black text-blue-600">{orderId}</p>
-                </div>
-
-                <div className="text-center mb-6">
-                  <p className="text-sm text-gray-600 mb-2">Suma k úhrade:</p>
-                  <p className="text-3xl font-black text-gray-900">€{total.toFixed(2)}</p>
-                </div>
-
-                <p className="text-xs text-gray-500 text-center mb-4">
-                  Naskenujte QR kód v bankovej aplikácii alebo zaplaťte manuálne pomocou údajov vyššie
+              {/* KONTAKT */}
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-center text-sm text-blue-800">
+                <p className="font-semibold mb-1">Potrebujete pomoc?</p>
+                <p>
+                  Email:{' '}
+                  <a href="mailto:phoneservissk@gmail.com" className="font-bold underline">
+                    phoneservissk@gmail.com
+                  </a>
                 </p>
+                <p>
+                  Web:{' '}
+                  <a href="https://fixanto.sk" className="font-bold underline">
+                    fixanto.sk
+                  </a>
+                </p>
+              </div>
 
-                <Link
-                  to="/store"
-                  className="block w-full bg-blue-600 text-white text-center px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all"
+              {/* NAVIGATION BUTTONS */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => navigate('/')}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-all"
                 >
-                  Pokračovať v nákupe
-                </Link>
+                  <Home className="w-5 h-5" /> Domov
+                </button>
+                <button
+                  onClick={() => navigate('/store')}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all"
+                >
+                  <ShoppingBag className="w-5 h-5" /> E-shop
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }
