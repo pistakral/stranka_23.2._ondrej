@@ -74,7 +74,7 @@ function App() {
         <Route path="/bonusy" element={<SpeakerCleaner />} />
         
         {/* SHOP ROUTES - POUŽÍVA PÔVODNÉ HERO */}
-        <Route path="/store" element={<><Hero /><ProductGrid /><Footer /></>} />
+        <Route path="/store" element={<><ProductGrid /><Footer /></>} />
         <Route path="/store/:id" element={<><ProductDetail /><Footer /></>} />
         <Route path="/store/checkout" element={<Checkout />} />
         <Route path="/store/confirmation/:orderId" element={<OrderConfirmation />} />
