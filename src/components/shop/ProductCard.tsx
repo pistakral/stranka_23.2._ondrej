@@ -17,11 +17,11 @@ export default function ProductCard({ id, name, capacity, color, price, image, g
       to={`/store/${id}`}
       className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 group"
     >
-      <div className="relative overflow-hidden bg-gray-100">
+      <div className="relative overflow-hidden bg-gray-50">
         <img
           src={image}
           alt={`${name} ${capacity} ${color}`}
-          className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-72 object-contain p-4 group-hover:scale-110 transition-transform duration-500"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="800"%3E%3Crect width="800" height="800" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="48" fill="%239ca3af"%3EPlaceholder%3C/text%3E%3C/svg%3E';
