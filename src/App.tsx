@@ -79,7 +79,7 @@ function App() {
         <Route path="/store/checkout" element={<Checkout />} />
         <Route path="/store/confirmation/:orderId" element={<OrderConfirmation />} />
       </Routes>
-    </CartProvider> 
+    </CartProvider>
   );
 }
 
