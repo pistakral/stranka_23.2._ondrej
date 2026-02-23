@@ -1,0 +1,174 @@
+{
+  "products": [
+    {
+      "id": "iphone-13-pro-128gb-graphite",
+      "name": "iPhone 13 Pro",
+      "capacity": "128GB",
+      "color": "Grafitová šedá",
+      "price": 420,
+      "stock": 2,
+      "grade": "A",
+      "images": [
+        "/images/products/iphone-13-pro-128gb-graphite/1.png",
+        "/images/products/iphone-13-pro-128gb-graphite/2.png",
+        "/images/products/iphone-13-pro-128gb-graphite/3.png"
+      ],
+      "condition": {
+        "appearance": "Minimálne, takmer neviditeľné známky používania",
+        "display": "Bez škrabancov alebo škvŕn",
+        "functionality": "100% funkčné",
+        "battery": "100%"
+      },
+      "specs": {
+        "display": "6,1\" Super Retina XDR OLED",
+        "resolution": "2532 × 1170 px (460 ppi)",
+        "processor": "Apple A15 Bionic (6-jadrový)",
+        "ram": "6 GB",
+        "camera": "12 MP (širokouhlý) + 12 MP (ultraširoký) + 12 MP (teleobjektív)",
+        "frontCamera": "12 MP TrueDepth",
+        "battery": "~3 095 mAh",
+        "sim": "Nano SIM + eSIM",
+        "waterproof": "IP68 (voda, prach – do 6 m na 30 minút)",
+        "weight": "204 g"
+      },
+      "serialNumber": "TJ4GYLXJTX",
+      "warranty": "12 mesiacov"
+    },
+    {
+      "id": "iphone-14-256gb-blue",
+      "name": "iPhone 14",
+      "capacity": "256GB",
+      "color": "Modrá",
+      "price": 550,
+      "stock": 2,
+      "grade": "A",
+      "images": [
+        "/images/products/iphone-14-256gb-blue/1.png",
+        "/images/products/iphone-14-256gb-blue/2.png",
+        "/images/products/iphone-14-256gb-blue/3.png"
+      ],
+      "condition": {
+        "appearance": "Minimálne, takmer neviditeľné známky používania",
+        "display": "Bez škrabancov alebo škvŕn",
+        "functionality": "100% funkčné",
+        "battery": "100%"
+      },
+      "specs": {
+        "display": "6,1\" Super Retina XDR OLED",
+        "resolution": "2532 × 1170 px (460 ppi)",
+        "processor": "Apple A15 Bionic (6-jadrový)",
+        "ram": "6 GB",
+        "camera": "12 MP (širokouhlý) + 12 MP (ultraširoký)",
+        "frontCamera": "12 MP TrueDepth",
+        "battery": "~3 279 mAh",
+        "sim": "Nano SIM + eSIM",
+        "waterproof": "IP68",
+        "weight": "172 g"
+      },
+      "serialNumber": "AB2CDE3FGH",
+      "warranty": "12 mesiacov"
+    },
+    {
+      "id": "iphone-12-64gb-black",
+      "name": "iPhone 12",
+      "capacity": "64GB",
+      "color": "Čierna",
+      "price": 320,
+      "stock": 2,
+      "grade": "A",
+      "images": [
+        "/images/products/iphone-12-64gb-black/1.png",
+        "/images/products/iphone-12-64gb-black/2.png",
+        "/images/products/iphone-12-64gb-black/3.png"
+      ],
+      "condition": {
+        "appearance": "Minimálne, takmer neviditeľné známky používania",
+        "display": "Bez škrabancov alebo škvŕn",
+        "functionality": "100% funkčné",
+        "battery": "100%"
+      },
+      "specs": {
+        "display": "6,1\" Super Retina XDR OLED",
+        "resolution": "2532 × 1170 px (460 ppi)",
+        "processor": "Apple A14 Bionic (6-jadrový)",
+        "ram": "4 GB",
+        "camera": "12 MP (širokouhlý) + 12 MP (ultraširoký)",
+        "frontCamera": "12 MP TrueDepth",
+        "battery": "~2 815 mAh",
+        "sim": "Nano SIM + eSIM",
+        "waterproof": "IP68",
+        "weight": "164 g"
+      },
+      "serialNumber": "XY9ZABCDEF",
+      "warranty": "12 mesiacov"
+    },
+    {
+      "id": "iphone-13-mini-128gb-pink",
+      "name": "iPhone 13 mini",
+      "capacity": "128GB",
+      "color": "Ružová",
+      "price": 380,
+      "stock": 2,
+      "grade": "A",
+      "images": [
+        "/images/products/iphone-13-mini-128gb-pink/1.png",
+        "/images/products/iphone-13-mini-128gb-pink/2.png",
+        "/images/products/iphone-13-mini-128gb-pink/3.png"
+      ],
+      "condition": {
+        "appearance": "Minimálne, takmer neviditeľné známky používania",
+        "display": "Bez škrabancov alebo škvŕn",
+        "functionality": "100% funkčné",
+        "battery": "100%"
+      },
+      "specs": {
+        "display": "5,4\" Super Retina XDR OLED",
+        "resolution": "2340 × 1080 px (476 ppi)",
+        "processor": "Apple A15 Bionic (6-jadrový)",
+        "ram": "4 GB",
+        "camera": "12 MP (širokouhlý) + 12 MP (ultraširoký)",
+        "frontCamera": "12 MP TrueDepth",
+        "battery": "~2 406 mAh",
+        "sim": "Nano SIM + eSIM",
+        "waterproof": "IP68",
+        "weight": "140 g"
+      },
+      "serialNumber": "MN5PQRSTUV",
+      "warranty": "12 mesiacov"
+    },
+    {
+      "id": "iphone-14-pro-max-512gb-gold",
+      "name": "iPhone 14 Pro Max",
+      "capacity": "512GB",
+      "color": "Zlatá",
+      "price": 850,
+      "stock": 2,
+      "grade": "A",
+      "images": [
+        "/images/products/iphone-14-pro-max-512gb-gold/1.png",
+        "/images/products/iphone-14-pro-max-512gb-gold/2.png",
+        "/images/products/iphone-14-pro-max-512gb-gold/3.png"
+      ],
+      "condition": {
+        "appearance": "Minimálne, takmer neviditeľné známky používania",
+        "display": "Bez škrabancov alebo škvŕn",
+        "functionality": "100% funkčné",
+        "battery": "100%"
+      },
+      "specs": {
+        "display": "6,7\" Super Retina XDR OLED",
+        "resolution": "2796 × 1290 px (460 ppi)",
+        "processor": "Apple A16 Bionic (6-jadrový)",
+        "ram": "6 GB",
+        "camera": "48 MP (hlavný) + 12 MP (ultraširoký) + 12 MP (teleobjektív)",
+        "frontCamera": "12 MP TrueDepth",
+        "battery": "~4 323 mAh",
+        "sim": "Nano SIM + eSIM",
+        "waterproof": "IP68",
+        "weight": "240 g"
+      },
+      "serialNumber": "WX7YZABCDE",
+      "warranty": "12 mesiacov"
+    }
+  ]
+}

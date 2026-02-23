@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+  
+  <!-- Homepage -->
+  <url>
+    <loc>https://fixanto.sk/</loc>
+    <lastmod>2025-12-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Tipy - Lead Magnet stránka -->
+  <url>
+    <loc>https://fixanto.sk/tipy</loc>
+    <lastmod>2025-12-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Výkup Apple -->
+  <url>
+    <loc>https://fixanto.sk/vykup-apple</loc>
+    <lastmod>2025-12-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Ochrana osobných údajov (GDPR) -->
+  <url>
+    <loc>https://fixanto.sk/ochrana-osobnych-udajov</loc>
+    <lastmod>2025-12-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  
+  <!-- VOP -->
+  <url>
+    <loc>https://fixanto.sk/vseobecne-obchodne-podmienky</loc>
+    <lastmod>2025-12-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  
+  <!-- Reklamačný poriadok -->
+  <url>
+    <loc>https://fixanto.sk/reklamacny-poriadok</loc>
+    <lastmod>2025-12-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  
+  <!-- E-book stránka je VYŇATÁ (Disallow v robots.txt) -->
+  
+</urlset>
