@@ -109,8 +109,6 @@ export default function Navbar() {
     }
   };
 
-  const isStorePage = location.pathname.startsWith('/store');
-
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-900/95 via-blue-800/95 to-blue-900/95 shadow-md backdrop-blur-md">
@@ -126,13 +124,10 @@ export default function Navbar() {
             </Link>
 
             <div className="md:hidden flex items-center gap-2">
+              {/* MOBILE - E-shop vždy žlté */}
               <Link
                 to="/store"
-                className={`px-2 py-2 rounded-lg font-black text-xs transition-all shadow-md hover:scale-105 whitespace-nowrap ${
-                  isStorePage
-                    ? 'bg-yellow-400 text-blue-900'
-                    : 'bg-white/10 text-white hover:bg-yellow-400 hover:text-blue-900'
-                }`}
+                className="bg-yellow-400 text-blue-900 px-2 py-2 rounded-lg font-black text-xs transition-all shadow-md hover:scale-105 whitespace-nowrap"
               >
                 🛒 E-shop
               </Link>
@@ -173,14 +168,10 @@ export default function Navbar() {
                 )
               ))}
               
-              {/* E-SHOP TLAČIDLO */}
+              {/* E-SHOP TLAČIDLO - vždy žlté */}
               <Link
                 to="/store"
-                className={`flex items-center gap-2 px-5 py-2 rounded-full font-semibold shadow-lg transition-all duration-300 ${
-                  isStorePage
-                    ? 'bg-yellow-400 text-blue-900 hover:scale-110'
-                    : 'bg-white/10 text-white hover:bg-yellow-400 hover:text-blue-900 hover:scale-110'
-                }`}
+                className="flex items-center gap-2 px-5 py-2 rounded-full font-black shadow-lg transition-all duration-300 bg-yellow-400 text-blue-900 hover:bg-yellow-300 hover:scale-110"
               >
                 <ShoppingBag className="w-5 h-5" />
                 E-shop
@@ -205,10 +196,11 @@ export default function Navbar() {
         {isOpen && (
           <div className="md:hidden bg-gradient-to-b from-blue-900 to-blue-950 border-t border-blue-700 shadow-xl">
             <div className="flex flex-col space-y-2 px-4 py-4">
+              {/* MOBILE MENU - E-shop vždy žlté */}
               <Link
                 to="/store"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl font-semibold transition-all hover:scale-105 bg-white/10 hover:bg-yellow-400 text-white hover:text-blue-900"
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl font-black transition-all hover:scale-105 bg-yellow-400 text-blue-900 hover:bg-yellow-300"
               >
                 <ShoppingBag className="w-5 h-5" />
                 E-shop
