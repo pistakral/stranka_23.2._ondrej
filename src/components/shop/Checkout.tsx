@@ -52,7 +52,7 @@ function validateField(name: string, value: string): string {
       return '';
     case 'phone':
       if (!value.trim()) return 'Telefón je povinný';
-      if (!/^[\d\s\+\-\(\)]{9,15}$/.test(value.trim())) return 'Zadajte platné telefónne číslo (min. 9 číslic)';
+      if (!/^[\d\s\+\-\(\)]{9,16}$/.test(value.trim())) return 'Zadajte platné telefónne číslo (min. 9 číslic)';
       return '';
     case 'street':
       if (!value.trim()) return 'Ulica a číslo sú povinné';
