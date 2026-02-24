@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Package, CreditCard, User, Check } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Package, CreditCard, User, Check, AlertCircle } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useCart } from '../../contexts/CartContext';
 import Navbar from '../Navbar';
@@ -11,7 +11,7 @@ const IBAN_DISPLAY = 'LT56 3250 0347 0476 1008';
 const RECIPIENT_NAME = 'Fixanto';
 
 const SHIPPING_OPTIONS = [
-  { id: 'packeta', label: 'Packeta – výdajné miesto', price: 0.1 },
+  { id: 'packeta', label: 'Packeta – výdajné miesto', price: 5.5 },
   { id: 'gls', label: 'GLS – doručenie na adresu', price: 7 },
   { id: 'posta', label: 'Slovenská pošta – doručenie na adresu', price: 7 },
 ];
@@ -20,20 +20,13 @@ function generateOrderId(): string {
   return Date.now().toString().slice(-8);
 }
 
-// EPC QR code – funguje vo všetkých EU bankových appkách (SK, LT, CZ…)
 async function generateEpcQR(iban: string, amount: number, reference: string, recipientName: string): Promise<string> {
   const epcData = [
-    'BCD',          // Service Tag
-    '002',          // Version
-    '1',            // Encoding: UTF-8
-    'SCT',          // Identification: SEPA Credit Transfer
-    '',             // BIC (optional, leave empty)
+    'BCD', '002', '1', 'SCT', '',
     recipientName,
     iban.replace(/\s/g, ''),
     `EUR${amount.toFixed(2)}`,
-    '',             // Purpose (optional)
-    reference,      // Remittance Reference
-    '',             // Remittance Information
+    '', reference, '',
   ].join('\n');
 
   return QRCode.toDataURL(epcData, {
@@ -44,6 +37,40 @@ async function generateEpcQR(iban: string, amount: number, reference: string, re
   });
 }
 
+// ── VALIDÁCIA POLÍ ─────────────────────────────────────────────────────────
+function validateField(name: string, value: string): string {
+  switch (name) {
+    case 'name':
+      if (!value.trim()) return 'Meno je povinné';
+      if (value.trim().length < 3) return 'Meno musí mať aspoň 3 znaky';
+      if (!/\s/.test(value.trim())) return 'Zadajte meno aj priezvisko';
+      return '';
+    case 'email':
+      if (!value.trim()) return 'Email je povinný';
+      if (!value.includes('@')) return 'Email musí obsahovať @';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Zadajte platný email (napr. jan@email.sk)';
+      return '';
+    case 'phone':
+      if (!value.trim()) return 'Telefón je povinný';
+      if (!/^[\d\s\+\-\(\)]{9,15}$/.test(value.trim())) return 'Zadajte platné telefónne číslo (min. 9 číslic)';
+      return '';
+    case 'street':
+      if (!value.trim()) return 'Ulica a číslo sú povinné';
+      if (value.trim().length < 3) return 'Zadajte platnú adresu (napr. Hlavná 42)';
+      return '';
+    case 'city':
+      if (!value.trim()) return 'Mesto je povinné';
+      if (value.trim().length < 2) return 'Zadajte platné mesto';
+      return '';
+    case 'zip':
+      if (!value.trim()) return 'PSČ je povinné';
+      if (!/^\d{3}\s?\d{2}$/.test(value.trim())) return 'PSČ musí byť vo formáte 911 01';
+      return '';
+    default:
+      return '';
+  }
+}
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { cart, clearCart } = useCart();
@@ -51,10 +78,14 @@ export default function Checkout() {
   const [selectedShipping, setSelectedShipping] = useState(SHIPPING_OPTIONS[0]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
+    street: '',
     city: '',
     zip: '',
   });
@@ -69,43 +100,55 @@ export default function Checkout() {
   }, []);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (touched[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    }
   };
 
-  const isFormValid =
-    form.name.trim() &&
-    form.email.trim() &&
-    form.phone.trim() &&
-    form.city.trim() &&
-    form.zip.trim();
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    setFieldErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+  };
+
+  const validateAll = () => {
+    const errors: Record<string, string> = {};
+    Object.keys(form).forEach(key => {
+      const err = validateField(key, form[key as keyof typeof form]);
+      if (err) errors[key] = err;
+    });
+    setFieldErrors(errors);
+    setTouched(Object.keys(form).reduce((acc, k) => ({ ...acc, [k]: true }), {}));
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async () => {
-    if (!isFormValid) { setError('Prosím vyplňte všetky polia.'); return; }
+    if (!validateAll()) { setError('Opravte prosím chyby vo formulári.'); return; }
     setSubmitting(true);
     setError('');
 
+    const orderData = {
+      orderId,
+      customerName: form.name,
+      customerEmail: form.email,
+      customerPhone: form.phone,
+      street: form.street,
+      city: form.city,
+      zip: form.zip,
+      shipping: selectedShipping.label,
+      shippingPrice: selectedShipping.price,
+      total,
+      products: cart,
+      iban: IBAN_DISPLAY,
+      variableSymbol: orderId,
+    };
+
     try {
       const qrCodeDataUrl = await generateEpcQR(IBAN, total, orderId, RECIPIENT_NAME);
-
-      const orderData = {
-        orderId,
-        customerName: form.name,
-        customerEmail: form.email,
-        customerPhone: form.phone,
-        city: form.city,
-        zip: form.zip,
-        shipping: selectedShipping.label,
-        shippingPrice: selectedShipping.price,
-        total,
-        products: cart,
-        iban: IBAN_DISPLAY,
-        variableSymbol: orderId,
-      };
-
-      // Uložiť do localStorage pre OrderConfirmation stránku
       localStorage.setItem('lastOrder', JSON.stringify({ ...orderData, qrCodeDataUrl }));
 
-      // Poslať emaily cez Netlify Function
       const res = await fetch('/.netlify/functions/send-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,30 +159,50 @@ export default function Checkout() {
 
       clearCart();
       navigate(`/store/confirmation/${orderId}`);
-    } catch (err: any) {
-      // Aj keby email zlyhal, prejdeme na potvrdenie (objednávka je uložená)
+    } catch {
       const qrCodeDataUrl = await generateEpcQR(IBAN, total, orderId, RECIPIENT_NAME);
-      const orderData = {
-        orderId,
-        customerName: form.name,
-        customerEmail: form.email,
-        customerPhone: form.phone,
-        city: form.city,
-        zip: form.zip,
-        shipping: selectedShipping.label,
-        shippingPrice: selectedShipping.price,
-        total,
-        products: cart,
-        iban: IBAN_DISPLAY,
-        variableSymbol: orderId,
-        qrCodeDataUrl,
-      };
-      localStorage.setItem('lastOrder', JSON.stringify(orderData));
+      localStorage.setItem('lastOrder', JSON.stringify({ ...orderData, qrCodeDataUrl }));
       clearCart();
       navigate(`/store/confirmation/${orderId}`);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // ── POLE S VALIDÁCIOU ──────────────────────────────────────────────────
+  const FormField = ({
+    name, label, placeholder, colSpan = false,
+  }: { name: string; label: string; placeholder: string; colSpan?: boolean }) => {
+    const hasError = touched[name] && fieldErrors[name];
+    const isOk = touched[name] && !fieldErrors[name] && form[name as keyof typeof form];
+
+    return (
+      <div className={colSpan ? 'sm:col-span-2' : ''}>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">{label}</label>
+        <div className="relative">
+          <input
+            type="text"
+            name={name}
+            value={form[name as keyof typeof form]}
+            onChange={handleInput}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+            className={`w-full border-2 rounded-xl px-4 py-3 text-gray-900 focus:outline-none transition-colors pr-10 ${
+              hasError
+                ? 'border-red-400 bg-red-50 focus:border-red-500'
+                : isOk
+                ? 'border-green-400 bg-green-50 focus:border-green-500'
+                : 'border-gray-200 focus:border-blue-500'
+            }`}
+          />
+          {hasError && <AlertCircle className="absolute right-3 top-3.5 w-5 h-5 text-red-400" />}
+          {isOk && <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500" />}
+        </div>
+        {hasError && (
+          <p className="mt-1 text-sm text-red-500">{fieldErrors[name]}</p>
+        )}
+      </div>
+    );
   };
 
   // ── ORDER SUMMARY ──────────────────────────────────────────────────────
@@ -185,12 +248,8 @@ export default function Checkout() {
       <Navbar />
       <div className="min-h-screen pt-24 pb-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <button
-            onClick={() => navigate('/store')}
-            className="mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            Späť na obchod
+          <button onClick={() => navigate('/store')} className="mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold">
+            <ChevronLeft className="w-5 h-5" /> Späť na obchod
           </button>
 
           <h1 className="text-3xl font-black text-gray-900 mb-8">Dokončiť objednávku</h1>
@@ -203,15 +262,11 @@ export default function Checkout() {
               { n: 3, icon: <CreditCard className="w-5 h-5" />, label: 'Platba' },
             ].map(({ n, icon, label }) => (
               <div key={n} className="flex items-center gap-2">
-                <div
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${
-                    step === n
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : step > n
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-200 text-gray-500'
-                  }`}
-                >
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${
+                  step === n ? 'bg-blue-600 text-white shadow-lg'
+                  : step > n ? 'bg-green-500 text-white'
+                  : 'bg-gray-200 text-gray-500'
+                }`}>
                   {step > n ? <Check className="w-5 h-5" /> : icon}
                   <span className="hidden sm:inline">{label}</span>
                 </div>
@@ -227,36 +282,22 @@ export default function Checkout() {
               {step === 1 && (
                 <div className="bg-white rounded-2xl shadow-xl p-8">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <Package className="w-7 h-7 text-blue-600" />
-                    Zvoľte spôsob dopravy
+                    <Package className="w-7 h-7 text-blue-600" /> Zvoľte spôsob dopravy
                   </h2>
                   <div className="space-y-3">
                     {SHIPPING_OPTIONS.map((opt) => (
-                      <label
-                        key={opt.id}
-                        className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all ${
-                          selectedShipping.id === opt.id
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-blue-300'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="shipping"
-                          value={opt.id}
-                          checked={selectedShipping.id === opt.id}
-                          onChange={() => setSelectedShipping(opt)}
-                          className="w-5 h-5 text-blue-600"
-                        />
+                      <label key={opt.id} className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                        selectedShipping.id === opt.id ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
+                      }`}>
+                        <input type="radio" name="shipping" value={opt.id} checked={selectedShipping.id === opt.id}
+                          onChange={() => setSelectedShipping(opt)} className="w-5 h-5 text-blue-600" />
                         <span className="flex-1 font-semibold text-gray-900">{opt.label}</span>
                         <span className="font-bold text-blue-600">€{opt.price.toFixed(2)}</span>
                       </label>
                     ))}
                   </div>
-                  <button
-                    onClick={() => setStep(2)}
-                    className="mt-8 w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
-                  >
+                  <button onClick={() => setStep(2)}
+                    className="mt-8 w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
                     Pokračovať <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
@@ -266,45 +307,28 @@ export default function Checkout() {
               {step === 2 && (
                 <div className="bg-white rounded-2xl shadow-xl p-8">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <User className="w-7 h-7 text-blue-600" />
-                    Vaše kontaktné údaje
+                    <User className="w-7 h-7 text-blue-600" /> Vaše kontaktné údaje
                   </h2>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {[
-                      { name: 'name', label: 'Meno a priezvisko', placeholder: 'Ján Novák', colSpan: true },
-                      { name: 'email', label: 'Email', placeholder: 'jan@email.sk', colSpan: true },
-                      { name: 'phone', label: 'Telefón', placeholder: '+421 900 000 000', colSpan: false },
-                      { name: 'city', label: 'Mesto', placeholder: 'Trenčín', colSpan: false },
-                      { name: 'zip', label: 'PSČ', placeholder: '911 01', colSpan: false },
-                    ].map(({ name, label, placeholder, colSpan }) => (
-                      <div key={name} className={colSpan ? 'sm:col-span-2' : ''}>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">{label}</label>
-                        <input
-                          type="text"
-                          name={name}
-                          value={form[name as keyof typeof form]}
-                          onChange={handleInput}
-                          placeholder={placeholder}
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
-                        />
-                      </div>
-                    ))}
+                    <FormField name="name" label="Meno a priezvisko" placeholder="Ján Novák" colSpan />
+                    <FormField name="email" label="Email" placeholder="jan@email.sk" colSpan />
+                    <FormField name="phone" label="Telefón" placeholder="+421 900 000 000" />
+                    <div /> {/* spacer */}
+                    <FormField name="street" label="Ulica a číslo domu" placeholder="Hlavná 42" colSpan />
+                    <FormField name="city" label="Mesto" placeholder="Trenčín" />
+                    <FormField name="zip" label="PSČ" placeholder="911 01" />
                   </div>
                   <div className="flex gap-3 mt-8">
-                    <button
-                      onClick={() => setStep(1)}
-                      className="px-6 py-4 rounded-xl border-2 border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2"
-                    >
+                    <button onClick={() => setStep(1)}
+                      className="px-6 py-4 rounded-xl border-2 border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2">
                       <ChevronLeft className="w-5 h-5" /> Späť
                     </button>
                     <button
                       onClick={() => {
-                        if (!isFormValid) { setError('Vyplňte prosím všetky polia.'); return; }
-                        setError('');
-                        setStep(3);
+                        if (!validateAll()) { setError('Opravte prosím chyby vo formulári.'); return; }
+                        setError(''); setStep(3);
                       }}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
-                    >
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
                       Pokračovať <ChevronRight className="w-5 h-5" />
                     </button>
                   </div>
@@ -316,10 +340,8 @@ export default function Checkout() {
               {step === 3 && (
                 <div className="bg-white rounded-2xl shadow-xl p-8">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <CreditCard className="w-7 h-7 text-blue-600" />
-                    Platba prevodom
+                    <CreditCard className="w-7 h-7 text-blue-600" /> Platba prevodom
                   </h2>
-
                   <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
                     <div className="flex items-start gap-3 mb-4">
                       <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -346,24 +368,27 @@ export default function Checkout() {
                     </div>
                   </div>
 
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-sm text-yellow-800">
-                    📱 QR kód na rýchlu platbu dostanete na stránke potvrdenia objednávky aj v emaili.
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 text-sm text-yellow-800">
+                    📱 QR kód na rýchlu platbu dostanete na stránke potvrdenia objednávky.
+                  </div>
+
+                  {/* Súhrn adresy */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-sm">
+                    <p className="font-semibold text-gray-700 mb-2">📦 Doručenie na adresu:</p>
+                    <p className="text-gray-600">{form.name}</p>
+                    <p className="text-gray-600">{form.street}</p>
+                    <p className="text-gray-600">{form.zip} {form.city}</p>
+                    <button onClick={() => setStep(2)} className="mt-2 text-blue-600 text-xs underline">Zmeniť údaje</button>
                   </div>
 
                   {error && <p className="mb-4 text-red-500 text-sm text-center">{error}</p>}
-
                   <div className="flex gap-3">
-                    <button
-                      onClick={() => setStep(2)}
-                      className="px-6 py-4 rounded-xl border-2 border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2"
-                    >
+                    <button onClick={() => setStep(2)}
+                      className="px-6 py-4 rounded-xl border-2 border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2">
                       <ChevronLeft className="w-5 h-5" /> Späť
                     </button>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={submitting}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-black text-lg shadow-xl hover:from-green-700 hover:to-green-800 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
+                    <button onClick={handleSubmit} disabled={submitting}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-black text-lg shadow-xl hover:from-green-700 hover:to-green-800 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed">
                       {submitting ? (
                         <span className="flex items-center justify-center gap-2">
                           <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
@@ -372,16 +397,13 @@ export default function Checkout() {
                           </svg>
                           Odosielam...
                         </span>
-                      ) : (
-                        '✅ ODOSLAŤ OBJEDNÁVKU'
-                      )}
+                      ) : '✅ ODOSLAŤ OBJEDNÁVKU'}
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* ORDER SUMMARY SIDEBAR */}
             <div className="lg:col-span-1">
               <OrderSummary />
             </div>
