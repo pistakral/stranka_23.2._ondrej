@@ -9,6 +9,7 @@ interface OrderData {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
+  street: string;
   city: string;
   zip: string;
   shipping: string;
@@ -103,11 +104,7 @@ export default function OrderConfirmation() {
                   <p className="text-gray-500 text-sm mb-4">Naskenujte v mobilnej appke vašej banky</p>
                   <div className="flex justify-center">
                     <div className="p-4 bg-white rounded-2xl shadow-inner border-2 border-blue-100 inline-block">
-                      <img
-                        src={order.qrCodeDataUrl}
-                        alt="QR kód na platbu"
-                        className="w-56 h-56"
-                      />
+                      <img src={order.qrCodeDataUrl} alt="QR kód na platbu" className="w-56 h-56" />
                     </div>
                   </div>
                   <p className="text-xs text-gray-400 mt-3">
@@ -150,6 +147,17 @@ export default function OrderConfirmation() {
                 </div>
               </div>
 
+              {/* ADRESA DORUČENIA */}
+              <div className="bg-white rounded-2xl shadow-xl p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">🚚 Adresa doručenia</h2>
+                <div className="text-sm space-y-1 text-gray-700">
+                  <p><strong>{order.customerName}</strong></p>
+                  <p>{order.street}</p>
+                  <p>{order.zip} {order.city}</p>
+                  <p className="text-gray-500 pt-1">📞 {order.customerPhone}</p>
+                </div>
+              </div>
+
               {/* ĎALŠIE KROKY */}
               <div className="bg-white rounded-2xl shadow-xl p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">📋 Čo bude ďalej?</h2>
@@ -173,32 +181,17 @@ export default function OrderConfirmation() {
               {/* KONTAKT */}
               <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-center text-sm text-blue-800">
                 <p className="font-semibold mb-1">Potrebujete pomoc?</p>
-                <p>
-                  Email:{' '}
-                  <a href="mailto:phoneservissk@gmail.com" className="font-bold underline">
-                    phoneservissk@gmail.com
-                  </a>
-                </p>
-                <p>
-                  Web:{' '}
-                  <a href="https://fixanto.sk" className="font-bold underline">
-                    fixanto.sk
-                  </a>
-                </p>
+                <p>Email: <a href="mailto:phoneservissk@gmail.com" className="font-bold underline">phoneservissk@gmail.com</a></p>
+                <p>Web: <a href="https://fixanto.sk" className="font-bold underline">fixanto.sk</a></p>
               </div>
 
-              {/* NAVIGATION BUTTONS */}
               <div className="flex gap-3">
-                <button
-                  onClick={() => navigate('/')}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-                >
+                <button onClick={() => navigate('/')}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-all">
                   <Home className="w-5 h-5" /> Domov
                 </button>
-                <button
-                  onClick={() => navigate('/store')}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all"
-                >
+                <button onClick={() => navigate('/store')}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all">
                   <ShoppingBag className="w-5 h-5" /> E-shop
                 </button>
               </div>
