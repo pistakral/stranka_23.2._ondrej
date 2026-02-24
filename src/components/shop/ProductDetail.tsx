@@ -11,12 +11,44 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
 
   const product = productsData.products.find(p => p.id === id);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    if (!product) return;
+
+    // Dynamicky načítame obrázky – skúšame 1.png, 2.png, 3.png... kým nenájdeme chýbajúci
+    const loadImages = async () => {
+      const found: string[] = [];
+      for (let i = 1; i <= 20; i++) {
+        const src = `/images/products/${product.id}/${i}.png`;
+        const exists = await checkImageExists(src);
+        if (exists) {
+          found.push(src);
+        } else {
+          break; // zastaví pri prvom chýbajúcom
+        }
+      }
+      // Ak nenašiel žiadny, použije placeholder
+      if (found.length === 0) {
+        found.push(...product.images);
+      }
+      setImages(found);
+    };
+
+    loadImages();
+  }, [product?.id]);
+
+  const checkImageExists = (src: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = src;
+    });
+  };
 
   if (!product) {
     return (
@@ -44,19 +76,21 @@ export default function ProductDetail() {
       capacity: product.capacity,
       color: product.color,
       price: product.price,
-      images: product.images,
+      images: images.length > 0 ? images : product.images,
     });
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
   };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
+
+  const displayImages = images.length > 0 ? images : product.images;
 
   return (
     <>
@@ -77,26 +111,32 @@ export default function ProductDetail() {
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div className="relative aspect-square bg-gray-50">
                   <img
-                    src={product.images[currentImageIndex]}
+                    key={displayImages[currentImageIndex]}
+                    src={displayImages[currentImageIndex]}
                     alt={`${product.name} ${currentImageIndex + 1}`}
-                    className="w-full h-full object-contain p-8"
+                    className="w-full h-full object-contain p-8 transition-opacity duration-300"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="800"%3E%3Crect width="800" height="800" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="48" fill="%239ca3af"%3EPlaceholder Image%3C/text%3E%3C/svg%3E';
+                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="800"%3E%3Crect width="800" height="800" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="48" fill="%239ca3af"%3EPlaceholder%3C/text%3E%3C/svg%3E';
                     }}
                   />
-                  
-                  {product.images.length > 1 && (
+
+                  {/* Počítadlo fotografií */}
+                  <div className="absolute top-4 left-4 bg-black/50 text-white text-sm px-3 py-1 rounded-full">
+                    {currentImageIndex + 1} / {displayImages.length}
+                  </div>
+
+                  {displayImages.length > 1 && (
                     <>
                       <button
                         onClick={prevImage}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all hover:scale-110"
                       >
                         <ChevronLeft className="w-6 h-6 text-gray-900" />
                       </button>
                       <button
                         onClick={nextImage}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all hover:scale-110"
                       >
                         <ChevronRight className="w-6 h-6 text-gray-900" />
                       </button>
@@ -105,17 +145,29 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              {/* Thumbnail dots */}
-              {product.images.length > 1 && (
-                <div className="flex justify-center gap-2 mt-4">
-                  {product.images.map((_, index) => (
+              {/* Thumbnails – zobrazí sa až 8, zvyšok je scrollovateľný */}
+              {displayImages.length > 1 && (
+                <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                  {displayImages.map((src, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`w-3 h-3 rounded-full transition-all ${
-                        index === currentImageIndex ? 'bg-blue-600 w-8' : 'bg-gray-300'
+                      className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all hover:scale-105 ${
+                        index === currentImageIndex
+                          ? 'border-blue-600 shadow-lg shadow-blue-200'
+                          : 'border-gray-200 hover:border-blue-300'
                       }`}
-                    />
+                    >
+                      <img
+                        src={src}
+                        alt={`${product.name} náhľad ${index + 1}`}
+                        className="w-full h-full object-contain bg-gray-50 p-1"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E';
+                        }}
+                      />
+                    </button>
                   ))}
                 </div>
               )}
@@ -214,7 +266,7 @@ export default function ProductDetail() {
 
       {/* Notification Toast */}
       {showNotification && (
-        <div className="fixed top-24 right-4 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-right">
+        <div className="fixed top-24 right-4 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50">
           <div className="flex items-center gap-3">
             <Check className="w-6 h-6" />
             <span className="font-bold">Pridané do košíka!</span>
