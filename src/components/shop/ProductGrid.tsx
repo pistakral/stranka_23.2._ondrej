@@ -1,12 +1,42 @@
 import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
-import productsData from '../../data/products.json';
 import Navbar from '../Navbar';
+import { supabase } from '../../lib/supabase';
 
 export default function ProductGrid() {
+  const [products, setProducts] = useState<any[]>([]);
   const [visibleCount, setVisibleCount] = useState(3);
-  const products = productsData.products;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Fetch produktov z Supabase
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Supabase error:', error);
+          setError('Nepodarilo sa načítať produkty.');
+        } else {
+          setProducts(data || []);
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError('Chyba pri načítavaní produktov.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
+
+  // Infinite scroll
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
@@ -34,31 +64,66 @@ export default function ProductGrid() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {visibleProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                capacity={product.capacity}
-                color={product.color}
-                price={product.price}
-                image={product.images[0]}
-                grade={product.grade}
-                stock={product.stock}
-              />
-            ))}
-          </div>
+          {/* LOADING STATE */}
+          {loading && (
+            <div className="text-center py-12">
+              <div className="inline-block w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-4 text-gray-600">Načítavam produkty...</p>
+            </div>
+          )}
 
-          {visibleCount < products.length && (
-            <div className="text-center mt-12">
+          {/* ERROR STATE */}
+          {error && (
+            <div className="text-center py-12">
+              <p className="text-red-600 text-lg">{error}</p>
               <button
-                onClick={() => setVisibleCount(prev => Math.min(prev + 3, products.length))}
-                className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition-all"
+                onClick={() => window.location.reload()}
+                className="mt-4 bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700"
               >
-                Zobraziť viac
+                Skúsiť znova
               </button>
             </div>
+          )}
+
+          {/* PRODUCTS GRID */}
+          {!loading && !error && (
+            <>
+              {products.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 text-lg">Momentálne nemáme žiadne produkty na sklade.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {visibleProducts.map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        id={product.slug}
+                        name={product.name}
+                        capacity={product.capacity}
+                        color={product.color}
+                        price={product.price}
+                        image={product.main_image}
+                        grade={product.grade}
+                        stock={product.stock}
+                      />
+                    ))}
+                  </div>
+
+                  {/* ZOBRAZ VIAC BUTTON */}
+                  {visibleCount < products.length && (
+                    <div className="text-center mt-12">
+                      <button
+                        onClick={() => setVisibleCount(prev => Math.min(prev + 3, products.length))}
+                        className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition-all"
+                      >
+                        Zobraziť viac
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
           )}
         </div>
       </section>
