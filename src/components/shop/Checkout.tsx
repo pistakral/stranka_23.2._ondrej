@@ -452,7 +452,7 @@ export default function Checkout() {
                   </div>
                   <div className="flex justify-between text-green-600">
                     <span>Doprava:</span>
-                    <span className="font-bold">ZADARMO ✅</span>
+                    <span className="font-bold">ZDARMA ✅</span>
                   </div>
                   <div className="flex justify-between text-2xl font-black text-blue-600 pt-3 border-t border-gray-200">
                     <span>Celkom:</span>
