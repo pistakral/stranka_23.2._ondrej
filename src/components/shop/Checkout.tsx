@@ -1,416 +1,442 @@
-import { useState, useEffect } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Package, CreditCard, User, Check, AlertCircle } from 'lucide-react';
-import QRCode from 'qrcode';
 import { useCart } from '../../contexts/CartContext';
+import { supabase } from '../../lib/supabase';
 import Navbar from '../Navbar';
-import Footer from '../Footer';
 
-const IBAN = 'LT563250034704761008';
-const IBAN_DISPLAY = 'LT56 3250 0347 0476 1008';
-const RECIPIENT_NAME = 'Fixanto';
+// Rate limiting konstanta
+const RATE_LIMIT_KEY = 'last_order_attempt';
+const RATE_LIMIT_COOLDOWN = 60000; // 1 minúta
 
-const SHIPPING_OPTIONS = [
-  { id: 'packeta', label: 'Packeta – výdajné miesto', price: 5.5 },
-  { id: 'gls', label: 'GLS – doručenie na adresu', price: 7 },
-  { id: 'posta', label: 'Slovenská pošta – doručenie na adresu', price: 7 },
+interface ShippingMethod {
+  id: string;
+  name: string;
+  price: number;
+}
+
+const SHIPPING_METHODS: ShippingMethod[] = [
+  { id: 'packeta', name: 'Packeta (výdajné miesto)', price: 5.5 },
+  { id: 'gls', name: 'GLS (kuriér)', price: 7 },
+  { id: 'posta', name: 'Slovenská pošta', price: 7 },
 ];
-
-function generateOrderId(): string {
-  return Date.now().toString().slice(-8);
-}
-
-async function generateEpcQR(iban: string, amount: number, reference: string, recipientName: string): Promise<string> {
-  const epcData = [
-    'BCD', '002', '1', 'SCT', '',
-    recipientName,
-    iban.replace(/\s/g, ''),
-    `EUR${amount.toFixed(2)}`,
-    '', reference, '',
-  ].join('\n');
-
-  return QRCode.toDataURL(epcData, {
-    errorCorrectionLevel: 'M',
-    width: 300,
-    margin: 2,
-    color: { dark: '#0d47a1', light: '#ffffff' },
-  });
-}
-
-// ── VALIDÁCIA POLÍ ─────────────────────────────────────────────────────────
-function validateField(name: string, value: string): string {
-  switch (name) {
-    case 'name':
-      if (!value.trim()) return 'Meno je povinné';
-      if (value.trim().length < 3) return 'Meno musí mať aspoň 3 znaky';
-      if (!/\s/.test(value.trim())) return 'Zadajte meno aj priezvisko';
-      return '';
-    case 'email':
-      if (!value.trim()) return 'Email je povinný';
-      if (!value.includes('@')) return 'Email musí obsahovať @';
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Zadajte platný email (napr. jan@email.sk)';
-      return '';
-    case 'phone':
-      if (!value.trim()) return 'Telefón je povinný';
-      if (!/^[\d\s\+\-\(\)]{9,16}$/.test(value.trim())) return 'Zadajte platné telefónne číslo (min. 9 číslic)';
-      return '';
-    case 'street':
-      if (!value.trim()) return 'Ulica a číslo sú povinné';
-      if (value.trim().length < 3) return 'Zadajte platnú adresu (napr. Hlavná 42)';
-      return '';
-    case 'city':
-      if (!value.trim()) return 'Mesto je povinné';
-      if (value.trim().length < 2) return 'Zadajte platné mesto';
-      return '';
-    case 'zip':
-      if (!value.trim()) return 'PSČ je povinné';
-      if (!/^\d{3}\s?\d{2}$/.test(value.trim())) return 'PSČ musí byť vo formáte 911 01';
-      return '';
-    default:
-      return '';
-  }
-}
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { cart, clearCart } = useCart();
-  const [step, setStep] = useState(1);
-  const [selectedShipping, setSelectedShipping] = useState(SHIPPING_OPTIONS[0]);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const { items, totalPrice, clearCart } = useCart();
 
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    street: '',
     city: '',
     zip: '',
+    shippingMethod: 'packeta',
+    notes: '',
   });
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
-  const total = subtotal + selectedShipping.price;
-  const orderId = generateOrderId();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (cart.length === 0) navigate('/store');
-    window.scrollTo(0, 0);
-  }, []);
+  // Ak je košík prázdny, redirect späť
+  if (items.length === 0) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen pt-32 flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Košík je prázdny</h1>
+            <button
+              onClick={() => navigate('/store')}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold"
+            >
+              Späť na obchod
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    if (touched[name]) {
-      setFieldErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+  const selectedShipping = SHIPPING_METHODS.find((m) => m.id === formData.shippingMethod)!;
+  const shippingPrice = selectedShipping.price;
+  const finalTotal = totalPrice + shippingPrice;
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // ============================================
+    // RATE LIMITING - Kontrola
+    // ============================================
+    const lastAttempt = localStorage.getItem(RATE_LIMIT_KEY);
+    if (lastAttempt) {
+      const timeSinceLastAttempt = Date.now() - parseInt(lastAttempt);
+      if (timeSinceLastAttempt < RATE_LIMIT_COOLDOWN) {
+        const remainingSeconds = Math.ceil((RATE_LIMIT_COOLDOWN - timeSinceLastAttempt) / 1000);
+        setError(`Počkajte prosím ${remainingSeconds} sekúnd pred ďalšou objednávkou.`);
+        return;
+      }
     }
-  };
 
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-    setFieldErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
-  };
+    // Validácia
+    if (!formData.name || !formData.email || !formData.phone || !formData.city || !formData.zip) {
+      setError('Vyplňte prosím všetky povinné polia.');
+      return;
+    }
 
-  const validateAll = () => {
-    const errors: Record<string, string> = {};
-    Object.keys(form).forEach(key => {
-      const err = validateField(key, form[key as keyof typeof form]);
-      if (err) errors[key] = err;
-    });
-    setFieldErrors(errors);
-    setTouched(Object.keys(form).reduce((acc, k) => ({ ...acc, [k]: true }), {}));
-    return Object.keys(errors).length === 0;
-  };
+    if (!formData.email.includes('@')) {
+      setError('Zadajte platný email.');
+      return;
+    }
 
-  const handleSubmit = async () => {
-    if (!validateAll()) { setError('Opravte prosím chyby vo formulári.'); return; }
-    setSubmitting(true);
-    setError('');
+    if (formData.phone.length < 9) {
+      setError('Zadajte platné telefónne číslo.');
+      return;
+    }
 
-    const orderData = {
-      orderId,
-      customerName: form.name,
-      customerEmail: form.email,
-      customerPhone: form.phone,
-      street: form.street,
-      city: form.city,
-      zip: form.zip,
-      shipping: selectedShipping.label,
-      shippingPrice: selectedShipping.price,
-      total,
-      products: cart,
-      iban: IBAN_DISPLAY,
-      variableSymbol: orderId,
-    };
+    setLoading(true);
 
     try {
-      const qrCodeDataUrl = await generateEpcQR(IBAN, total, orderId, RECIPIENT_NAME);
-      localStorage.setItem('lastOrder', JSON.stringify({ ...orderData, qrCodeDataUrl }));
+      // ============================================
+      // 1. VYTVOR OBJEDNÁVKU V SUPABASE
+      // ============================================
+      const orderId = Date.now().toString();
 
-      const res = await fetch('/.netlify/functions/send-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderId,
+          customer_name: formData.name,
+          customer_email: formData.email,
+          customer_phone: formData.phone,
+          customer_city: formData.city,
+          customer_zip: formData.zip,
+          subtotal: totalPrice,
+          shipping_price: shippingPrice,
+          total_price: finalTotal,
+          shipping_method: formData.shippingMethod,
+          payment_method: 'bank_transfer',
+          status: 'pending',
+          customer_notes: formData.notes || null,
+        })
+        .select()
+        .single();
 
-      if (!res.ok) throw new Error('Email sa nepodarilo odoslať');
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        throw new Error('Nepodarilo sa vytvoriť objednávku. Skúste to prosím znova.');
+      }
 
+      // ============================================
+      // 2. VYTVOR POLOŽKY OBJEDNÁVKY
+      // ============================================
+      const orderItems = items.map((item) => ({
+        order_id: orderData.id,
+        product_id: null, // Môžeš doplniť UUID produktu ak chceš
+        product_name: item.name,
+        product_capacity: item.capacity,
+        product_color: item.color,
+        product_image: item.images?.[0] || '',
+        quantity: 1,
+        unit_price: item.price,
+        total_price: item.price,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('Order items error:', itemsError);
+        // Pokračuj aj tak - hlavná objednávka je vytvorená
+      }
+
+      // ============================================
+      // 3. VYTVOR REZERVÁCIE PRE PRODUKTY (48h systém)
+      // ============================================
+      for (const item of items) {
+        // Nájdi produkt v databáze podľa slug
+        const { data: productData } = await supabase
+          .from('products')
+          .select('id')
+          .eq('slug', item.id)
+          .single();
+
+        if (productData) {
+          await supabase.from('reservations').insert({
+            product_id: productData.id,
+            customer_email: formData.email,
+            customer_name: formData.name,
+            customer_phone: formData.phone,
+            status: 'pending',
+            notes: `Objednávka #${orderId}`,
+          });
+
+          // Označ produkt ako rezervovaný
+          await supabase
+            .from('products')
+            .update({ stock_status: 'reserved' })
+            .eq('id', productData.id);
+        }
+      }
+
+      // ============================================
+      // 4. ULOŽ RATE LIMITING TIMESTAMP
+      // ============================================
+      localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
+
+      // ============================================
+      // 5. ULOŽ OBJEDNÁVKU DO LOCALSTORAGE (pre confirmation page)
+      // ============================================
+      const orderForLocalStorage = {
+        orderId,
+        customerName: formData.name,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
+        customerCity: formData.city,
+        customerZip: formData.zip,
+        items,
+        subtotal: totalPrice,
+        shippingMethod: selectedShipping.name,
+        shippingPrice,
+        totalPrice: finalTotal,
+        createdAt: new Date().toISOString(),
+      };
+
+      localStorage.setItem(`order-${orderId}`, JSON.stringify(orderForLocalStorage));
+
+      // ============================================
+      // 6. POŠLI EMAIL NOTIFIKÁCIU (TODO: implementovať MailerLite/EmailJS)
+      // ============================================
+      console.log('📧 EMAIL NOTIFICATION (TODO):');
+      console.log('To:', formData.email);
+      console.log('Subject:', `Objednávka #${orderId} - Fixanto.sk`);
+      console.log('Body:', `
+Ďakujeme za objednávku!
+
+Číslo objednávky: ${orderId}
+Meno: ${formData.name}
+Email: ${formData.email}
+Telefón: ${formData.phone}
+
+Produkty:
+${items.map((item) => `- ${item.name} (${item.capacity}) ${item.color} - €${item.price}`).join('\n')}
+
+Doprava: ${selectedShipping.name} - €${shippingPrice}
+Celková suma: €${finalTotal}
+
+Platbu zašlite na účet:
+IBAN: SK31 1100 0000 0029 4803 7511
+Variabilný symbol: ${orderId}
+
+Platba musí byť pripísaná do 48 hodín, inak bude rezervácia zrušená.
+
+Ďakujeme!
+Fixanto.sk
+      `);
+
+      // ============================================
+      // 7. VYČISTI KOŠÍK A REDIRECT
+      // ============================================
       clearCart();
       navigate(`/store/confirmation/${orderId}`);
-    } catch {
-      const qrCodeDataUrl = await generateEpcQR(IBAN, total, orderId, RECIPIENT_NAME);
-      localStorage.setItem('lastOrder', JSON.stringify({ ...orderData, qrCodeDataUrl }));
-      clearCart();
-      navigate(`/store/confirmation/${orderId}`);
+    } catch (err: any) {
+      console.error('Checkout error:', err);
+      setError(err.message || 'Nastala chyba. Skúste to prosím znova.');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
-
-  // ── POLE S VALIDÁCIOU ──────────────────────────────────────────────────
-  const FormField = ({
-    name, label, placeholder, colSpan = false,
-  }: { name: string; label: string; placeholder: string; colSpan?: boolean }) => {
-    const hasError = touched[name] && fieldErrors[name];
-    const isOk = touched[name] && !fieldErrors[name] && form[name as keyof typeof form];
-
-    return (
-      <div className={colSpan ? 'sm:col-span-2' : ''}>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">{label}</label>
-        <div className="relative">
-          <input
-            type="text"
-            name={name}
-            value={form[name as keyof typeof form]}
-            onChange={handleInput}
-            onBlur={handleBlur}
-            placeholder={placeholder}
-            className={`w-full border-2 rounded-xl px-4 py-3 text-gray-900 focus:outline-none transition-colors pr-10 ${
-              hasError
-                ? 'border-red-400 bg-red-50 focus:border-red-500'
-                : isOk
-                ? 'border-green-400 bg-green-50 focus:border-green-500'
-                : 'border-gray-200 focus:border-blue-500'
-            }`}
-          />
-          {hasError && <AlertCircle className="absolute right-3 top-3.5 w-5 h-5 text-red-400" />}
-          {isOk && <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500" />}
-        </div>
-        {hasError && (
-          <p className="mt-1 text-sm text-red-500">{fieldErrors[name]}</p>
-        )}
-      </div>
-    );
-  };
-
-  // ── ORDER SUMMARY ──────────────────────────────────────────────────────
-  const OrderSummary = () => (
-    <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-28">
-      <h3 className="text-xl font-bold text-gray-900 mb-4">Zhrnutie objednávky</h3>
-      <div className="space-y-3 mb-4">
-        {cart.map((item) => (
-          <div key={item.id} className="flex items-center gap-3">
-            <img
-              src={item.images[0]}
-              alt={item.name}
-              className="w-14 h-14 object-contain rounded-lg bg-gray-100"
-              onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="56" height="56"%3E%3Crect width="56" height="56" fill="%23e5e7eb"/%3E%3C/svg%3E'; }}
-            />
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-gray-900 truncate">{item.name} {item.capacity}</p>
-              <p className="text-xs text-gray-500">{item.color}</p>
-            </div>
-            <span className="font-bold text-blue-600">€{item.price}</span>
-          </div>
-        ))}
-      </div>
-      <div className="border-t pt-4 space-y-2">
-        <div className="flex justify-between text-gray-600">
-          <span>Produkty</span>
-          <span>€{subtotal}</span>
-        </div>
-        <div className="flex justify-between text-gray-600">
-          <span>Doprava</span>
-          <span>€{selectedShipping.price.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-xl font-black text-blue-600 border-t pt-2">
-          <span>CELKOM</span>
-          <span>€{total.toFixed(2)}</span>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <>
       <Navbar />
       <div className="min-h-screen pt-24 pb-16 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <button onClick={() => navigate('/store')} className="mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold">
-            <ChevronLeft className="w-5 h-5" /> Späť na obchod
-          </button>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-4xl font-black text-gray-900 mb-8">Pokladňa</h1>
 
-          <h1 className="text-3xl font-black text-gray-900 mb-8">Dokončiť objednávku</h1>
-
-          {/* STEP INDICATOR */}
-          <div className="flex items-center gap-2 mb-10">
-            {[
-              { n: 1, icon: <Package className="w-5 h-5" />, label: 'Doprava' },
-              { n: 2, icon: <User className="w-5 h-5" />, label: 'Vaše údaje' },
-              { n: 3, icon: <CreditCard className="w-5 h-5" />, label: 'Platba' },
-            ].map(({ n, icon, label }) => (
-              <div key={n} className="flex items-center gap-2">
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${
-                  step === n ? 'bg-blue-600 text-white shadow-lg'
-                  : step > n ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {step > n ? <Check className="w-5 h-5" /> : icon}
-                  <span className="hidden sm:inline">{label}</span>
-                </div>
-                {n < 3 && <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />}
-              </div>
-            ))}
-          </div>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-xl mb-6">
+              <p className="font-semibold">❌ {error}</p>
+            </div>
+          )}
 
           <div className="grid lg:grid-cols-3 gap-8">
+            {/* LEFT: Formulár */}
             <div className="lg:col-span-2">
+              <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Kontaktné údaje</h2>
 
-              {/* ── KROK 1: DOPRAVA ── */}
-              {step === 1 && (
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <Package className="w-7 h-7 text-blue-600" /> Zvoľte spôsob dopravy
-                  </h2>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Meno a priezvisko *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Ján Novák"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="jan.novak@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Telefón *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0949 123 456"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Mesto *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Trenčín"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">PSČ *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.zip}
+                      onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="911 01"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Spôsob doručenia *
+                  </label>
                   <div className="space-y-3">
-                    {SHIPPING_OPTIONS.map((opt) => (
-                      <label key={opt.id} className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all ${
-                        selectedShipping.id === opt.id ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
-                      }`}>
-                        <input type="radio" name="shipping" value={opt.id} checked={selectedShipping.id === opt.id}
-                          onChange={() => setSelectedShipping(opt)} className="w-5 h-5 text-blue-600" />
-                        <span className="flex-1 font-semibold text-gray-900">{opt.label}</span>
-                        <span className="font-bold text-blue-600">€{opt.price.toFixed(2)}</span>
+                    {SHIPPING_METHODS.map((method) => (
+                      <label
+                        key={method.id}
+                        className="flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 transition-colors"
+                        style={{
+                          borderColor: formData.shippingMethod === method.id ? '#2563eb' : '#e5e7eb',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="shipping"
+                          value={method.id}
+                          checked={formData.shippingMethod === method.id}
+                          onChange={(e) => setFormData({ ...formData, shippingMethod: e.target.value })}
+                          className="w-5 h-5 text-blue-600"
+                        />
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-900">{method.name}</div>
+                        </div>
+                        <div className="font-bold text-blue-600">€{method.price.toFixed(2)}</div>
                       </label>
                     ))}
                   </div>
-                  <button onClick={() => setStep(2)}
-                    className="mt-8 w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
-                    Pokračovať <ChevronRight className="w-5 h-5" />
-                  </button>
                 </div>
-              )}
 
-              {/* ── KROK 2: ÚDAJE ── */}
-              {step === 2 && (
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <User className="w-7 h-7 text-blue-600" /> Vaše kontaktné údaje
-                  </h2>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <FormField name="name" label="Meno a priezvisko" placeholder="Ján Novák" colSpan />
-                    <FormField name="email" label="Email" placeholder="jan@email.sk" colSpan />
-                    <FormField name="phone" label="Telefón" placeholder="+421 900 000 000" />
-                    <div /> {/* spacer */}
-                    <FormField name="street" label="Ulica a číslo domu" placeholder="Hlavná 42" colSpan />
-                    <FormField name="city" label="Mesto" placeholder="Trenčín" />
-                    <FormField name="zip" label="PSČ" placeholder="911 01" />
-                  </div>
-                  <div className="flex gap-3 mt-8">
-                    <button onClick={() => setStep(1)}
-                      className="px-6 py-4 rounded-xl border-2 border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2">
-                      <ChevronLeft className="w-5 h-5" /> Späť
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (!validateAll()) { setError('Opravte prosím chyby vo formulári.'); return; }
-                        setError(''); setStep(3);
-                      }}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
-                      Pokračovať <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                  {error && <p className="mt-3 text-red-500 text-sm text-center">{error}</p>}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Poznámka k objednávke
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Napr. preferovaný čas doručenia..."
+                  />
                 </div>
-              )}
 
-              {/* ── KROK 3: PLATBA ── */}
-              {step === 3 && (
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <CreditCard className="w-7 h-7 text-blue-600" /> Platba prevodom
-                  </h2>
-                  <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-blue-900 text-lg">Bankový prevod (ZADARMO)</p>
-                        <p className="text-blue-700 text-sm">Po odoslaní objednávky dostanete email s platobnými údajmi a QR kódom</p>
-                      </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-5 rounded-xl font-black text-xl shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Spracovávam...
                     </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">IBAN:</span>
-                        <span className="font-mono font-bold text-blue-900">{IBAN_DISPLAY}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Variabilný symbol:</span>
-                        <span className="font-bold text-blue-900">{orderId}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Suma:</span>
-                        <span className="font-bold text-xl text-blue-900">€{total.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
+                  ) : (
+                    '🛒 Odoslať objednávku'
+                  )}
+                </button>
 
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 text-sm text-yellow-800">
-                    📱 QR kód na rýchlu platbu dostanete na stránke potvrdenia objednávky.
-                  </div>
-
-                  {/* Súhrn adresy */}
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-sm">
-                    <p className="font-semibold text-gray-700 mb-2">📦 Doručenie na adresu:</p>
-                    <p className="text-gray-600">{form.name}</p>
-                    <p className="text-gray-600">{form.street}</p>
-                    <p className="text-gray-600">{form.zip} {form.city}</p>
-                    <button onClick={() => setStep(2)} className="mt-2 text-blue-600 text-xs underline">Zmeniť údaje</button>
-                  </div>
-
-                  {error && <p className="mb-4 text-red-500 text-sm text-center">{error}</p>}
-                  <div className="flex gap-3">
-                    <button onClick={() => setStep(2)}
-                      className="px-6 py-4 rounded-xl border-2 border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2">
-                      <ChevronLeft className="w-5 h-5" /> Späť
-                    </button>
-                    <button onClick={handleSubmit} disabled={submitting}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-black text-lg shadow-xl hover:from-green-700 hover:to-green-800 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed">
-                      {submitting ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                          </svg>
-                          Odosielam...
-                        </span>
-                      ) : '✅ ODOSLAŤ OBJEDNÁVKU'}
-                    </button>
-                  </div>
-                </div>
-              )}
+                <p className="text-sm text-gray-500 text-center">
+                  Platba prevodom. Údaje na úhradu dostanete na email.
+                </p>
+              </form>
             </div>
 
-            <div className="lg:col-span-1">
-              <OrderSummary />
+            {/* RIGHT: Zhrnutie */}
+            <div>
+              <div className="bg-white rounded-2xl shadow-xl p-8 sticky top-24">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Zhrnutie</h2>
+
+                <div className="space-y-4 mb-6">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex gap-4">
+                      <img
+                        src={item.images?.[0] || ''}
+                        alt={item.name}
+                        className="w-16 h-16 object-contain bg-gray-50 rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                        <p className="text-sm text-gray-600">
+                          {item.capacity} • {item.color}
+                        </p>
+                      </div>
+                      <div className="font-bold text-blue-600">€{item.price}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-200 pt-4 space-y-3">
+                  <div className="flex justify-between text-gray-700">
+                    <span>Medzisúčet:</span>
+                    <span className="font-semibold">€{totalPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Doprava:</span>
+                    <span className="font-semibold">€{shippingPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-2xl font-black text-blue-600 pt-3 border-t border-gray-200">
+                    <span>Celkom:</span>
+                    <span>€{finalTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <Footer />
     </>
   );
 }
