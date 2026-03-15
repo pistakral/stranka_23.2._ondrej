@@ -25,7 +25,7 @@ const SHIPPING_METHODS: ShippingMethod[] = [
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart } = useCart();
+  const { cart, totalPrice, clearCart } = useCart();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -41,7 +41,7 @@ export default function Checkout() {
   const [error, setError] = useState<string | null>(null);
 
   // Ak je košík prázdny, redirect späť
-  if (items.length === 0) {
+  if (cart.length === 0) {
     return (
       <>
         <Navbar />
@@ -133,7 +133,7 @@ export default function Checkout() {
       // ============================================
       // 2. VYTVOR POLOŽKY OBJEDNÁVKY
       // ============================================
-      const orderItems = items.map((item) => ({
+      const orderItems = cart.map((item) => ({
         order_id: orderData.id,
         product_id: null, // Môžeš doplniť UUID produktu ak chceš
         product_name: item.name,
@@ -157,7 +157,7 @@ export default function Checkout() {
       // ============================================
       // 3. VYTVOR REZERVÁCIE PRE PRODUKTY (48h systém)
       // ============================================
-      for (const item of items) {
+      for (const item of cart) {
         // Nájdi produkt v databáze podľa slug
         const { data: productData } = await supabase
           .from('products')
@@ -198,7 +198,7 @@ export default function Checkout() {
         customerPhone: formData.phone,
         customerCity: formData.city,
         customerZip: formData.zip,
-        items,
+        items: cart,
         subtotal: totalPrice,
         shippingMethod: selectedShipping.name,
         shippingPrice,
@@ -219,7 +219,7 @@ export default function Checkout() {
           customerPhone: formData.phone,
           customerCity: formData.city,
           customerZip: formData.zip,
-          items: items.map((item) => ({
+          items: cart.map((item) => ({
             name: item.name,
             capacity: item.capacity,
             color: item.color,
@@ -414,7 +414,7 @@ export default function Checkout() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Zhrnutie</h2>
 
                 <div className="space-y-4 mb-6">
-                  {items.map((item) => (
+                  {cart.map((item) => (
                     <div key={item.id} className="flex gap-4">
                       <img
                         src={item.images?.[0] || ''}
