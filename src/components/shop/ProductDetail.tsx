@@ -2,54 +2,55 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
-import productsData from '../../data/products.json';
+import { supabase } from '../../lib/supabase';
 import Navbar from '../Navbar';
 
 export default function ProductDetail() {
-  const { id } = useParams();
+  const { id } = useParams(); // id = slug
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
 
-  const product = productsData.products.find(p => p.id === id);
-
+  // Fetch produkt z Supabase
   useEffect(() => {
+    async function fetchProduct() {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', id)
+        .eq('is_active', true)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching product:', error);
+        setProduct(null);
+      } else {
+        setProduct(data);
+      }
+      setLoading(false);
+    }
+
     window.scrollTo(0, 0);
-    if (!product) return;
+    fetchProduct();
+  }, [id]);
 
-    // Dynamicky načítame obrázky – skúšame 1.png, 2.png, 3.png... kým nenájdeme chýbajúci
-    const loadImages = async () => {
-      const found: string[] = [];
-      for (let i = 1; i <= 20; i++) {
-        const src = `/images/products/${product.id}/${i}.png`;
-        const exists = await checkImageExists(src);
-        if (exists) {
-          found.push(src);
-        } else {
-          break; // zastaví pri prvom chýbajúcom
-        }
-      }
-      // Ak nenašiel žiadny, použije placeholder
-      if (found.length === 0) {
-        found.push(...product.images);
-      }
-      setImages(found);
-    };
+  // Loading state
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen pt-32 flex items-center justify-center">
+          <div className="inline-block w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </>
+    );
+  }
 
-    loadImages();
-  }, [product?.id]);
-
-  const checkImageExists = (src: string): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      img.src = src;
-    });
-  };
-
+  // Product not found
   if (!product) {
     return (
       <>
@@ -71,26 +72,29 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     addToCart({
-      id: product.id,
+      id: product.slug,
       name: product.name,
       capacity: product.capacity,
       color: product.color,
       price: product.price,
-      images: images.length > 0 ? images : product.images,
+      images: product.images || [product.main_image],
     });
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
   };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    setCurrentImageIndex((prev) => (prev + 1) % displayImages.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    setCurrentImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
   };
 
-  const displayImages = images.length > 0 ? images : product.images;
+  // Použiť images array alebo fallback na main_image
+  const displayImages = (product.images && product.images.length > 0) 
+    ? product.images 
+    : [product.main_image];
 
   return (
     <>
@@ -145,7 +149,7 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              {/* Thumbnails – zobrazí sa až 8, zvyšok je scrollovateľný */}
+              {/* Thumbnails */}
               {displayImages.length > 1 && (
                 <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
                   {displayImages.map((src, index) => (
@@ -196,7 +200,7 @@ export default function ProductDetail() {
                   </div>
                   <div className="flex items-center gap-3">
                     <Check className="w-6 h-6 text-green-600" />
-                    <span className="text-lg">Batéria: {product.condition.battery} ⚡</span>
+                    <span className="text-lg">Batéria: {product.condition_battery_percent}% ⚡</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Check className="w-6 h-6 text-green-600" />
@@ -228,39 +232,43 @@ export default function ProductDetail() {
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-xl font-bold text-blue-600 mb-3">Vzhľad</h3>
-                <p className="text-gray-700">{product.condition.appearance}</p>
+                <p className="text-gray-700">{product.condition_appearance}</p>
               </div>
               <div>
                 <h3 className="text-xl font-bold text-blue-600 mb-3">Displej</h3>
-                <p className="text-gray-700">{product.condition.display}</p>
+                <p className="text-gray-700">{product.condition_display}</p>
               </div>
               <div>
                 <h3 className="text-xl font-bold text-blue-600 mb-3">Funkčnosť</h3>
-                <p className="text-gray-700">{product.condition.functionality}</p>
+                <p className="text-gray-700">{product.condition_functionality}</p>
               </div>
               <div>
                 <h3 className="text-xl font-bold text-blue-600 mb-3">Batéria</h3>
-                <p className="text-gray-700">{product.condition.battery}</p>
+                <p className="text-gray-700">{product.condition_battery_percent}% - Výborný stav</p>
               </div>
             </div>
           </div>
 
           {/* Specifications */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Technické špecifikácie</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {Object.entries(product.specs).map(([key, value]) => (
-                <div key={key} className="flex border-b border-gray-200 pb-3">
-                  <span className="font-semibold text-gray-700 w-1/2">{key}:</span>
-                  <span className="text-gray-600 w-1/2">{value}</span>
-                </div>
-              ))}
-              <div className="flex border-b border-gray-200 pb-3">
-                <span className="font-semibold text-gray-700 w-1/2">Sériové číslo:</span>
-                <span className="text-gray-600 w-1/2">{product.serialNumber}</span>
+          {product.specs && Object.keys(product.specs).length > 0 && (
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">Technické špecifikácie</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                {Object.entries(product.specs).map(([key, value]) => (
+                  <div key={key} className="flex border-b border-gray-200 pb-3">
+                    <span className="font-semibold text-gray-700 w-1/2 capitalize">{key}:</span>
+                    <span className="text-gray-600 w-1/2">{String(value)}</span>
+                  </div>
+                ))}
+                {product.serial_number && (
+                  <div className="flex border-b border-gray-200 pb-3">
+                    <span className="font-semibold text-gray-700 w-1/2">Sériové číslo:</span>
+                    <span className="text-gray-600 w-1/2">{product.serial_number}</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
