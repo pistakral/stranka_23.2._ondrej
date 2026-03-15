@@ -1,2 +1,22 @@
+# dependencies
 node_modules/
+
+# environment variables
 .env
+.env.local
+.env.*.local
+
+# build
+dist/
+dist-ssr/
+
+# logs
+*.log
+
+# editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
