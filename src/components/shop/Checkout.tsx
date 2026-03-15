@@ -18,9 +18,7 @@ interface ShippingMethod {
 }
 
 const SHIPPING_METHODS: ShippingMethod[] = [
-  { id: 'packeta', name: 'Packeta (výdajné miesto)', price: 5.5 },
-  { id: 'gls', name: 'GLS (kuriér)', price: 7 },
-  { id: 'posta', name: 'Slovenská pošta', price: 7 },
+  { id: 'posta', name: 'Slovenská pošta – doručenie na adresu', price: 0 },
 ];
 
 export default function Checkout() {
@@ -31,9 +29,10 @@ export default function Checkout() {
     name: '',
     email: '',
     phone: '',
+    street: '',
     city: '',
     zip: '',
-    shippingMethod: 'packeta',
+    shippingMethod: 'posta',
     notes: '',
   });
 
@@ -82,7 +81,7 @@ export default function Checkout() {
     }
 
     // Validácia
-    if (!formData.name || !formData.email || !formData.phone || !formData.city || !formData.zip) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.street || !formData.city || !formData.zip) {
       setError('Vyplňte prosím všetky povinné polia.');
       return;
     }
@@ -112,6 +111,7 @@ export default function Checkout() {
           customer_name: formData.name,
           customer_email: formData.email,
           customer_phone: formData.phone,
+          customer_street: formData.street,
           customer_city: formData.city,
           customer_zip: formData.zip,
           subtotal: totalPrice,
@@ -196,6 +196,7 @@ export default function Checkout() {
         customerName: formData.name,
         customerEmail: formData.email,
         customerPhone: formData.phone,
+        customerStreet: formData.street,
         customerCity: formData.city,
         customerZip: formData.zip,
         items: cart,
@@ -217,6 +218,7 @@ export default function Checkout() {
           customerName: formData.name,
           customerEmail: formData.email,
           customerPhone: formData.phone,
+          customerStreet: formData.street,
           customerCity: formData.city,
           customerZip: formData.zip,
           items: cart.map((item) => ({
@@ -319,6 +321,20 @@ export default function Checkout() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Ulica a číslo domu *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.street}
+                    onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Hlavná 42"
+                  />
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Mesto *</label>
@@ -352,23 +368,20 @@ export default function Checkout() {
                     {SHIPPING_METHODS.map((method) => (
                       <label
                         key={method.id}
-                        className="flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 transition-colors"
-                        style={{
-                          borderColor: formData.shippingMethod === method.id ? '#2563eb' : '#e5e7eb',
-                        }}
+                        className="flex items-center gap-3 p-4 border-2 border-green-500 bg-green-50 rounded-xl cursor-pointer"
                       >
                         <input
                           type="radio"
                           name="shipping"
                           value={method.id}
-                          checked={formData.shippingMethod === method.id}
-                          onChange={(e) => setFormData({ ...formData, shippingMethod: e.target.value })}
-                          className="w-5 h-5 text-blue-600"
+                          checked={true}
+                          readOnly
+                          className="w-5 h-5 text-green-600"
                         />
                         <div className="flex-1">
                           <div className="font-semibold text-gray-900">{method.name}</div>
                         </div>
-                        <div className="font-bold text-blue-600">€{method.price.toFixed(2)}</div>
+                        <div className="font-bold text-green-600 text-lg">ZADARMO ✅</div>
                       </label>
                     ))}
                   </div>
@@ -437,9 +450,9 @@ export default function Checkout() {
                     <span>Medzisúčet:</span>
                     <span className="font-semibold">€{totalPrice.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-700">
+                  <div className="flex justify-between text-green-600">
                     <span>Doprava:</span>
-                    <span className="font-semibold">€{shippingPrice.toFixed(2)}</span>
+                    <span className="font-bold">ZADARMO ✅</span>
                   </div>
                   <div className="flex justify-between text-2xl font-black text-blue-600 pt-3 border-t border-gray-200">
                     <span>Celkom:</span>
