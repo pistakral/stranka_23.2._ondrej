@@ -161,11 +161,12 @@ export default function Checkout() {
         // Nájdi produkt v databáze podľa slug
         const { data: productData } = await supabase
           .from('products')
-          .select('id')
+          .select('id, stock')
           .eq('slug', item.id)
           .single();
 
         if (productData) {
+          // Vytvor rezerváciu
           await supabase.from('reservations').insert({
             product_id: productData.id,
             customer_email: formData.email,
@@ -175,11 +176,13 @@ export default function Checkout() {
             notes: `Objednávka #${orderId}`,
           });
 
-          // Označ produkt ako rezervovaný
-          await supabase
-            .from('products')
-            .update({ stock_status: 'reserved' })
-            .eq('id', productData.id);
+          // Označ produkt ako rezervovaný LEN AK JE STOCK = 1
+          if (productData.stock === 1) {
+            await supabase
+              .from('products')
+              .update({ stock_status: 'reserved' })
+              .eq('id', productData.id);
+          }
         }
       }
 
@@ -381,7 +384,7 @@ export default function Checkout() {
                         <div className="flex-1">
                           <div className="font-semibold text-gray-900">{method.name}</div>
                         </div>
-                        <div className="font-bold text-green-600 text-lg">ZDARMA ✅</div>
+                        <div className="font-bold text-green-600 text-lg">ZADARMO ✅</div>
                       </label>
                     ))}
                   </div>
@@ -452,7 +455,7 @@ export default function Checkout() {
                   </div>
                   <div className="flex justify-between text-green-600">
                     <span>Doprava:</span>
-                    <span className="font-bold">ZDARMA ✅</span>
+                    <span className="font-bold">ZADARMO ✅</span>
                   </div>
                   <div className="flex justify-between text-2xl font-black text-blue-600 pt-3 border-t border-gray-200">
                     <span>Celkom:</span>
