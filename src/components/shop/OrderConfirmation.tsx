@@ -14,6 +14,7 @@ interface OrderData {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
+  customerStreet: string;
   customerCity: string;
   customerZip: string;
   items: Array<{
@@ -204,7 +205,9 @@ export default function OrderConfirmation() {
                 <div className="border-t mt-4 pt-4 space-y-1 text-sm">
                   <div className="flex justify-between text-gray-600">
                     <span>Doprava ({order.shippingMethod})</span>
-                    <span>€{order.shippingPrice.toFixed(2)}</span>
+                    <span className="font-bold text-green-600">
+                      {order.shippingPrice === 0 ? 'ZADARMO ✅' : `€${order.shippingPrice.toFixed(2)}`}
+                    </span>
                   </div>
                   <div className="flex justify-between font-black text-xl text-blue-600">
                     <span>CELKOM</span>
@@ -220,6 +223,7 @@ export default function OrderConfirmation() {
                   <p>
                     <strong>{order.customerName}</strong>
                   </p>
+                  <p>{order.customerStreet}</p>
                   <p>
                     {order.customerZip} {order.customerCity}
                   </p>
