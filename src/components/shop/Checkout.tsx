@@ -8,6 +8,9 @@ import Navbar from '../Navbar';
 const RATE_LIMIT_KEY = 'last_order_attempt';
 const RATE_LIMIT_COOLDOWN = 60000; // 1 minúta
 
+// Platobné údaje
+const IBAN_DISPLAY = 'LT56 3250 0347 0476 1008';
+
 interface ShippingMethod {
   id: string;
   name: string;
@@ -206,34 +209,45 @@ export default function Checkout() {
       localStorage.setItem(`order-${orderId}`, JSON.stringify(orderForLocalStorage));
 
       // ============================================
-      // 6. POŠLI EMAIL NOTIFIKÁCIU (TODO: implementovať MailerLite/EmailJS)
+      // 6. POŠLI EMAIL NOTIFIKÁCIU
       // ============================================
-      console.log('📧 EMAIL NOTIFICATION (TODO):');
-      console.log('To:', formData.email);
-      console.log('Subject:', `Objednávka #${orderId} - Fixanto.sk`);
-      console.log('Body:', `
-Ďakujeme za objednávku!
+      try {
+        const emailData = {
+          orderId,
+          customerName: formData.name,
+          customerEmail: formData.email,
+          customerPhone: formData.phone,
+          customerCity: formData.city,
+          customerZip: formData.zip,
+          items: items.map((item) => ({
+            name: item.name,
+            capacity: item.capacity,
+            color: item.color,
+            price: item.price,
+          })),
+          subtotal: totalPrice,
+          shippingMethod: selectedShipping.name,
+          shippingPrice,
+          totalPrice: finalTotal,
+          iban: IBAN_DISPLAY,
+          variableSymbol: orderId,
+        };
 
-Číslo objednávky: ${orderId}
-Meno: ${formData.name}
-Email: ${formData.email}
-Telefón: ${formData.phone}
+        const emailRes = await fetch('/.netlify/functions/send-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emailData),
+        });
 
-Produkty:
-${items.map((item) => `- ${item.name} (${item.capacity}) ${item.color} - €${item.price}`).join('\n')}
-
-Doprava: ${selectedShipping.name} - €${shippingPrice}
-Celková suma: €${finalTotal}
-
-Platbu zašlite na účet:
-IBAN: SK31 1100 0000 0029 4803 7511
-Variabilný symbol: ${orderId}
-
-Platba musí byť pripísaná do 48 hodín, inak bude rezervácia zrušená.
-
-Ďakujeme!
-Fixanto.sk
-      `);
+        if (!emailRes.ok) {
+          console.error('Email sa nepodarilo odoslať, ale objednávka bola vytvorená.');
+        } else {
+          console.log('✅ Email úspešne odoslaný!');
+        }
+      } catch (emailError) {
+        console.error('Email error:', emailError);
+        // Pokračuj aj keď email zlyhá - objednávka je už v Supabase
+      }
 
       // ============================================
       // 7. VYČISTI KOŠÍK A REDIRECT
