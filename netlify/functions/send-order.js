@@ -153,7 +153,7 @@ exports.handler = async (event) => {
         <p style="margin:4px 0;color:#555;"><strong>Email:</strong> ${safe.customerEmail}</p>
         <p style="margin:4px 0;color:#555;"><strong>Telefón:</strong> ${safe.customerPhone}</p>
         <p style="margin:4px 0;color:#555;"><strong>Adresa:</strong> ${safe.customerStreet}, ${safe.customerZip} ${safe.customerCity}</p>
-        <p style="margin:4px 0;color:#555;"><strong>Spôsob dopravy:</strong> ${safe.shippingMethod} ${safe.shippingPrice === '0.00' ? '<span style="color:#4caf50;font-weight:bold;">ZADARMO ✅</span>' : ''}</p>
+        <p style="margin:4px 0;color:#555;"><strong>Spôsob dopravy:</strong> ${safe.shippingMethod} ${safe.shippingPrice === '0.00' ? '<span style="color:#4caf50;font-weight:bold;">ZDARMA ✅</span>' : ''}</p>
       </div>
 
       <h3 style="color:#0d47a1;margin:24px 0 12px;">📋 Čo bude ďalej?</h3>
