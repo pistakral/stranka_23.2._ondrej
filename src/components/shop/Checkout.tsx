@@ -158,16 +158,31 @@ export default function Checkout() {
       // 3. VYTVOR REZERVÁCIE PRE PRODUKTY (48h systém)
       // ============================================
       for (const item of cart) {
+        console.log('🔍 Hľadám produkt s slug:', item.id);
+        
         // Nájdi produkt v databáze podľa slug
-        const { data: productData } = await supabase
+        const { data: productData, error: productError } = await supabase
           .from('products')
-          .select('id, stock')
+          .select('id, slug, stock, stock_status, name')
           .eq('slug', item.id)
-          .single();
+          .maybeSingle();
 
-        if (productData) {
-          // Vytvor rezerváciu
-          await supabase.from('reservations').insert({
+        if (productError) {
+          console.error('❌ Chyba pri hľadaní produktu:', productError);
+          continue;
+        }
+
+        if (!productData) {
+          console.warn('⚠️ Produkt nebol nájdený! slug:', item.id);
+          continue;
+        }
+
+        console.log(`✅ Našiel som: ${productData.name}, stock = ${productData.stock}`);
+
+        // Vytvor rezerváciu
+        const { error: reservationError } = await supabase
+          .from('reservations')
+          .insert({
             product_id: productData.id,
             customer_email: formData.email,
             customer_name: formData.name,
@@ -176,13 +191,28 @@ export default function Checkout() {
             notes: `Objednávka #${orderId}`,
           });
 
-          // Označ produkt ako rezervovaný LEN AK JE STOCK = 1
-          if (productData.stock === 1) {
-            await supabase
-              .from('products')
-              .update({ stock_status: 'reserved' })
-              .eq('id', productData.id);
+        if (reservationError) {
+          console.error('❌ Chyba rezervácie:', reservationError);
+        } else {
+          console.log('✅ Rezervácia vytvorená');
+        }
+
+        // Označ produkt ako rezervovaný LEN AK JE STOCK = 1
+        if (productData.stock === 1) {
+          console.log('🔒 REZERVUJEM (stock = 1)');
+          
+          const { error: updateError } = await supabase
+            .from('products')
+            .update({ stock_status: 'reserved' })
+            .eq('id', productData.id);
+
+          if (updateError) {
+            console.error('❌ Chyba update:', updateError);
+          } else {
+            console.log('✅ REZERVOVANÉ!');
           }
+        } else {
+          console.log(`⏭️ Stock = ${productData.stock}, nerezerv ujem`);
         }
       }
 
