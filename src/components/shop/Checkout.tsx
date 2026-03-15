@@ -197,19 +197,22 @@ export default function Checkout() {
           console.log('✅ Rezervácia vytvorená');
         }
 
-        // Označ produkt ako rezervovaný LEN AK JE STOCK = 1
+        // Rezervuj produkt cez BEZPEČNÚ SERVER-SIDE FUNKCIU
         if (productData.stock === 1) {
-          console.log('🔒 REZERVUJEM (stock = 1)');
+          console.log('🔒 Volám reserve_product()...');
           
-          const { error: updateError } = await supabase
-            .from('products')
-            .update({ stock_status: 'reserved' })
-            .eq('id', productData.id);
+          const { data: reserveResult, error: reserveError } = await supabase
+            .rpc('reserve_product', { product_slug: item.id });
 
-          if (updateError) {
-            console.error('❌ Chyba update:', updateError);
-          } else {
-            console.log('✅ REZERVOVANÉ!');
+          if (reserveError) {
+            console.error('❌ Chyba RPC:', reserveError);
+          } else if (reserveResult && reserveResult.length > 0) {
+            const result = reserveResult[0];
+            if (result.success) {
+              console.log('✅ REZERVOVANÉ!', result.message);
+            } else {
+              console.warn('⚠️ Rezervácia zlyhala:', result.message);
+            }
           }
         } else {
           console.log(`⏭️ Stock = ${productData.stock}, nerezerv ujem`);
