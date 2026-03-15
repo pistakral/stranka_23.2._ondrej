@@ -1,8 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://pacedozzqdgscxxkgimc.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhY2Vkb3p6cWRnc2N4eGtnaW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Nzg5NDMsImV4cCI6MjA4OTA1NDk0M30.swlz-HFXu3SjE7h2TCBzl2ZREc00Z4e7aTeSNZrmGe4'; // ← VLOŽ SEM ANON KEY
+// Načítaj credentials z .env súboru
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Bezpečnostná kontrola - ak chybí .env súbor, hneď upozorní
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    '❌ Missing Supabase environment variables!\n' +
+    'Make sure you have a .env file with:\n' +
+    'VITE_SUPABASE_URL=your_url\n' +
+    'VITE_SUPABASE_ANON_KEY=your_key'
+  );
+}
+
+// Vytvor Supabase klienta
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // TypeScript typy (optional, ale odporúčam)
