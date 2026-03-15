@@ -206,7 +206,7 @@ export default function OrderConfirmation() {
                   <div className="flex justify-between text-gray-600">
                     <span>Doprava ({order.shippingMethod})</span>
                     <span className="font-bold text-green-600">
-                      {order.shippingPrice === 0 ? 'ZADARMO ✅' : `€${order.shippingPrice.toFixed(2)}`}
+                      {order.shippingPrice === 0 ? 'ZDARMA ✅' : `€${order.shippingPrice.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between font-black text-xl text-blue-600">
