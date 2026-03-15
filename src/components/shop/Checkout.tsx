@@ -381,7 +381,7 @@ export default function Checkout() {
                         <div className="flex-1">
                           <div className="font-semibold text-gray-900">{method.name}</div>
                         </div>
-                        <div className="font-bold text-green-600 text-lg">ZADARMO ✅</div>
+                        <div className="font-bold text-green-600 text-lg">ZDARMA ✅</div>
                       </label>
                     ))}
                   </div>
