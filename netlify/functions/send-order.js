@@ -233,7 +233,7 @@ exports.handler = async (event) => {
       to: safe.customerEmail,
       subject: `✅ Objednávka #${safe.orderId} prijatá – Fixanto`,
       html: customerHtml,
-      text: `Objednávka #${safe.orderId} prijatá!\n\nIBAN: ${safe.iban}\nVS: ${safe.variableSymbol}\nSuma: €${safe.totalPrice}\n\nPlatba do 48 hodín!\n\n${productListText}\n\nDoprava: ${safe.shippingMethod} ${safe.shippingPrice === '0.00' ? 'ZADARMO' : '€' + safe.shippingPrice}\nAdresa: ${safe.customerStreet}, ${safe.customerZip} ${safe.customerCity}\n\nFixanto | 0949 344 600 | phoneservissk@gmail.com`,
+      text: `Objednávka #${safe.orderId} prijatá!\n\nIBAN: ${safe.iban}\nVS: ${safe.variableSymbol}\nSuma: €${safe.totalPrice}\n\nPlatba do 48 hodín!\n\n${productListText}\n\nDoprava: ${safe.shippingMethod} ${safe.shippingPrice === '0.00' ? 'ZDARMA' : '€' + safe.shippingPrice}\nAdresa: ${safe.customerStreet}, ${safe.customerZip} ${safe.customerCity}\n\nFixanto | 0949 344 600 | phoneservissk@gmail.com`,
     });
 
     // Email pre admina
@@ -242,7 +242,7 @@ exports.handler = async (event) => {
       to: process.env.GMAIL_USER,
       subject: `🛒 NOVÁ OBJEDNÁVKA #${safe.orderId} – ${safe.customerName} – €${safe.totalPrice}`,
       html: adminHtml,
-      text: `NOVÁ OBJEDNÁVKA #${safe.orderId}\n${safe.customerName} | ${safe.customerEmail} | ${safe.customerPhone}\n${safe.customerStreet}, ${safe.customerZip} ${safe.customerCity}\n\n${productListText}\n\nDoprava: ${safe.shippingMethod} ${safe.shippingPrice === '0.00' ? 'ZADARMO' : '€' + safe.shippingPrice}\nCelkom: €${safe.totalPrice}\nVS: ${safe.variableSymbol}\n\nČakáme na platbu do 48h!`,
+      text: `NOVÁ OBJEDNÁVKA #${safe.orderId}\n${safe.customerName} | ${safe.customerEmail} | ${safe.customerPhone}\n${safe.customerStreet}, ${safe.customerZip} ${safe.customerCity}\n\n${productListText}\n\nDoprava: ${safe.shippingMethod} ${safe.shippingPrice === '0.00' ? 'ZDARMA' : '€' + safe.shippingPrice}\nCelkom: €${safe.totalPrice}\nVS: ${safe.variableSymbol}\n\nČakáme na platbu do 48h!`,
     });
 
     return {
