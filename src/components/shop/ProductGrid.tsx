@@ -106,6 +106,7 @@ export default function ProductGrid() {
                         image={product.main_image}
                         grade={product.grade}
                         stock={product.stock}
+                        stockStatus={product.stock_status}
                       />
                     ))}
                   </div>
