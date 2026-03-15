@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://pacedozzqdgscxxkgimc.supabase.co';
-const supabaseAnonKey = 'TVOJ_ANON_KEY_SEM'; // ← VLOŽ SEM ANON KEY
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhY2Vkb3p6cWRnc2N4eGtnaW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Nzg5NDMsImV4cCI6MjA4OTA1NDk0M30.swlz-HFXu3SjE7h2TCBzl2ZREc00Z4e7aTeSNZrmGe4'; // ← VLOŽ SEM ANON KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
