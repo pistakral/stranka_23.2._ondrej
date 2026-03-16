@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { supabase } from '../../lib/supabase';
@@ -98,6 +99,16 @@ export default function ProductDetail() {
 
   return (
     <>
+      <Helmet>
+        <title>
+          {product.meta_title || `${product.name} ${product.capacity} ${product.color} | Fixanto`}
+        </title>
+        <meta 
+          name="description" 
+          content={product.meta_description || product.description?.substring(0, 155) || `${product.name} ${product.capacity} ${product.color} - Prémiový iPhone`}
+        />
+      </Helmet>
+
       <Navbar />
       <div className="min-h-screen pt-24 pb-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -219,6 +230,9 @@ export default function ProductDetail() {
                   🛒 PRIDAŤ DO KOŠÍKA
                 </button>
 
+                <p className="text-sm text-gray-500 text-center mt-4">
+                  Doprava zadarmo nad 500€
+                </p>
               </div>
             </div>
           </div>
