@@ -96,6 +96,30 @@ export default function Checkout() {
       return;
     }
 
+    // EXTRA BEZPEČNOSŤ: Blokuj podozrivé znaky
+    const dangerousPattern = /(<script|javascript:|onerror=|DROP|DELETE|INSERT|UPDATE|SELECT|;--|\/\*)/gi;
+    
+    const allInputs = [
+      formData.name,
+      formData.email,
+      formData.phone,
+      formData.street,
+      formData.city,
+      formData.zip,
+      formData.notes
+    ].join(' ');
+
+    if (dangerousPattern.test(allInputs)) {
+      setError('Neplatné znaky v údajoch. Skúste znova bez špeciálnych znakov.');
+      return;
+    }
+
+    // Kontrola max dĺžky
+    if (formData.name.length > 100 || formData.street.length > 200 || formData.notes.length > 500) {
+      setError('Niektoré polia sú príliš dlhé.');
+      return;
+    }
+
     setLoading(true);
 
     try {
