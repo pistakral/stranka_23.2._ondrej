@@ -203,15 +203,15 @@ export default function ProductDetail() {
                 </div>
 
                 {/* DARČEK BANNER */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl p-4 mb-6 shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-500 p-2 rounded-lg">
-                      <Gift className="w-6 h-6 text-white" />
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl p-5 mb-6 shadow-lg transition-transform duration-200 hover:scale-105 hover:shadow-xl cursor-default">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-green-500 p-3 rounded-xl">
+                      <Gift className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <p className="font-bold text-green-900 text-lg">DARČEK ZADARMO! 🎁</p>
-                      <p className="text-sm text-green-700">
-                        Ochranné sklo v hodnote <span className="font-bold">€10</span> k telefónu
+                      <p className="font-bold text-green-900 text-xl">DARČEK ZADARMO! 🎁</p>
+                      <p className="text-base text-green-700">
+                        Ochranné sklo v hodnote <span className="font-black text-green-900">€10</span> k telefónu
                       </p>
                     </div>
                   </div>
@@ -253,7 +253,7 @@ export default function ProductDetail() {
                 </button>
 
                 <p className="text-sm text-gray-500 text-center mt-4">
-                  Doprava zadarmo 🎁
+                  Doprava zadarmo nad 500€
                 </p>
               </div>
             </div>
