@@ -466,7 +466,6 @@ export default function Checkout() {
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={3}
-                    placeholder="Napr. preferovaný čas doručenia..."
                   />
                 </div>
 
