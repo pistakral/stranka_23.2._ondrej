@@ -39,34 +39,15 @@ interface OrderData {
   createdAt: string;
 }
 
-async function generateEpcQR(
-  iban: string,
-  amount: number,
-  reference: string,
-  recipientName: string
-): Promise<string> {
-  const epcData = [
-    'BCD', '002', '1', 'SCT', '',
-    recipientName,
-    iban.replace(/\s/g, ''),
-    `EUR${amount.toFixed(2)}`,
-    '', reference, '',
-  ].join('\n');
-
-  return QRCode.toDataURL(epcData, {
-    errorCorrectionLevel: 'M',
-    width: 300,
-    margin: 2,
-    color: { dark: '#0d47a1', light: '#ffffff' },
-  });
+async function generateEpcQR(iban: string, amount: number, reference: string, recipientName: string): Promise<string> {
+  const epcData = ['BCD', '002', '1', 'SCT', '', recipientName, iban.replace(/\s/g, ''), `EUR${amount.toFixed(2)}`, '', reference, ''].join('\n');
+  return QRCode.toDataURL(epcData, { errorCorrectionLevel: 'M', width: 300, margin: 2, color: { dark: '#0d47a1', light: '#ffffff' } });
 }
 
-// Zistí či je položka adaptér
 function isAdapter(item: OrderItem): boolean {
   return item.id === 'adapter-20w' || item.name.toLowerCase().includes('adaptér');
 }
 
-// Vráti správny obrázok pre položku
 function getItemImage(item: OrderItem): string {
   if (isAdapter(item)) return '/images/adapter.png';
   return item.images?.[0] || '';
@@ -80,17 +61,11 @@ export default function OrderConfirmation() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-
-    if (!orderId) {
-      navigate('/store');
-      return;
-    }
-
+    if (!orderId) { navigate('/store'); return; }
     const stored = localStorage.getItem(`order-${orderId}`);
     if (stored) {
       const orderData = JSON.parse(stored) as OrderData;
       setOrder(orderData);
-
       generateEpcQR(IBAN, orderData.totalPrice, orderId, RECIPIENT_NAME)
         .then(setQrCodeDataUrl)
         .catch((err) => console.error('QR generation error:', err));
@@ -113,59 +88,56 @@ export default function OrderConfirmation() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen pt-24 pb-16 bg-gray-50">
+      <div className="min-h-screen pt-20 sm:pt-24 pb-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* SUCCESS HEADER */}
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl shadow-xl p-8 text-center text-white mb-8">
-            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-200" />
-            <h1 className="text-3xl sm:text-4xl font-black mb-2">Objednávka odoslaná!</h1>
-            <p className="text-green-100 text-lg">
-              Ďakujeme za vašu objednávku číslo{' '}
-              <strong className="text-white text-xl">#{order.orderId}</strong>
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl shadow-xl p-6 sm:p-8 text-center text-white mb-6 sm:mb-8">
+            <CheckCircle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-green-200" />
+            <h1 className="text-2xl sm:text-4xl font-black mb-2">Objednávka odoslaná!</h1>
+            <p className="text-green-100 text-base sm:text-lg">
+              Ďakujeme za objednávku č.{' '}
+              <strong className="text-white text-lg sm:text-xl">#{order.orderId}</strong>
             </p>
-            <p className="text-green-100 mt-2">
+            <p className="text-green-100 mt-1 text-sm sm:text-base">
               Rekapituláciu sme zaslali na{' '}
               <strong className="text-white">{order.customerEmail}</strong>
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* LEFT – PLATOBNÉ ÚDAJE + QR */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">💳 Platba a doručenie</h2>
+          <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
+            {/* LEFT */}
+            <div className="space-y-5 sm:space-y-6">
+              {/* Platobné údaje */}
+              <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">💳 Platba a doručenie</h2>
                 <div className="space-y-2 text-sm mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Zvolená doprava:</span>
-                    <span className="font-semibold text-gray-900">{order.shippingMethod}</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-gray-500 flex-shrink-0">Zvolená doprava:</span>
+                    <span className="font-semibold text-gray-900 text-right">{order.shippingMethod}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Zvolená platba:</span>
-                    <span className="font-semibold text-gray-900">Prevodom na účet (vopred)</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-gray-500 flex-shrink-0">Zvolená platba:</span>
+                    <span className="font-semibold text-gray-900 text-right">Prevodom (vopred)</span>
                   </div>
-                  <div className="flex justify-between text-lg font-black border-t pt-2 mt-2">
+                  <div className="flex justify-between gap-2 text-base font-black border-t pt-2 mt-2">
                     <span className="text-gray-700">Čiastka k úhrade:</span>
                     <span className="text-blue-600">€{order.totalPrice.toFixed(2)}</span>
                   </div>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2 text-sm">
-                  <div className="flex justify-between">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 space-y-2 text-sm">
+                  <div className="flex justify-between gap-2 flex-wrap">
                     <span className="text-gray-600">Bankový účet:</span>
-                    <span className="font-mono font-bold text-blue-900 text-xs sm:text-sm">
-                      {IBAN_DISPLAY}
-                    </span>
+                    <span className="font-mono font-bold text-blue-900 text-xs sm:text-sm">{IBAN_DISPLAY}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-2">
                     <span className="text-gray-600">Variabilný symbol:</span>
-                    <span className="font-bold text-blue-900 text-lg">{order.orderId}</span>
+                    <span className="font-bold text-blue-900 text-base sm:text-lg">{order.orderId}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-2">
                     <span className="text-gray-600">Suma:</span>
-                    <span className="font-black text-blue-900 text-xl">
-                      €{order.totalPrice.toFixed(2)}
-                    </span>
+                    <span className="font-black text-blue-900 text-lg sm:text-xl">€{order.totalPrice.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -174,21 +146,17 @@ export default function OrderConfirmation() {
                 </p>
               </div>
 
-              {/* QR KÓD */}
+              {/* QR kód */}
               {qrCodeDataUrl ? (
-                <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">📱 QR kód na platbu</h2>
-                  <p className="text-gray-500 text-sm mb-4">
-                    Naskenujte v mobilnej appke vašej banky
-                  </p>
+                <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 text-center">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">📱 QR kód na platbu</h2>
+                  <p className="text-gray-500 text-sm mb-4">Naskenujte v mobilnej appke vašej banky</p>
                   <div className="flex justify-center">
-                    <div className="p-4 bg-white rounded-2xl shadow-inner border-2 border-blue-100 inline-block">
-                      <img src={qrCodeDataUrl} alt="QR kód na platbu" className="w-56 h-56" />
+                    <div className="p-3 sm:p-4 bg-white rounded-2xl shadow-inner border-2 border-blue-100 inline-block">
+                      <img src={qrCodeDataUrl} alt="QR kód na platbu" className="w-44 h-44 sm:w-56 sm:h-56" />
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-3">
-                    EPC / SEPA QR kód – funguje v appkách všetkých bánk
-                  </p>
+                  <p className="text-xs text-gray-400 mt-3">EPC / SEPA QR kód – funguje vo všetkých bankách</p>
                 </div>
               ) : (
                 <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
@@ -198,10 +166,11 @@ export default function OrderConfirmation() {
               )}
             </div>
 
-            {/* RIGHT – OBSAH OBJEDNÁVKY + INFO */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">📦 Obsah objednávky</h2>
+            {/* RIGHT */}
+            <div className="space-y-5 sm:space-y-6">
+              {/* Obsah objednávky */}
+              <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">📦 Obsah objednávky</h2>
                 <div className="space-y-3">
                   {order.items.map((item) => {
                     const adapter = isAdapter(item);
@@ -210,23 +179,20 @@ export default function OrderConfirmation() {
                         <img
                           src={getItemImage(item)}
                           alt={item.name}
-                          className="w-14 h-14 object-contain rounded-xl bg-gray-100 flex-shrink-0"
+                          className="w-12 h-12 sm:w-14 sm:h-14 object-contain rounded-xl bg-gray-100 flex-shrink-0"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="56" height="56"%3E%3Crect width="56" height="56" fill="%23e5e7eb"/%3E%3C/svg%3E';
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="56" height="56"%3E%3Crect width="56" height="56" fill="%23e5e7eb"/%3E%3C/svg%3E';
                           }}
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900">
+                          <p className="font-semibold text-gray-900 text-sm leading-snug">
                             {item.name}{item.capacity ? ` ${item.capacity}` : ''}
                           </p>
-                          <p className="text-sm text-gray-500">
-                            {adapter
-                              ? 'Apple USB-C Power Adapter'
-                              : `${item.color} • Záruka 12 mesiacov`}
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {adapter ? 'Apple USB-C Power Adapter' : `${item.color} • Záruka 12 mesiacov`}
                           </p>
                         </div>
-                        <span className={`font-bold flex-shrink-0 ${adapter ? 'text-orange-600' : 'text-blue-600'}`}>
+                        <span className={`font-bold flex-shrink-0 text-sm sm:text-base ${adapter ? 'text-orange-600' : 'text-blue-600'}`}>
                           €{item.price}
                         </span>
                       </div>
@@ -234,38 +200,33 @@ export default function OrderConfirmation() {
                   })}
                 </div>
 
-                <div className="border-t mt-4 pt-4 space-y-1 text-sm">
+                <div className="border-t mt-4 pt-3 space-y-1.5 text-sm">
                   <div className="flex justify-between text-gray-600">
                     <span>Medzisúčet:</span>
-                    <span className="font-semibold text-gray-800">
-                      €{order.subtotal.toFixed(2)}
-                    </span>
+                    <span className="font-semibold text-gray-800">€{order.subtotal.toFixed(2)}</span>
                   </div>
-
                   {order.discountCode && (
                     <div className="flex justify-between text-green-600">
-                      <span>Zľava ({order.discountCode} -{order.discountPercent}%):</span>
-                      <span className="font-bold">-€{order.discountAmount?.toFixed(2)}</span>
+                      <span className="truncate mr-2">Zľava ({order.discountCode} -{order.discountPercent}%):</span>
+                      <span className="font-bold flex-shrink-0">-€{order.discountAmount?.toFixed(2)}</span>
                     </div>
                   )}
-
                   <div className="flex justify-between text-gray-600">
-                    <span>Doprava ({order.shippingMethod})</span>
+                    <span>Doprava</span>
                     <span className="font-bold text-green-600">
                       {order.shippingPrice === 0 ? 'ZDARMA ✅' : `€${order.shippingPrice.toFixed(2)}`}
                     </span>
                   </div>
-
-                  <div className="flex justify-between font-black text-xl text-blue-600 pt-1 border-t border-gray-100">
+                  <div className="flex justify-between font-black text-lg sm:text-xl text-blue-600 pt-1 border-t border-gray-100">
                     <span>CELKOM</span>
                     <span>€{order.totalPrice.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
-              {/* ADRESA DORUČENIA */}
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">🚚 Adresa doručenia</h2>
+              {/* Adresa */}
+              <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">🚚 Adresa doručenia</h2>
                 <div className="text-sm space-y-1 text-gray-700">
                   <p><strong>{order.customerName}</strong></p>
                   <p>{order.customerStreet}</p>
@@ -274,19 +235,19 @@ export default function OrderConfirmation() {
                 </div>
               </div>
 
-              {/* ĎALŠIE KROKY */}
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">📋 Čo bude ďalej?</h2>
+              {/* Ďalšie kroky */}
+              <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">📋 Čo bude ďalej?</h2>
                 <ol className="space-y-3">
                   {[
-                    { n: 1, text: 'Uhraďte objednávku prevodom do 48 hodín (QR kód vľavo)' },
-                    { n: 2, text: 'Po prijatí platby vám zašleme potvrdzujúci email' },
-                    { n: 3, text: 'Zásielku expedujeme do 1-2 pracovných dní' },
-                    { n: 4, text: 'Dostanete tracking číslo pre sledovanie balíka' },
-                  ].map(({ n, text }) => (
-                    <li key={n} className="flex items-start gap-3">
-                      <span className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                        {n}
+                    'Uhraďte objednávku prevodom do 48 hodín (QR kód vľavo)',
+                    'Po prijatí platby vám zašleme potvrdzujúci email',
+                    'Zásielku expedujeme do 1-2 pracovných dní',
+                    'Dostanete tracking číslo pre sledovanie balíka',
+                  ].map((text, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 mt-0.5">
+                        {i + 1}
                       </span>
                       <span className="text-gray-700 text-sm">{text}</span>
                     </li>
@@ -294,34 +255,23 @@ export default function OrderConfirmation() {
                 </ol>
               </div>
 
-              {/* KONTAKT */}
+              {/* Kontakt */}
               <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-center text-sm text-blue-800">
-                <p className="font-semibold mb-1">Potrebujete pomoc?</p>
-                <p>Telefón: <a href="tel:+421949344600" className="font-bold">0949 344 600</a></p>
-                <p>
-                  Email:{' '}
-                  <a href="mailto:phoneservissk@gmail.com" className="font-bold underline">
-                    phoneservissk@gmail.com
-                  </a>
-                </p>
-                <p>
-                  Web:{' '}
-                  <a href="https://fixanto.sk" className="font-bold underline">fixanto.sk</a>
-                </p>
+                <p className="font-semibold mb-2">Potrebujete pomoc?</p>
+                <p>📞 <a href="tel:+421949344600" className="font-bold">0949 344 600</a></p>
+                <p>📧 <a href="mailto:phoneservissk@gmail.com" className="font-bold underline">phoneservissk@gmail.com</a></p>
+                <p>🌐 <a href="https://fixanto.sk" className="font-bold underline">fixanto.sk</a></p>
               </div>
 
+              {/* Tlačidlá */}
               <div className="flex gap-3">
-                <button
-                  onClick={() => navigate('/')}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-                >
-                  <Home className="w-5 h-5" /> Domov
+                <button onClick={() => navigate('/')}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-all text-sm sm:text-base">
+                  <Home className="w-4 h-4 sm:w-5 sm:h-5" /> Domov
                 </button>
-                <button
-                  onClick={() => navigate('/store')}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all"
-                >
-                  <ShoppingBag className="w-5 h-5" /> E-shop
+                <button onClick={() => navigate('/store')}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all text-sm sm:text-base">
+                  <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" /> E-shop
                 </button>
               </div>
             </div>
