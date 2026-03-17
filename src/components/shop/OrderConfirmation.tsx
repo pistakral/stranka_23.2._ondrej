@@ -5,9 +5,18 @@ import QRCode from 'qrcode';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 
-const IBAN = 'LT563250034704761008';
-const IBAN_DISPLAY = 'LT56 3250 0347 0476 1008';
+const IBAN = 'SK4809000000005242690350';
+const IBAN_DISPLAY = 'SK48 0900 0000 0052 4269 0350';
 const RECIPIENT_NAME = 'Fixanto';
+
+interface OrderItem {
+  id: string;
+  name: string;
+  capacity: string;
+  color: string;
+  price: number;
+  images: string[];
+}
 
 interface OrderData {
   orderId: string;
@@ -17,34 +26,31 @@ interface OrderData {
   customerStreet: string;
   customerCity: string;
   customerZip: string;
-  items: Array<{
-    id: string;
-    name: string;
-    capacity: string;
-    color: string;
-    price: number;
-    images: string[];
-  }>;
+  items: OrderItem[];
   subtotal: number;
   shippingMethod: string;
   shippingPrice: number;
   totalPrice: number;
+  discountCode?: string | null;
+  discountPercent?: number;
+  discountAmount?: number;
+  adapterAdded?: boolean;
+  adapterPrice?: number;
   createdAt: string;
 }
 
-async function generateEpcQR(iban: string, amount: number, reference: string, recipientName: string): Promise<string> {
+async function generateEpcQR(
+  iban: string,
+  amount: number,
+  reference: string,
+  recipientName: string
+): Promise<string> {
   const epcData = [
-    'BCD',
-    '002',
-    '1',
-    'SCT',
-    '',
+    'BCD', '002', '1', 'SCT', '',
     recipientName,
     iban.replace(/\s/g, ''),
     `EUR${amount.toFixed(2)}`,
-    '',
-    reference,
-    '',
+    '', reference, '',
   ].join('\n');
 
   return QRCode.toDataURL(epcData, {
@@ -53,6 +59,17 @@ async function generateEpcQR(iban: string, amount: number, reference: string, re
     margin: 2,
     color: { dark: '#0d47a1', light: '#ffffff' },
   });
+}
+
+// Zistí či je položka adaptér
+function isAdapter(item: OrderItem): boolean {
+  return item.id === 'adapter-20w' || item.name.toLowerCase().includes('adaptér');
+}
+
+// Vráti správny obrázok pre položku
+function getItemImage(item: OrderItem): string {
+  if (isAdapter(item)) return '/images/adapter.png';
+  return item.images?.[0] || '';
 }
 
 export default function OrderConfirmation() {
@@ -69,18 +86,15 @@ export default function OrderConfirmation() {
       return;
     }
 
-    // Načítaj objednávku z localStorage
     const stored = localStorage.getItem(`order-${orderId}`);
     if (stored) {
       const orderData = JSON.parse(stored) as OrderData;
       setOrder(orderData);
 
-      // Vygeneruj QR kód
       generateEpcQR(IBAN, orderData.totalPrice, orderId, RECIPIENT_NAME)
         .then(setQrCodeDataUrl)
         .catch((err) => console.error('QR generation error:', err));
     } else {
-      // Ak objednávka nie je v localStorage, redirect späť
       navigate('/store');
     }
   }, [orderId, navigate]);
@@ -101,6 +115,7 @@ export default function OrderConfirmation() {
       <Navbar />
       <div className="min-h-screen pt-24 pb-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
           {/* SUCCESS HEADER */}
           <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl shadow-xl p-8 text-center text-white mb-8">
             <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-200" />
@@ -110,7 +125,8 @@ export default function OrderConfirmation() {
               <strong className="text-white text-xl">#{order.orderId}</strong>
             </p>
             <p className="text-green-100 mt-2">
-              Rekapituláciu sme zaslali na <strong className="text-white">{order.customerEmail}</strong>
+              Rekapituláciu sme zaslali na{' '}
+              <strong className="text-white">{order.customerEmail}</strong>
             </p>
           </div>
 
@@ -137,7 +153,9 @@ export default function OrderConfirmation() {
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Bankový účet:</span>
-                    <span className="font-mono font-bold text-blue-900 text-xs sm:text-sm">{IBAN_DISPLAY}</span>
+                    <span className="font-mono font-bold text-blue-900 text-xs sm:text-sm">
+                      {IBAN_DISPLAY}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Variabilný symbol:</span>
@@ -145,7 +163,9 @@ export default function OrderConfirmation() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Suma:</span>
-                    <span className="font-black text-blue-900 text-xl">€{order.totalPrice.toFixed(2)}</span>
+                    <span className="font-black text-blue-900 text-xl">
+                      €{order.totalPrice.toFixed(2)}
+                    </span>
                   </div>
                 </div>
 
@@ -158,7 +178,9 @@ export default function OrderConfirmation() {
               {qrCodeDataUrl ? (
                 <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
                   <h2 className="text-xl font-bold text-gray-900 mb-2">📱 QR kód na platbu</h2>
-                  <p className="text-gray-500 text-sm mb-4">Naskenujte v mobilnej appke vašej banky</p>
+                  <p className="text-gray-500 text-sm mb-4">
+                    Naskenujte v mobilnej appke vašej banky
+                  </p>
                   <div className="flex justify-center">
                     <div className="p-4 bg-white rounded-2xl shadow-inner border-2 border-blue-100 inline-block">
                       <img src={qrCodeDataUrl} alt="QR kód na platbu" className="w-56 h-56" />
@@ -181,35 +203,60 @@ export default function OrderConfirmation() {
               <div className="bg-white rounded-2xl shadow-xl p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">📦 Obsah objednávky</h2>
                 <div className="space-y-3">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3">
-                      <img
-                        src={item.images[0]}
-                        alt={item.name}
-                        className="w-14 h-14 object-contain rounded-xl bg-gray-100"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="56" height="56"%3E%3Crect width="56" height="56" fill="%23e5e7eb"/%3E%3C/svg%3E';
-                        }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900">
-                          {item.name} {item.capacity}
-                        </p>
-                        <p className="text-sm text-gray-500">{item.color} • Záruka 12 mesiacov</p>
+                  {order.items.map((item) => {
+                    const adapter = isAdapter(item);
+                    return (
+                      <div key={item.id} className="flex items-center gap-3">
+                        <img
+                          src={getItemImage(item)}
+                          alt={item.name}
+                          className="w-14 h-14 object-contain rounded-xl bg-gray-100 flex-shrink-0"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="56" height="56"%3E%3Crect width="56" height="56" fill="%23e5e7eb"/%3E%3C/svg%3E';
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900">
+                            {item.name}{item.capacity ? ` ${item.capacity}` : ''}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {adapter
+                              ? 'Apple USB-C Power Adapter'
+                              : `${item.color} • Záruka 12 mesiacov`}
+                          </p>
+                        </div>
+                        <span className={`font-bold flex-shrink-0 ${adapter ? 'text-orange-600' : 'text-blue-600'}`}>
+                          €{item.price}
+                        </span>
                       </div>
-                      <span className="font-bold text-blue-600">€{item.price}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+
                 <div className="border-t mt-4 pt-4 space-y-1 text-sm">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Medzisúčet:</span>
+                    <span className="font-semibold text-gray-800">
+                      €{order.subtotal.toFixed(2)}
+                    </span>
+                  </div>
+
+                  {order.discountCode && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Zľava ({order.discountCode} -{order.discountPercent}%):</span>
+                      <span className="font-bold">-€{order.discountAmount?.toFixed(2)}</span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between text-gray-600">
                     <span>Doprava ({order.shippingMethod})</span>
                     <span className="font-bold text-green-600">
                       {order.shippingPrice === 0 ? 'ZDARMA ✅' : `€${order.shippingPrice.toFixed(2)}`}
                     </span>
                   </div>
-                  <div className="flex justify-between font-black text-xl text-blue-600">
+
+                  <div className="flex justify-between font-black text-xl text-blue-600 pt-1 border-t border-gray-100">
                     <span>CELKOM</span>
                     <span>€{order.totalPrice.toFixed(2)}</span>
                   </div>
@@ -220,13 +267,9 @@ export default function OrderConfirmation() {
               <div className="bg-white rounded-2xl shadow-xl p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">🚚 Adresa doručenia</h2>
                 <div className="text-sm space-y-1 text-gray-700">
-                  <p>
-                    <strong>{order.customerName}</strong>
-                  </p>
+                  <p><strong>{order.customerName}</strong></p>
                   <p>{order.customerStreet}</p>
-                  <p>
-                    {order.customerZip} {order.customerCity}
-                  </p>
+                  <p>{order.customerZip} {order.customerCity}</p>
                   <p className="text-gray-500 pt-1">📞 {order.customerPhone}</p>
                 </div>
               </div>
@@ -254,9 +297,7 @@ export default function OrderConfirmation() {
               {/* KONTAKT */}
               <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-center text-sm text-blue-800">
                 <p className="font-semibold mb-1">Potrebujete pomoc?</p>
-                <p>
-                  Telefón: <a href="tel:+421949344600" className="font-bold">0949 344 600</a>
-                </p>
+                <p>Telefón: <a href="tel:+421949344600" className="font-bold">0949 344 600</a></p>
                 <p>
                   Email:{' '}
                   <a href="mailto:phoneservissk@gmail.com" className="font-bold underline">
@@ -265,9 +306,7 @@ export default function OrderConfirmation() {
                 </p>
                 <p>
                   Web:{' '}
-                  <a href="https://fixanto.sk" className="font-bold underline">
-                    fixanto.sk
-                  </a>
+                  <a href="https://fixanto.sk" className="font-bold underline">fixanto.sk</a>
                 </p>
               </div>
 
