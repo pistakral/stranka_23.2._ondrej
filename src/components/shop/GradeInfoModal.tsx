@@ -45,7 +45,7 @@ export default function GradeInfoModal({ isOpen, onClose }: GradeInfoModalProps)
         'Viacero škrabancov na ráme alebo displeji',
         'Všetky funkcie 100% funkčné',
         'Zdravie batérie nad 80%',
-        'Kompletne otestovaný',
+        'Kompletne otestovaný', 
       ],
     },
   ];
