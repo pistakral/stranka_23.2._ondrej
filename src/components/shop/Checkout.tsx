@@ -412,7 +412,7 @@ export default function Checkout() {
             <div>
               <OrderSummary
                 cart={cart}
-                totalPrice={totalPrice} 
+                totalPrice={totalPrice}
                 discountApplied={discountApplied}
                 discountCode={discountCode}
                 discountPercent={discountPercent}
