@@ -239,7 +239,7 @@ export default function ProductDetail() {
                     <div className="min-w-0">
                       <p className="font-black text-green-900 text-sm sm:text-xl leading-tight">DARČEK ZADARMO! 🎁</p>
                       <p className="text-xs sm:text-sm text-green-700 mt-0.5">
-                        Ochranný kryt a nabíjací kábel{' '}
+                        Ochranný kryt a nabíjací kábel v hodnote{' '}
                         <span className="font-black text-green-900">€10</span> k telefónu
                       </p>
                     </div>
