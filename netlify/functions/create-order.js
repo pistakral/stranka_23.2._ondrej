@@ -24,7 +24,7 @@ function isValidPrice(num) {
 
 const IBAN_DISPLAY = 'SK48 0900 0000 0052 4269 0350';
 const ADAPTER_PRICE = 15;
-const ADAPTER_NAME = 'Nabíjací adaptér 20W (Apple USB-C Power Adapter)';
+const ADAPTER_NAME = 'Nabíjací adaptér 20W (USB-C Power Adapter)';
 
 // ── Handler ──────────────────────────────────────────────────────
 exports.handler = async (event) => {
