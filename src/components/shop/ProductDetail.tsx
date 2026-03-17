@@ -56,9 +56,9 @@ export default function ProductDetail() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen pt-32 flex items-center justify-center">
+        <div className="min-h-screen pt-32 flex items-center justify-center px-4">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Produkt nenájdený</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Produkt nenájdený</h1>
             <button onClick={() => navigate('/store')}
               className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">
               Späť na obchod
@@ -115,20 +115,22 @@ export default function ProductDetail() {
 
       <Navbar />
       <div className="min-h-screen pt-20 sm:pt-24 pb-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* max-w-2xl na mobile aby sa obsah nestlačil, 7xl na desktop */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
 
           <button
             onClick={() => navigate('/store')}
-            className="mb-4 sm:mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold text-sm sm:text-base"
+            className="mb-4 sm:mb-6 flex items-center gap-1 text-blue-600 hover:text-blue-700 font-semibold text-sm sm:text-base"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
             Späť na obchod
           </button>
 
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-12 mb-8 sm:mb-12">
+          {/* Na mobile: stĺpec, na lg: 2 stĺpce vedľa seba */}
+          <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-12 mb-8 sm:mb-12 gap-5">
 
-            {/* ── LEFT: Carousel ── */}
-            <div className="relative">
+            {/* ── Carousel ── */}
+            <div>
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div
                   className="relative bg-gray-50 group cursor-zoom-in"
@@ -146,49 +148,52 @@ export default function ProductDetail() {
                     }}
                   />
 
+                  {/* Počítadlo */}
                   <div className="absolute top-3 left-3 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full select-none">
                     {currentImageIndex + 1} / {displayImages.length}
                   </div>
 
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/8 rounded-2xl pointer-events-none">
+                  {/* Zoom hint — len na hover (desktop) */}
+                  <div className="absolute inset-0 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/5 rounded-2xl pointer-events-none hidden sm:flex">
                     <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
                       <ZoomIn className="w-4 h-4 text-blue-600" />
                       <span className="text-xs font-semibold text-blue-600">Zobraziť väčšie</span>
                     </div>
                   </div>
 
+                  {/* Šípky */}
                   {displayImages.length > 1 && (
                     <>
                       <button
                         onClick={(e) => { e.stopPropagation(); prevCarousel(); }}
-                        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-all hover:scale-110 z-10"
+                        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-all z-10"
                         aria-label="Predchádzajúca"
                       >
-                        <ChevronLeft className="w-5 h-5 text-gray-900" />
+                        <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-900" />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); nextCarousel(); }}
-                        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-all hover:scale-110 z-10"
+                        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-all z-10"
                         aria-label="Ďalšia"
                       >
-                        <ChevronRight className="w-5 h-5 text-gray-900" />
+                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-900" />
                       </button>
                     </>
                   )}
                 </div>
               </div>
 
-              {/* Thumbnails — horizontal scroll on mobile */}
+              {/* Thumbnails */}
               {displayImages.length > 1 && (
-                <div className="flex gap-2 mt-3 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
                   {displayImages.map((src: string, index: number) => (
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all ${
+                      className={`flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${
                         index === currentImageIndex
                           ? 'border-blue-600 shadow-lg shadow-blue-200'
-                          : 'border-gray-200 hover:border-blue-300'
+                          : 'border-gray-200'
                       }`}
                     >
                       <img
@@ -206,35 +211,34 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* ── RIGHT: Info ── */}
+            {/* ── Info panel ── */}
             <div>
-              <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8">
+              <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8">
 
-                {/* Trieda + info */}
+                {/* Trieda + "Čo je trieda?" — vždy na jednom riadku, wrap ak treba */}
                 <div className="flex items-center gap-2 mb-4 flex-wrap">
-                  <div className="inline-block bg-yellow-400 text-blue-900 px-3 py-1.5 rounded-lg font-bold text-sm">
+                  <span className="bg-yellow-400 text-blue-900 px-3 py-1.5 rounded-lg font-bold text-sm whitespace-nowrap">
                     TRIEDA {product.grade}
-                  </div>
+                  </span>
                   <button
                     onClick={() => setShowGradeModal(true)}
                     className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-semibold text-sm transition-colors"
                     aria-label="Čo znamená trieda?"
                   >
-                    <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="hidden xs:inline">Čo znamená táto trieda?</span>
-                    <span className="xs:hidden">Čo je trieda?</span>
+                    <HelpCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>Čo znamená táto trieda?</span>
                   </button>
                 </div>
 
-                {/* Darček banner */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl p-4 mb-5 shadow-lg transition-transform duration-200 hover:scale-105 hover:shadow-xl cursor-default">
+                {/* Darček banner — bez hover scale na mobile (spôsobuje overflow) */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl p-3 sm:p-4 mb-4 sm:mb-5 shadow-lg sm:hover:scale-105 sm:hover:shadow-xl transition-transform duration-200 cursor-default">
                   <div className="flex items-center gap-3">
-                    <div className="bg-green-500 p-2.5 rounded-xl flex-shrink-0">
-                      <Gift className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    <div className="bg-green-500 p-2 sm:p-2.5 rounded-xl flex-shrink-0">
+                      <Gift className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                     </div>
-                    <div>
-                      <p className="font-black text-green-900 text-base sm:text-xl">DARČEK ZADARMO! 🎁</p>
-                      <p className="text-sm text-green-700 mt-0.5">
+                    <div className="min-w-0">
+                      <p className="font-black text-green-900 text-sm sm:text-xl leading-tight">DARČEK ZADARMO! 🎁</p>
+                      <p className="text-xs sm:text-sm text-green-700 mt-0.5">
                         Ochranné sklo v hodnote{' '}
                         <span className="font-black text-green-900">€10</span> k telefónu
                       </p>
@@ -242,37 +246,43 @@ export default function ProductDetail() {
                   </div>
                 </div>
 
-                <h1 className="text-2xl sm:text-4xl font-black text-gray-900 mb-1 sm:mb-2">
+                {/* Názov */}
+                <h1 className="text-xl sm:text-4xl font-black text-gray-900 mb-1 leading-tight">
                   {product.name} ({product.capacity})
                 </h1>
-                <p className="text-lg sm:text-2xl text-gray-600 mb-4 sm:mb-6">{product.color}</p>
+                <p className="text-base sm:text-2xl text-gray-600 mb-3 sm:mb-6">{product.color}</p>
 
-                <div className="text-4xl sm:text-5xl font-black text-blue-600 mb-5 sm:mb-8">
+                {/* Cena */}
+                <div className="text-3xl sm:text-5xl font-black text-blue-600 mb-4 sm:mb-8">
                   €{product.price}
                 </div>
 
-                <div className="space-y-3 mb-6 sm:mb-8">
+                {/* Vlastnosti */}
+                <div className="space-y-2 sm:space-y-3 mb-5 sm:mb-8">
                   {[
-                    `Trieda: ${product.grade} ✅`,
-                    `Batéria: ${product.condition_battery_percent}% ⚡`,
-                    `Záruka: ${product.warranty} 🛡️`,
-                    `Skladom: ${product.stock} ks 📦`,
-                  ].map((text) => (
-                    <div key={text} className="flex items-center gap-3">
-                      <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
-                      <span className="text-base sm:text-lg">{text}</span>
+                    { label: `Trieda: ${product.grade}`, suffix: '✅' },
+                    { label: `Batéria: ${product.condition_battery_percent}%`, suffix: '⚡' },
+                    { label: `Záruka: ${product.warranty}`, suffix: '🛡️' },
+                    { label: `Skladom: ${product.stock} ks`, suffix: '📦' },
+                  ].map(({ label, suffix }) => (
+                    <div key={label} className="flex items-start gap-2 sm:gap-3">
+                      <Check className="w-4 h-4 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm sm:text-lg leading-snug">
+                        {label} {suffix}
+                      </span>
                     </div>
                   ))}
                 </div>
 
+                {/* Tlačidlo */}
                 <button
                   onClick={handleAddToCart}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 sm:px-8 sm:py-5 rounded-xl font-black text-lg sm:text-xl shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-105 flex items-center justify-center gap-3"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3.5 sm:px-8 sm:py-5 rounded-xl font-black text-base sm:text-xl shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all sm:hover:scale-105 flex items-center justify-center gap-2 sm:gap-3"
                 >
                   🛒 PRIDAŤ DO KOŠÍKA
                 </button>
 
-                <p className="text-xs sm:text-sm text-gray-500 text-center mt-3 sm:mt-4">
+                <p className="text-xs sm:text-sm text-gray-500 text-center mt-3">
                   Doprava zadarmo nad 500€
                 </p>
               </div>
@@ -280,9 +290,9 @@ export default function ProductDetail() {
           </div>
 
           {/* Stav zariadenia */}
-          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8 mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-5 sm:mb-6">Stav zariadenia</h2>
-            <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
+          <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-5 sm:mb-8">
+            <h2 className="text-xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Stav zariadenia</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {[
                 { label: 'Vzhľad', value: product.condition_appearance },
                 { label: 'Displej', value: product.condition_display },
@@ -290,7 +300,7 @@ export default function ProductDetail() {
                 { label: 'Batéria', value: `${product.condition_battery_percent}% - Výborný stav` },
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <h3 className="text-lg font-bold text-blue-600 mb-2">{label}</h3>
+                  <h3 className="text-base sm:text-xl font-bold text-blue-600 mb-1 sm:mb-2">{label}</h3>
                   <p className="text-gray-700 text-sm sm:text-base">{value}</p>
                 </div>
               ))}
@@ -299,21 +309,21 @@ export default function ProductDetail() {
 
           {/* Technické špecifikácie */}
           {product.specs && Object.keys(product.specs).length > 0 && (
-            <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-5 sm:mb-6">
+            <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8">
+              <h2 className="text-xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Technické špecifikácie
               </h2>
-              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                 {Object.entries(product.specs).map(([key, value]) => (
-                  <div key={key} className="flex border-b border-gray-200 pb-2 sm:pb-3">
-                    <span className="font-semibold text-gray-700 w-1/2 capitalize text-sm sm:text-base">{key}:</span>
-                    <span className="text-gray-600 w-1/2 text-sm sm:text-base">{String(value)}</span>
+                  <div key={key} className="flex border-b border-gray-200 pb-2">
+                    <span className="font-semibold text-gray-700 w-1/2 capitalize text-xs sm:text-base pr-2">{key}:</span>
+                    <span className="text-gray-600 w-1/2 text-xs sm:text-base">{String(value)}</span>
                   </div>
                 ))}
                 {product.serial_number && (
-                  <div className="flex border-b border-gray-200 pb-2 sm:pb-3">
-                    <span className="font-semibold text-gray-700 w-1/2 text-sm sm:text-base">Sériové číslo:</span>
-                    <span className="text-gray-600 w-1/2 text-sm sm:text-base">{product.serial_number}</span>
+                  <div className="flex border-b border-gray-200 pb-2">
+                    <span className="font-semibold text-gray-700 w-1/2 text-xs sm:text-base">Sériové číslo:</span>
+                    <span className="text-gray-600 w-1/2 text-xs sm:text-base">{product.serial_number}</span>
                   </div>
                 )}
               </div>
@@ -324,10 +334,10 @@ export default function ProductDetail() {
 
       {/* Toast */}
       {showNotification && (
-        <div className="fixed top-20 sm:top-24 right-3 sm:right-4 bg-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl z-50">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Check className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="font-bold text-sm sm:text-base">Pridané do košíka!</span>
+        <div className="fixed top-20 sm:top-24 right-3 sm:right-4 bg-green-600 text-white px-4 py-3 rounded-xl shadow-2xl z-50 max-w-[calc(100vw-24px)]">
+          <div className="flex items-center gap-2">
+            <Check className="w-5 h-5 flex-shrink-0" />
+            <span className="font-bold text-sm">Pridané do košíka!</span>
           </div>
         </div>
       )}
