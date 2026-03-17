@@ -32,7 +32,7 @@ export default function GradeInfoModal({ isOpen, onClose }: GradeInfoModalProps)
         'Pár menších škrabancov na ráme a displeji',
         'Displej bez výrazných škrabancov',
         'Batéria v dobrom stave',
-        'Kompletne otestované',
+        'Kompletne otestovaný',
       ],
     },
     {
@@ -42,7 +42,7 @@ export default function GradeInfoModal({ isOpen, onClose }: GradeInfoModalProps)
       borderColor: 'border-amber-500',
       features: [
         'Viditeľné známky používania',
-        'Viacero škrabancov na ráme/displeji',
+        'Viacero škrabancov na ráme alebo displeji',
         'Všetky funkcie 100% funkčné',
         'Batéria min. 80% zdravie',
         'Overené a testované',
