@@ -253,7 +253,7 @@ export default function ProductDetail() {
                 </button>
 
                 <p className="text-sm text-gray-500 text-center mt-4">
-                  Doprava zadarmo nad 500€
+                  Doprava zadarmo 🎁
                 </p>
               </div>
             </div>
