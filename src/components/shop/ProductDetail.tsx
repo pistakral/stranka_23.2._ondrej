@@ -211,7 +211,7 @@ export default function ProductDetail() {
                     <div>
                       <p className="font-bold text-green-900 text-xl">DARČEK ZADARMO! 🎁</p>
                       <p className="text-base text-green-700">
-                        Ochranné sklo v hodnote <span className="font-black text-green-900">€10</span> k telefónu
+                        Ochranný kryt a kábel v hodnote 10€ k telefónu<span className="font-black text-green-900">€10</span> k telefónu
                       </p>
                     </div>
                   </div>
