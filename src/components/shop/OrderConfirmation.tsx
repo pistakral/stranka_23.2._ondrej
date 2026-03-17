@@ -189,7 +189,7 @@ export default function OrderConfirmation() {
                             {item.name}{item.capacity ? ` ${item.capacity}` : ''}
                           </p>
                           <p className="text-xs text-gray-500 mt-0.5">
-                            {adapter ? 'Apple USB-C Power Adapter' : `${item.color} • Záruka 12 mesiacov`}
+                            {adapter ? 'USB-C Power Adapter' : `${item.color} • Záruka 12 mesiacov`}
                           </p>
                         </div>
                         <span className={`font-bold flex-shrink-0 text-sm sm:text-base ${adapter ? 'text-orange-600' : 'text-blue-600'}`}>
