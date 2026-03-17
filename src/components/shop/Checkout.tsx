@@ -297,7 +297,7 @@ export default function Checkout() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-gray-900 text-sm sm:text-base">Nabíjací adaptér 20W</p>
-                      <p className="text-xs sm:text-sm text-gray-500">Apple USB-C Power Adapter</p>
+                      <p className="text-xs sm:text-sm text-gray-500">USB-C Power Adapter</p>
                     </div>
                     <div className={`font-black text-base sm:text-lg flex-shrink-0 transition-colors ${adapterAdded ? 'text-orange-600' : 'text-gray-700'}`}>
                       +€{ADAPTER_PRICE}
