@@ -29,7 +29,6 @@ export default function ProductDetail() {
         .eq('slug', id)
         .eq('is_active', true)
         .single();
-
       if (error) {
         console.error('Error fetching product:', error);
         setProduct(null);
@@ -38,7 +37,6 @@ export default function ProductDetail() {
       }
       setLoading(false);
     }
-
     window.scrollTo(0, 0);
     fetchProduct();
   }, [id]);
@@ -60,11 +58,9 @@ export default function ProductDetail() {
         <Navbar />
         <div className="min-h-screen pt-32 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Produkt nenájdený</h1>
-            <button
-              onClick={() => navigate('/store')}
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold"
-            >
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Produkt nenájdený</h1>
+            <button onClick={() => navigate('/store')}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">
               Späť na obchod
             </button>
           </div>
@@ -105,8 +101,7 @@ export default function ProductDetail() {
     <>
       <Helmet>
         <title>
-          {product.meta_title ||
-            `${product.name} ${product.capacity} ${product.color} | Fixanto`}
+          {product.meta_title || `${product.name} ${product.capacity} ${product.color} | Fixanto`}
         </title>
         <meta
           name="description"
@@ -119,79 +114,78 @@ export default function ProductDetail() {
       </Helmet>
 
       <Navbar />
-      <div className="min-h-screen pt-24 pb-16 bg-gray-50">
+      <div className="min-h-screen pt-20 sm:pt-24 pb-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
           <button
             onClick={() => navigate('/store')}
-            className="mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
+            className="mb-4 sm:mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold text-sm sm:text-base"
           >
             <ChevronLeft className="w-5 h-5" />
             Späť na obchod
           </button>
 
-          <div className="grid lg:grid-cols-2 gap-12 mb-12">
+          <div className="grid lg:grid-cols-2 gap-6 sm:gap-12 mb-8 sm:mb-12">
+
             {/* ── LEFT: Carousel ── */}
             <div className="relative">
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div
-                  className="relative aspect-square bg-gray-50 group cursor-zoom-in"
+                  className="relative bg-gray-50 group cursor-zoom-in"
+                  style={{ aspectRatio: '1 / 1' }}
                   onClick={() => openLightbox(currentImageIndex)}
                 >
                   <img
                     key={displayImages[currentImageIndex]}
                     src={displayImages[currentImageIndex]}
                     alt={`${product.name} ${currentImageIndex + 1}`}
-                    className="w-full h-full object-contain p-8 transition-opacity duration-300"
+                    className="w-full h-full object-contain p-4 sm:p-8 transition-opacity duration-300"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src =
-                        'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="800"%3E%3Crect width="800" height="800" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="48" fill="%239ca3af"%3EPlaceholder%3C/text%3E%3C/svg%3E';
+                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="800"%3E%3Crect width="800" height="800" fill="%23e5e7eb"/%3E%3C/svg%3E';
                     }}
                   />
 
-                  {/* Počítadlo */}
-                  <div className="absolute top-4 left-4 bg-black/50 text-white text-sm px-3 py-1 rounded-full select-none">
+                  <div className="absolute top-3 left-3 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full select-none">
                     {currentImageIndex + 1} / {displayImages.length}
                   </div>
 
-                  {/* Zoom hint */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/8 rounded-2xl pointer-events-none">
-                    <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
-                      <ZoomIn className="w-5 h-5 text-blue-600" />
-                      <span className="text-sm font-semibold text-blue-600">Zobraziť väčšie</span>
+                    <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+                      <ZoomIn className="w-4 h-4 text-blue-600" />
+                      <span className="text-xs font-semibold text-blue-600">Zobraziť väčšie</span>
                     </div>
                   </div>
 
-                  {/* Šípky carouselu */}
                   {displayImages.length > 1 && (
                     <>
                       <button
                         onClick={(e) => { e.stopPropagation(); prevCarousel(); }}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all hover:scale-110 z-10"
+                        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-all hover:scale-110 z-10"
                         aria-label="Predchádzajúca"
                       >
-                        <ChevronLeft className="w-6 h-6 text-gray-900" />
+                        <ChevronLeft className="w-5 h-5 text-gray-900" />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); nextCarousel(); }}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all hover:scale-110 z-10"
+                        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-all hover:scale-110 z-10"
                         aria-label="Ďalšia"
                       >
-                        <ChevronRight className="w-6 h-6 text-gray-900" />
+                        <ChevronRight className="w-5 h-5 text-gray-900" />
                       </button>
                     </>
                   )}
                 </div>
               </div>
 
-              {/* Thumbnails */}
+              {/* Thumbnails — horizontal scroll on mobile */}
               {displayImages.length > 1 && (
-                <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-2 scrollbar-hide">
                   {displayImages.map((src: string, index: number) => (
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all hover:scale-105 ${
+                      className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all ${
                         index === currentImageIndex
                           ? 'border-blue-600 shadow-lg shadow-blue-200'
                           : 'border-gray-200 hover:border-blue-300'
@@ -199,12 +193,11 @@ export default function ProductDetail() {
                     >
                       <img
                         src={src}
-                        alt={`${product.name} náhľad ${index + 1}`}
+                        alt={`náhľad ${index + 1}`}
                         className="w-full h-full object-contain bg-gray-50 p-1"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src =
-                            'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E';
+                          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E';
                         }}
                       />
                     </button>
@@ -215,9 +208,11 @@ export default function ProductDetail() {
 
             {/* ── RIGHT: Info ── */}
             <div>
-              <div className="bg-white rounded-2xl shadow-xl p-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="inline-block bg-yellow-400 text-blue-900 px-4 py-2 rounded-lg font-bold text-sm">
+              <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8">
+
+                {/* Trieda + info */}
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                  <div className="inline-block bg-yellow-400 text-blue-900 px-3 py-1.5 rounded-lg font-bold text-sm">
                     TRIEDA {product.grade}
                   </div>
                   <button
@@ -225,20 +220,21 @@ export default function ProductDetail() {
                     className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-semibold text-sm transition-colors"
                     aria-label="Čo znamená trieda?"
                   >
-                    <HelpCircle className="w-5 h-5" />
-                    Čo znamená táto trieda?
+                    <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden xs:inline">Čo znamená táto trieda?</span>
+                    <span className="xs:hidden">Čo je trieda?</span>
                   </button>
                 </div>
 
-                {/* DARČEK BANNER */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl p-5 mb-6 shadow-lg transition-transform duration-200 hover:scale-105 hover:shadow-xl cursor-default">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-green-500 p-3 rounded-xl">
-                      <Gift className="w-8 h-8 text-white" />
+                {/* Darček banner */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl p-4 mb-5 shadow-lg transition-transform duration-200 hover:scale-105 hover:shadow-xl cursor-default">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-green-500 p-2.5 rounded-xl flex-shrink-0">
+                      <Gift className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                     </div>
                     <div>
-                      <p className="font-black text-green-900 text-xl">DARČEK ZADARMO! 🎁</p>
-                      <p className="text-base text-green-700 mt-0.5">
+                      <p className="font-black text-green-900 text-base sm:text-xl">DARČEK ZADARMO! 🎁</p>
+                      <p className="text-sm text-green-700 mt-0.5">
                         Ochranné sklo v hodnote{' '}
                         <span className="font-black text-green-900">€10</span> k telefónu
                       </p>
@@ -246,42 +242,37 @@ export default function ProductDetail() {
                   </div>
                 </div>
 
-                <h1 className="text-4xl font-black text-gray-900 mb-2">
+                <h1 className="text-2xl sm:text-4xl font-black text-gray-900 mb-1 sm:mb-2">
                   {product.name} ({product.capacity})
                 </h1>
-                <p className="text-2xl text-gray-600 mb-6">{product.color}</p>
+                <p className="text-lg sm:text-2xl text-gray-600 mb-4 sm:mb-6">{product.color}</p>
 
-                <div className="text-5xl font-black text-blue-600 mb-8">
+                <div className="text-4xl sm:text-5xl font-black text-blue-600 mb-5 sm:mb-8">
                   €{product.price}
                 </div>
 
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center gap-3">
-                    <Check className="w-6 h-6 text-green-600" />
-                    <span className="text-lg">Trieda: {product.grade} ✅</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Check className="w-6 h-6 text-green-600" />
-                    <span className="text-lg">Batéria: {product.condition_battery_percent}% ⚡</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Check className="w-6 h-6 text-green-600" />
-                    <span className="text-lg">Záruka: {product.warranty} 🛡️</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Check className="w-6 h-6 text-green-600" />
-                    <span className="text-lg">Skladom: {product.stock} ks 📦</span>
-                  </div>
+                <div className="space-y-3 mb-6 sm:mb-8">
+                  {[
+                    `Trieda: ${product.grade} ✅`,
+                    `Batéria: ${product.condition_battery_percent}% ⚡`,
+                    `Záruka: ${product.warranty} 🛡️`,
+                    `Skladom: ${product.stock} ks 📦`,
+                  ].map((text) => (
+                    <div key={text} className="flex items-center gap-3">
+                      <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
+                      <span className="text-base sm:text-lg">{text}</span>
+                    </div>
+                  ))}
                 </div>
 
                 <button
                   onClick={handleAddToCart}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-5 rounded-xl font-black text-xl shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-105 flex items-center justify-center gap-3"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 sm:px-8 sm:py-5 rounded-xl font-black text-lg sm:text-xl shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-105 flex items-center justify-center gap-3"
                 >
                   🛒 PRIDAŤ DO KOŠÍKA
                 </button>
 
-                <p className="text-sm text-gray-500 text-center mt-4">
+                <p className="text-xs sm:text-sm text-gray-500 text-center mt-3 sm:mt-4">
                   Doprava zadarmo nad 500€
                 </p>
               </div>
@@ -289,51 +280,40 @@ export default function ProductDetail() {
           </div>
 
           {/* Stav zariadenia */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Stav zariadenia</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-xl font-bold text-blue-600 mb-3">Vzhľad</h3>
-                <p className="text-gray-700">{product.condition_appearance}</p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-blue-600 mb-3">Displej</h3>
-                <p className="text-gray-700">{product.condition_display}</p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-blue-600 mb-3">Funkčnosť</h3>
-                <p className="text-gray-700">{product.condition_functionality}</p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-blue-600 mb-3">Batéria</h3>
-                <p className="text-gray-700">
-                  {product.condition_battery_percent}% - Výborný stav
-                </p>
-              </div>
+          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8 mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-5 sm:mb-6">Stav zariadenia</h2>
+            <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
+              {[
+                { label: 'Vzhľad', value: product.condition_appearance },
+                { label: 'Displej', value: product.condition_display },
+                { label: 'Funkčnosť', value: product.condition_functionality },
+                { label: 'Batéria', value: `${product.condition_battery_percent}% - Výborný stav` },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <h3 className="text-lg font-bold text-blue-600 mb-2">{label}</h3>
+                  <p className="text-gray-700 text-sm sm:text-base">{value}</p>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Technické špecifikácie */}
           {product.specs && Object.keys(product.specs).length > 0 && (
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-5 sm:mb-6">
                 Technické špecifikácie
               </h2>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                 {Object.entries(product.specs).map(([key, value]) => (
-                  <div key={key} className="flex border-b border-gray-200 pb-3">
-                    <span className="font-semibold text-gray-700 w-1/2 capitalize">
-                      {key}:
-                    </span>
-                    <span className="text-gray-600 w-1/2">{String(value)}</span>
+                  <div key={key} className="flex border-b border-gray-200 pb-2 sm:pb-3">
+                    <span className="font-semibold text-gray-700 w-1/2 capitalize text-sm sm:text-base">{key}:</span>
+                    <span className="text-gray-600 w-1/2 text-sm sm:text-base">{String(value)}</span>
                   </div>
                 ))}
                 {product.serial_number && (
-                  <div className="flex border-b border-gray-200 pb-3">
-                    <span className="font-semibold text-gray-700 w-1/2">
-                      Sériové číslo:
-                    </span>
-                    <span className="text-gray-600 w-1/2">{product.serial_number}</span>
+                  <div className="flex border-b border-gray-200 pb-2 sm:pb-3">
+                    <span className="font-semibold text-gray-700 w-1/2 text-sm sm:text-base">Sériové číslo:</span>
+                    <span className="text-gray-600 w-1/2 text-sm sm:text-base">{product.serial_number}</span>
                   </div>
                 )}
               </div>
@@ -344,20 +324,16 @@ export default function ProductDetail() {
 
       {/* Toast */}
       {showNotification && (
-        <div className="fixed top-24 right-4 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50">
-          <div className="flex items-center gap-3">
-            <Check className="w-6 h-6" />
-            <span className="font-bold">Pridané do košíka!</span>
+        <div className="fixed top-20 sm:top-24 right-3 sm:right-4 bg-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl z-50">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Check className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="font-bold text-sm sm:text-base">Pridané do košíka!</span>
           </div>
         </div>
       )}
 
-      <GradeInfoModal
-        isOpen={showGradeModal}
-        onClose={() => setShowGradeModal(false)}
-      />
+      <GradeInfoModal isOpen={showGradeModal} onClose={() => setShowGradeModal(false)} />
 
-      {/* Lightbox — samostatný komponent */}
       {lightboxOpen && (
         <ImageLightbox
           images={displayImages}
