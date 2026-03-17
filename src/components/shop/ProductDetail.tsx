@@ -18,7 +18,6 @@ export default function ProductDetail() {
   const [showNotification, setShowNotification] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
 
-  // Fetch produkt z Supabase
   useEffect(() => {
     async function fetchProduct() {
       const { data, error } = await supabase
@@ -41,7 +40,6 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id]);
 
-  // Loading state
   if (loading) {
     return (
       <>
@@ -53,7 +51,6 @@ export default function ProductDetail() {
     );
   }
 
-  // Product not found
   if (!product) {
     return (
       <>
@@ -94,7 +91,6 @@ export default function ProductDetail() {
     setCurrentImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
   };
 
-  // Použiť images array alebo fallback na main_image
   const displayImages = (product.images && product.images.length > 0) 
     ? product.images 
     : [product.main_image];
@@ -138,7 +134,6 @@ export default function ProductDetail() {
                     }}
                   />
 
-                  {/* Počítadlo fotografií */}
                   <div className="absolute top-4 left-4 bg-black/50 text-white text-sm px-3 py-1 rounded-full">
                     {currentImageIndex + 1} / {displayImages.length}
                   </div>
@@ -162,10 +157,9 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              {/* Thumbnails */}
               {displayImages.length > 1 && (
                 <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
-                  {displayImages.map((src, index) => (
+                  {displayImages.map((src: string, index: number) => (
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
@@ -320,6 +314,12 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
+
+      {/* ✅ OPRAVA: GradeInfoModal bol importovaný ale nikdy sa nevyrenderoval */}
+      <GradeInfoModal
+        isOpen={showGradeModal}
+        onClose={() => setShowGradeModal(false)}
+      />
     </>
   );
 }
