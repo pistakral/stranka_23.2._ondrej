@@ -315,7 +315,6 @@ export default function ProductDetail() {
         </div>
       )}
 
-      {/* ✅ OPRAVA: GradeInfoModal bol importovaný ale nikdy sa nevyrenderoval */}
       <GradeInfoModal
         isOpen={showGradeModal}
         onClose={() => setShowGradeModal(false)}
