@@ -313,7 +313,7 @@ export default function ProductDetail() {
             <span className="font-bold">Pridané do košíka!</span>
           </div>
         </div>
-      )}
+      )} 
 
       {/* ✅ OPRAVA: GradeInfoModal bol importovaný ale nikdy sa nevyrenderoval */}
       <GradeInfoModal
