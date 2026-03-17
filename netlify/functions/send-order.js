@@ -44,7 +44,6 @@ exports.handler = async (event) => {
     discountCode, discountPercent, discountAmount,
   } = order;
 
-  // Validácia povinných polí
   if (!orderId || !customerName || !customerEmail || !customerPhone ||
       !customerStreet || !customerCity || !customerZip || !shippingMethod || !items || !variableSymbol) {
     return { statusCode: 400, body: 'Missing required fields' };
@@ -94,21 +93,21 @@ exports.handler = async (event) => {
     price: isValidPrice(p.price) ? Number(p.price).toFixed(2) : '0.00',
   }));
 
-  // HTML zoznam produktov (pre oba emaily)
+  // HTML zoznam produktov
   const productListHtml = safeProducts
     .map(p => `
       <tr>
-        <td style="padding:8px;border-bottom:1px solid #eee;">${p.name} ${p.capacity} – ${p.color}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;">${p.name}${p.capacity ? ' ' + p.capacity : ''}${p.color ? ' – ' + p.color : ''}</td>
         <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;font-weight:bold;">€${p.price}</td>
       </tr>`)
     .join('');
 
-  // Plain-text zoznam produktov (pre oba emaily)
+  // Plain-text zoznam
   const productListText = safeProducts
-    .map(p => `  • ${p.name} ${p.capacity} – ${p.color}: €${p.price}`)
+    .map(p => `  • ${p.name}${p.capacity ? ' ' + p.capacity : ''}${p.color ? ' – ' + p.color : ''}: €${p.price}`)
     .join('\n');
 
-  // Zľavový blok pre HTML emaily
+  // Zľavové bloky
   const discountHtmlBlock = safe.discountCode ? `
     <div style="background:#e8f5e9;border:2px solid #4caf50;border-radius:10px;padding:15px;margin:16px 0;">
       <p style="margin:0;color:#2e7d32;font-weight:bold;font-size:16px;">
@@ -259,7 +258,7 @@ exports.handler = async (event) => {
       <h2 style="color:#1b5e20;margin-top:24px;">💳 Čakáme na platbu (48h)</h2>
       <p style="margin:4px 0;"><strong>VS:</strong> ${safe.variableSymbol}</p>
       <p style="margin:4px 0;"><strong>Suma:</strong> €${safe.totalPrice}</p>
-      
+
       <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px;margin-top:16px;">
         <p style="margin:0;color:#856404;"><strong>⚠️ Akcia potrebná:</strong> Po prijatí platby potvrď objednávku v Supabase Dashboard.</p>
       </div>
@@ -277,7 +276,6 @@ exports.handler = async (event) => {
   });
 
   try {
-    // Email pre zákazníka
     await transporter.sendMail({
       from: `"Fixanto" <${process.env.GMAIL_USER}>`,
       to: safe.customerEmail,
@@ -286,7 +284,6 @@ exports.handler = async (event) => {
       text: `Objednávka #${safe.orderId} prijatá!\n\nIBAN: ${safe.iban}\nVS: ${safe.variableSymbol}\nSuma: €${safe.totalPrice}\n\nPlatba do 48 hodín!\n\n${productListText}\n\n${discountTextLine}Doprava: ${safe.shippingMethod} ${safe.shippingPrice === '0.00' ? 'ZADARMO' : '€' + safe.shippingPrice}\nAdresa: ${safe.customerStreet}, ${safe.customerZip} ${safe.customerCity}\n\nFixanto | 0949 344 600 | phoneservissk@gmail.com`,
     });
 
-    // Email pre admina
     await transporter.sendMail({
       from: `"Fixanto Store" <${process.env.GMAIL_USER}>`,
       to: process.env.GMAIL_USER,
