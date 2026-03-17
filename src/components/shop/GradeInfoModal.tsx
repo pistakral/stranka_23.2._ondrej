@@ -44,8 +44,8 @@ export default function GradeInfoModal({ isOpen, onClose }: GradeInfoModalProps)
         'Viditeľné známky používania',
         'Viacero škrabancov na ráme alebo displeji',
         'Všetky funkcie 100% funkčné',
-        'Batéria min. 80% zdravie',
-        'Overené a testované',
+        'Zdravie batérie nad 80%',
+        'Kompletne otestovaný',
       ],
     },
   ];
