@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ChevronLeft, ChevronRight, Check, HelpCircle, Gift, ZoomIn, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, HelpCircle, Gift, ZoomIn } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { supabase } from '../../lib/supabase';
 import Navbar from '../Navbar';
 import GradeInfoModal from './GradeInfoModal';
+import ImageLightbox from './ImageLightbox';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -17,8 +18,6 @@ export default function ProductDetail() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
-
-  // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
@@ -43,37 +42,6 @@ export default function ProductDetail() {
     window.scrollTo(0, 0);
     fetchProduct();
   }, [id]);
-
-  const displayImages =
-    product?.images && product.images.length > 0
-      ? product.images
-      : product
-      ? [product.main_image]
-      : [];
-
-  // Klávesové skratky pre lightbox
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (!lightboxOpen) return;
-      if (e.key === 'Escape') setLightboxOpen(false);
-      if (e.key === 'ArrowRight')
-        setLightboxIndex((prev) => (prev + 1) % displayImages.length);
-      if (e.key === 'ArrowLeft')
-        setLightboxIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
-    },
-    [lightboxOpen, displayImages.length]
-  );
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
-
-  // Zablokuj scroll pri otvorenom lightboxe
-  useEffect(() => {
-    document.body.style.overflow = lightboxOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [lightboxOpen]);
 
   if (loading) {
     return (
@@ -105,6 +73,11 @@ export default function ProductDetail() {
     );
   }
 
+  const displayImages =
+    product.images && product.images.length > 0
+      ? product.images
+      : [product.main_image];
+
   const handleAddToCart = () => {
     addToCart({
       id: product.slug,
@@ -127,10 +100,6 @@ export default function ProductDetail() {
     setCurrentImageIndex((prev) => (prev + 1) % displayImages.length);
   const prevCarousel = () =>
     setCurrentImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
-  const lightboxNext = () =>
-    setLightboxIndex((prev) => (prev + 1) % displayImages.length);
-  const lightboxPrev = () =>
-    setLightboxIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
 
   return (
     <>
@@ -164,7 +133,6 @@ export default function ProductDetail() {
             {/* ── LEFT: Carousel ── */}
             <div className="relative">
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                {/* Hlavný obrázok — kliknuteľný */}
                 <div
                   className="relative aspect-square bg-gray-50 group cursor-zoom-in"
                   onClick={() => openLightbox(currentImageIndex)}
@@ -186,7 +154,7 @@ export default function ProductDetail() {
                     {currentImageIndex + 1} / {displayImages.length}
                   </div>
 
-                  {/* Zoom hint pri hoveri */}
+                  {/* Zoom hint */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/8 rounded-2xl pointer-events-none">
                     <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
                       <ZoomIn className="w-5 h-5 text-blue-600" />
@@ -374,105 +342,6 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════
-          LIGHTBOX — fullscreen, max kvalita
-      ══════════════════════════════════════ */}
-      {lightboxOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95"
-          onClick={() => setLightboxOpen(false)}
-        >
-          {/* Zatvoriť */}
-          <button
-            onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 z-10 bg-white/10 hover:bg-white/25 text-white p-3 rounded-full transition-all hover:scale-110 backdrop-blur-sm"
-            aria-label="Zavrieť"
-          >
-            <X className="w-7 h-7" />
-          </button>
-
-          {/* Počítadlo */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-full select-none">
-            {lightboxIndex + 1} / {displayImages.length}
-          </div>
-
-          {/* Obrázok — plná veľkosť bez object-fit zmenšenia náhľadu */}
-          <div
-            className="relative flex items-center justify-center"
-            style={{ width: '100vw', height: '100vh', padding: '60px 80px' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              key={`lb-${lightboxIndex}`}
-              src={displayImages[lightboxIndex]}
-              alt={`${product.name} ${lightboxIndex + 1}`}
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                imageRendering: 'high-quality',
-              }}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src =
-                  'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="800"%3E%3Crect width="800" height="800" fill="%23222"/%3E%3C/svg%3E';
-              }}
-            />
-          </div>
-
-          {/* Šípky */}
-          {displayImages.length > 1 && (
-            <>
-              <button
-                onClick={(e) => { e.stopPropagation(); lightboxPrev(); }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/25 text-white p-4 rounded-full transition-all hover:scale-110 backdrop-blur-sm"
-                aria-label="Predchádzajúca"
-              >
-                <ChevronLeft className="w-8 h-8" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); lightboxNext(); }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/25 text-white p-4 rounded-full transition-all hover:scale-110 backdrop-blur-sm"
-                aria-label="Ďalšia"
-              >
-                <ChevronRight className="w-8 h-8" />
-              </button>
-            </>
-          )}
-
-          {/* Thumbnail strip v lightboxe */}
-          {displayImages.length > 1 && (
-            <div
-              className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 px-4 py-3 bg-black/60 backdrop-blur-sm rounded-2xl overflow-x-auto max-w-[92vw]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {displayImages.map((src: string, index: number) => (
-                <button
-                  key={index}
-                  onClick={() => setLightboxIndex(index)}
-                  className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                    index === lightboxIndex
-                      ? 'border-white scale-110 shadow-lg shadow-white/20'
-                      : 'border-white/25 opacity-55 hover:opacity-90 hover:scale-105'
-                  }`}
-                >
-                  <img
-                    src={src}
-                    alt={`náhľad ${index + 1}`}
-                    className="w-full h-full object-contain bg-gray-900 p-0.5"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Klávesové skratky — hint */}
-          <div className="absolute bottom-5 right-5 text-white/25 text-xs hidden md:block select-none">
-            ← → navigácia &nbsp;·&nbsp; ESC zavrieť
-          </div>
-        </div>
-      )}
-
       {/* Toast */}
       {showNotification && (
         <div className="fixed top-24 right-4 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50">
@@ -487,6 +356,17 @@ export default function ProductDetail() {
         isOpen={showGradeModal}
         onClose={() => setShowGradeModal(false)}
       />
+
+      {/* Lightbox — samostatný komponent */}
+      {lightboxOpen && (
+        <ImageLightbox
+          images={displayImages}
+          currentIndex={lightboxIndex}
+          productName={product.name}
+          onClose={() => setLightboxOpen(false)}
+          onNavigate={setLightboxIndex}
+        />
+      )}
     </>
   );
 }
