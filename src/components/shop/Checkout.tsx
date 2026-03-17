@@ -2,16 +2,12 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
-import { supabase } from '../../lib/supabase';
 import Navbar from '../Navbar';
 import OrderSummary from './OrderSummary';
 
 // Rate limiting
 const RATE_LIMIT_KEY = 'last_order_attempt';
 const RATE_LIMIT_COOLDOWN = 60000;
-
-// Platobné údaje
-const IBAN_DISPLAY = 'SK48 0900 0000 0052 4269 0350';
 
 // Adaptér
 const ADAPTER_PRICE = 15;
@@ -62,10 +58,8 @@ export default function Checkout() {
         <div className="min-h-screen pt-32 flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Košík je prázdny</h1>
-            <button
-              onClick={() => navigate('/store')}
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold"
-            >
+            <button onClick={() => navigate('/store')}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">
               Späť na obchod
             </button>
           </div>
@@ -77,11 +71,11 @@ export default function Checkout() {
   const selectedShipping = SHIPPING_METHODS.find((m) => m.id === formData.shippingMethod)!;
   const shippingPrice = selectedShipping.price;
   const adapterPrice = adapterAdded ? ADAPTER_PRICE : 0;
-  // Zľava sa vzťahuje na celkovú sumu vrátane adaptéra
   const subtotalWithAdapter = totalPrice + adapterPrice;
   const discountAmount = (subtotalWithAdapter * discountPercent) / 100;
   const finalTotal = subtotalWithAdapter - discountAmount + shippingPrice;
 
+  // ── Overenie zľavového kódu cez Supabase (len read, žiadny zápis) ──
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) {
       setCodeError('Zadajte zľavový kód');
@@ -90,41 +84,26 @@ export default function Checkout() {
     setCheckingCode(true);
     setCodeError(null);
     try {
-      const { data, error } = await supabase
-        .from('discount_codes')
-        .select('discount_percent, is_active, max_uses, current_uses, valid_until')
-        .eq('code', discountCode.trim().toUpperCase())
-        .maybeSingle();
+      // Discount codes sú read-only pre anon — toto je bezpečné
+      const res = await fetch('/.netlify/functions/verify-discount', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: discountCode.trim().toUpperCase() }),
+      });
+      const data = await res.json();
 
-      if (error || !data) {
-        setCodeError('Neplatný kód');
+      if (!res.ok || !data.valid) {
+        setCodeError(data.message || 'Neplatný kód');
         setDiscountApplied(false);
         setDiscountPercent(0);
-        setCheckingCode(false);
-        return;
+      } else {
+        setDiscountPercent(data.discount_percent);
+        setDiscountApplied(true);
+        setCodeError(null);
       }
-      if (!data.is_active) {
-        setCodeError('Tento kód už nie je aktívny');
-        setCheckingCode(false);
-        return;
-      }
-      if (data.max_uses !== null && data.current_uses >= data.max_uses) {
-        setCodeError('Kód bol už použitý maximálny počet krát');
-        setCheckingCode(false);
-        return;
-      }
-      if (data.valid_until && new Date(data.valid_until) < new Date()) {
-        setCodeError('Platnosť kódu vypršala');
-        setCheckingCode(false);
-        return;
-      }
-      setDiscountPercent(data.discount_percent);
-      setDiscountApplied(true);
-      setCodeError(null);
-      setCheckingCode(false);
-    } catch (err) {
-      console.error('Discount code error:', err);
+    } catch {
       setCodeError('Chyba pri overovaní kódu');
+    } finally {
       setCheckingCode(false);
     }
   };
@@ -133,16 +112,18 @@ export default function Checkout() {
     e.preventDefault();
     setError(null);
 
+    // Rate limiting
     const lastAttempt = localStorage.getItem(RATE_LIMIT_KEY);
     if (lastAttempt) {
-      const timeSinceLastAttempt = Date.now() - parseInt(lastAttempt);
-      if (timeSinceLastAttempt < RATE_LIMIT_COOLDOWN) {
-        const remainingSeconds = Math.ceil((RATE_LIMIT_COOLDOWN - timeSinceLastAttempt) / 1000);
-        setError(`Počkajte prosím ${remainingSeconds} sekúnd pred ďalšou objednávkou.`);
+      const elapsed = Date.now() - parseInt(lastAttempt);
+      if (elapsed < RATE_LIMIT_COOLDOWN) {
+        const remaining = Math.ceil((RATE_LIMIT_COOLDOWN - elapsed) / 1000);
+        setError(`Počkajte prosím ${remaining} sekúnd pred ďalšou objednávkou.`);
         return;
       }
     }
 
+    // Validácia
     if (!formData.name || !formData.email || !formData.phone ||
         !formData.street || !formData.city || !formData.zip) {
       setError('Vyplňte prosím všetky povinné polia.');
@@ -157,120 +138,50 @@ export default function Checkout() {
       return;
     }
 
-    const dangerousPattern = /(<script|javascript:|onerror=|DROP|DELETE|INSERT|UPDATE|SELECT|;--|\/\*)/gi;
-    const allInputs = [
-      formData.name, formData.email, formData.phone,
-      formData.street, formData.city, formData.zip, formData.notes,
-    ].join(' ');
-
-    if (dangerousPattern.test(allInputs)) {
-      setError('Neplatné znaky v údajoch. Skúste znova bez špeciálnych znakov.');
-      return;
-    }
-    if (formData.name.length > 100 || formData.street.length > 200 || formData.notes.length > 500) {
-      setError('Niektoré polia sú príliš dlhé.');
-      return;
-    }
-
     setLoading(true);
     try {
-      const orderId = Date.now().toString();
-
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          order_number: orderId,
-          customer_name: formData.name,
-          customer_email: formData.email,
-          customer_phone: formData.phone,
-          customer_street: formData.street,
-          customer_city: formData.city,
-          customer_zip: formData.zip,
+      // Pošli všetko na server — Supabase zápis prebehne tam
+      const res = await fetch('/.netlify/functions/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: formData.name,
+          customerEmail: formData.email,
+          customerPhone: formData.phone,
+          customerStreet: formData.street,
+          customerCity: formData.city,
+          customerZip: formData.zip,
+          shippingMethod: selectedShipping.name,
+          shippingPrice,
+          notes: formData.notes || null,
+          items: cart.map((item) => ({
+            name: item.name,
+            capacity: item.capacity,
+            color: item.color,
+            price: item.price,
+            image: item.images?.[0] || '',
+            slug: item.id,
+          })),
           subtotal: subtotalWithAdapter,
-          shipping_price: shippingPrice,
-          total_price: finalTotal,
-          shipping_method: formData.shippingMethod,
-          payment_method: 'bank_transfer',
-          status: 'pending',
-          customer_notes: formData.notes || null,
-          discount_code: discountApplied ? discountCode : null,
-          discount_percent: discountApplied ? discountPercent : 0,
-          discount_amount: discountApplied ? discountAmount : 0,
-          has_adapter: adapterAdded,
-        })
-        .select()
-        .single();
+          totalPrice: finalTotal,
+          discountCode: discountApplied ? discountCode : null,
+          discountPercent: discountApplied ? discountPercent : 0,
+          discountAmount: discountApplied ? discountAmount : 0,
+          adapterAdded,
+        }),
+      });
 
-      if (orderError) {
-        console.error('Order creation error:', orderError);
-        throw new Error('Nepodarilo sa vytvoriť objednávku. Skúste to prosím znova.');
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || 'Nastala chyba. Skúste to prosím znova.');
       }
 
-      // Položky košíka + adaptér
-      const orderItems = [
-        ...cart.map((item) => ({
-          order_id: orderData.id,
-          product_id: null,
-          product_name: item.name,
-          product_capacity: item.capacity,
-          product_color: item.color,
-          product_image: item.images?.[0] || '',
-          quantity: 1,
-          unit_price: item.price,
-          total_price: item.price,
-        })),
-        ...(adapterAdded
-          ? [{
-              order_id: orderData.id,
-              product_id: null,
-              product_name: ADAPTER_NAME,
-              product_capacity: '',
-              product_color: '',
-              product_image: '',
-              quantity: 1,
-              unit_price: ADAPTER_PRICE,
-              total_price: ADAPTER_PRICE,
-            }]
-          : []),
-      ];
-
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-      if (itemsError) console.error('Order items error:', itemsError);
-
-      // Rezervácie
-      for (const item of cart) {
-        const { data: productData, error: productError } = await supabase
-          .from('products')
-          .select('id, slug, stock, stock_status, name')
-          .eq('slug', item.id)
-          .maybeSingle();
-
-        if (productError || !productData) continue;
-
-        const { error: reservationError } = await supabase
-          .from('reservations')
-          .insert({
-            product_id: productData.id,
-            customer_email: formData.email,
-            customer_name: formData.name,
-            customer_phone: formData.phone,
-            status: 'pending',
-            notes: `Objednávka #${orderId}`,
-          });
-
-        if (reservationError) console.error('Reservation error:', reservationError);
-
-        if (productData.stock === 1) {
-          const { error: reserveError } = await supabase.rpc('reserve_product', {
-            product_slug: item.id,
-          });
-          if (reserveError) console.error('Reserve error:', reserveError);
-        }
-      }
-
+      const orderId = result.orderId;
       localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
 
-      const orderForLocalStorage = {
+      // Ulož pre stránku potvrdenia
+      localStorage.setItem(`order-${orderId}`, JSON.stringify({
         orderId,
         customerName: formData.name,
         customerEmail: formData.email,
@@ -294,57 +205,11 @@ export default function Checkout() {
         adapterAdded,
         adapterPrice: adapterAdded ? ADAPTER_PRICE : 0,
         createdAt: new Date().toISOString(),
-      };
-
-      localStorage.setItem(`order-${orderId}`, JSON.stringify(orderForLocalStorage));
-
-      // Email
-      try {
-        const emailItems = [
-          ...cart.map((item) => ({
-            name: item.name,
-            capacity: item.capacity,
-            color: item.color,
-            price: item.price,
-          })),
-          ...(adapterAdded
-            ? [{ name: ADAPTER_NAME, capacity: '', color: '', price: ADAPTER_PRICE }]
-            : []),
-        ];
-
-        const emailData = {
-          orderId,
-          customerName: formData.name,
-          customerEmail: formData.email,
-          customerPhone: formData.phone,
-          customerStreet: formData.street,
-          customerCity: formData.city,
-          customerZip: formData.zip,
-          items: emailItems,
-          subtotal: subtotalWithAdapter,
-          discountCode: discountApplied ? discountCode : null,
-          discountPercent: discountApplied ? discountPercent : 0,
-          discountAmount: discountApplied ? discountAmount : 0,
-          shippingMethod: selectedShipping.name,
-          shippingPrice,
-          totalPrice: finalTotal,
-          iban: IBAN_DISPLAY,
-          variableSymbol: orderId,
-        };
-
-        const emailRes = await fetch('/.netlify/functions/send-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(emailData),
-        });
-
-        if (!emailRes.ok) console.error('Email sa nepodarilo odoslať');
-      } catch (emailError) {
-        console.error('Email error:', emailError);
-      }
+      }));
 
       clearCart();
       navigate(`/store/confirmation/${orderId}`);
+
     } catch (err: any) {
       console.error('Checkout error:', err);
       setError(err.message || 'Nastala chyba. Skúste to prosím znova.');
@@ -420,12 +285,11 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                {/* ── Zľavový kód ── */}
+                {/* Zľavový kód */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Zľavový kód (voliteľné)</label>
                   <div className="flex gap-2">
-                    <input
-                      type="text" value={discountCode}
+                    <input type="text" value={discountCode}
                       onChange={(e) => {
                         setDiscountCode(e.target.value.toUpperCase());
                         setDiscountApplied(false);
@@ -433,8 +297,7 @@ export default function Checkout() {
                       }}
                       className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
                       placeholder="Zadajte kód"
-                      disabled={discountApplied}
-                    />
+                      disabled={discountApplied} />
                     <button type="button" onClick={applyDiscountCode}
                       disabled={checkingCode || discountApplied || !discountCode.trim()}
                       className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed">
@@ -454,22 +317,15 @@ export default function Checkout() {
                   )}
                 </div>
 
-                {/* ── Nabíjací adaptér ── */}
+                {/* Nabíjací adaptér */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Doplnkové príslušenstvo
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Doplnkové príslušenstvo</label>
                   <label className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    adapterAdded
-                      ? 'border-orange-500 bg-orange-50'
-                      : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                    adapterAdded ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
                   }`}>
-                    <input
-                      type="checkbox"
-                      checked={adapterAdded}
+                    <input type="checkbox" checked={adapterAdded}
                       onChange={(e) => setAdapterAdded(e.target.checked)}
-                      className="w-5 h-5 accent-orange-500 flex-shrink-0"
-                    />
+                      className="w-5 h-5 accent-orange-500 flex-shrink-0" />
                     <div className={`p-2 rounded-lg flex-shrink-0 transition-colors ${adapterAdded ? 'bg-orange-500' : 'bg-gray-200'}`}>
                       <Zap className={`w-6 h-6 transition-colors ${adapterAdded ? 'text-white' : 'text-gray-500'}`} />
                     </div>
@@ -483,7 +339,7 @@ export default function Checkout() {
                   </label>
                 </div>
 
-                {/* ── Spôsob doručenia ── */}
+                {/* Spôsob doručenia */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Spôsob doručenia *</label>
                   <div className="space-y-3">
@@ -497,15 +353,13 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                {/* ── Poznámka ── */}
+                {/* Poznámka */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Poznámka k objednávke</label>
-                  <textarea
-                    value={formData.notes}
+                  <textarea value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    rows={3}
-                  />
+                    rows={3} />
                 </div>
 
                 <button type="submit" disabled={loading}
@@ -524,7 +378,7 @@ export default function Checkout() {
               </form>
             </div>
 
-            {/* ── Sidebar ── */}
+            {/* Sidebar */}
             <div>
               <OrderSummary
                 cart={cart}
