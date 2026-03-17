@@ -52,7 +52,7 @@ export default function OrderSummary({
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900 leading-snug text-xs sm:text-sm">Nabíjací adaptér 20W</p>
-              <p className="text-xs text-gray-500 mt-0.5">Apple USB-C Power Adapter</p>
+              <p className="text-xs text-gray-500 mt-0.5">USB-C Power Adapter</p>
             </div>
             <div className="font-bold text-orange-600 flex-shrink-0 text-sm">€{adapterPrice}</div>
           </div>
