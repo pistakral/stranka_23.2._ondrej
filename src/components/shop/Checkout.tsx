@@ -8,7 +8,7 @@ import OrderSummary from './OrderSummary';
 const RATE_LIMIT_KEY = 'last_order_attempt';
 const RATE_LIMIT_COOLDOWN = 60000;
 const ADAPTER_PRICE = 15;
-const ADAPTER_NAME = 'Nabíjací adaptér 20W (Apple USB-C Power Adapter)';
+const ADAPTER_NAME = 'Nabíjací adaptér 20W (USB-C Power Adapter)';
 
 interface ShippingMethod {
   id: string;
