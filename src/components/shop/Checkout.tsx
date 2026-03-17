@@ -9,7 +9,7 @@ const RATE_LIMIT_KEY = 'last_order_attempt';
 const RATE_LIMIT_COOLDOWN = 60000; // 1 minúta
 
 // Platobné údaje
-const IBAN_DISPLAY = 'LT56 3250 0347 0476 1008';
+const IBAN_DISPLAY = 'SK48 0900 0000 0052 4269 0350';
 
 interface ShippingMethod {
   id: string;
