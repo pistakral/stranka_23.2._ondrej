@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, HelpCircle, Gift } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { supabase } from '../../lib/supabase';
 import Navbar from '../Navbar';
+import GradeInfoModal from './GradeInfoModal';
 
 export default function ProductDetail() {
   const { id } = useParams(); // id = slug
@@ -15,6 +16,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
+  const [showGradeModal, setShowGradeModal] = useState(false);
 
   // Fetch produkt z Supabase
   useEffect(() => {
@@ -191,8 +193,34 @@ export default function ProductDetail() {
             {/* RIGHT: Product Info */}
             <div>
               <div className="bg-white rounded-2xl shadow-xl p-8">
-                <div className="inline-block bg-yellow-400 text-blue-900 px-4 py-2 rounded-lg font-bold text-sm mb-4">
-                  TRIEDA {product.grade}
+                {/* TRIEDA + ? tlačidlo */}
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="inline-block bg-yellow-400 text-blue-900 px-4 py-2 rounded-lg font-bold text-sm">
+                    TRIEDA {product.grade}
+                  </div>
+                  <button
+                    onClick={() => setShowGradeModal(true)}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-semibold text-sm transition-colors"
+                    aria-label="Čo znamená trieda?"
+                  >
+                    <HelpCircle className="w-5 h-5" />
+                    Čo znamená táto trieda?
+                  </button>
+                </div>
+
+                {/* DARČEK BANNER */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl p-4 mb-6 shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-green-500 p-2 rounded-lg">
+                      <Gift className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-green-900 text-lg">DARČEK ZADARMO! 🎁</p>
+                      <p className="text-sm text-green-700">
+                        Ochranné sklo v hodnote <span className="font-bold">€10</span> k telefónu
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <h1 className="text-4xl font-black text-gray-900 mb-2">
