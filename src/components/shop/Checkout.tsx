@@ -58,8 +58,10 @@ export default function Checkout() {
         <div className="min-h-screen pt-32 flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Košík je prázdny</h1>
-            <button onClick={() => navigate('/store')}
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">
+            <button
+              onClick={() => navigate('/store')}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold"
+            >
               Späť na obchod
             </button>
           </div>
@@ -75,7 +77,7 @@ export default function Checkout() {
   const discountAmount = (subtotalWithAdapter * discountPercent) / 100;
   const finalTotal = subtotalWithAdapter - discountAmount + shippingPrice;
 
-  // ── Overenie zľavového kódu cez Supabase (len read, žiadny zápis) ──
+  // Overenie zľavového kódu cez server (verify-discount funkcia)
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) {
       setCodeError('Zadajte zľavový kód');
@@ -84,7 +86,6 @@ export default function Checkout() {
     setCheckingCode(true);
     setCodeError(null);
     try {
-      // Discount codes sú read-only pre anon — toto je bezpečné
       const res = await fetch('/.netlify/functions/verify-discount', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,7 +102,8 @@ export default function Checkout() {
         setDiscountApplied(true);
         setCodeError(null);
       }
-    } catch {
+    } catch (err) {
+      console.error('Discount code error:', err);
       setCodeError('Chyba pri overovaní kódu');
     } finally {
       setCheckingCode(false);
@@ -115,15 +117,15 @@ export default function Checkout() {
     // Rate limiting
     const lastAttempt = localStorage.getItem(RATE_LIMIT_KEY);
     if (lastAttempt) {
-      const elapsed = Date.now() - parseInt(lastAttempt);
-      if (elapsed < RATE_LIMIT_COOLDOWN) {
-        const remaining = Math.ceil((RATE_LIMIT_COOLDOWN - elapsed) / 1000);
-        setError(`Počkajte prosím ${remaining} sekúnd pred ďalšou objednávkou.`);
+      const timeSinceLastAttempt = Date.now() - parseInt(lastAttempt);
+      if (timeSinceLastAttempt < RATE_LIMIT_COOLDOWN) {
+        const remainingSeconds = Math.ceil((RATE_LIMIT_COOLDOWN - timeSinceLastAttempt) / 1000);
+        setError(`Počkajte prosím ${remainingSeconds} sekúnd pred ďalšou objednávkou.`);
         return;
       }
     }
 
-    // Validácia
+    // Validácia povinných polí
     if (!formData.name || !formData.email || !formData.phone ||
         !formData.street || !formData.city || !formData.zip) {
       setError('Vyplňte prosím všetky povinné polia.');
@@ -138,9 +140,27 @@ export default function Checkout() {
       return;
     }
 
+    // Injection ochrana
+    const dangerousPattern = /(<script|javascript:|onerror=|DROP|DELETE|INSERT|UPDATE|SELECT|;--|\/\*)/gi;
+    const allInputs = [
+      formData.name, formData.email, formData.phone,
+      formData.street, formData.city, formData.zip, formData.notes,
+    ].join(' ');
+
+    if (dangerousPattern.test(allInputs)) {
+      setError('Neplatné znaky v údajoch. Skúste znova bez špeciálnych znakov.');
+      return;
+    }
+
+    // Dĺžková kontrola
+    if (formData.name.length > 100 || formData.street.length > 200 || formData.notes.length > 500) {
+      setError('Niektoré polia sú príliš dlhé.');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Pošli všetko na server — Supabase zápis prebehne tam
+      // Všetok zápis prebieha na serveri cez create-order funkciu
       const res = await fetch('/.netlify/functions/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -180,7 +200,7 @@ export default function Checkout() {
       const orderId = result.orderId;
       localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
 
-      // Ulož pre stránku potvrdenia
+      // Ulož pre stránku potvrdenia (OrderConfirmation číta z localStorage)
       localStorage.setItem(`order-${orderId}`, JSON.stringify({
         orderId,
         customerName: formData.name,
@@ -209,7 +229,6 @@ export default function Checkout() {
 
       clearCart();
       navigate(`/store/confirmation/${orderId}`);
-
     } catch (err: any) {
       console.error('Checkout error:', err);
       setError(err.message || 'Nastala chyba. Skúste to prosím znova.');
@@ -289,7 +308,8 @@ export default function Checkout() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Zľavový kód (voliteľné)</label>
                   <div className="flex gap-2">
-                    <input type="text" value={discountCode}
+                    <input
+                      type="text" value={discountCode}
                       onChange={(e) => {
                         setDiscountCode(e.target.value.toUpperCase());
                         setDiscountApplied(false);
@@ -297,7 +317,8 @@ export default function Checkout() {
                       }}
                       className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
                       placeholder="Zadajte kód"
-                      disabled={discountApplied} />
+                      disabled={discountApplied}
+                    />
                     <button type="button" onClick={applyDiscountCode}
                       disabled={checkingCode || discountApplied || !discountCode.trim()}
                       className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed">
@@ -319,13 +340,20 @@ export default function Checkout() {
 
                 {/* Nabíjací adaptér */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Doplnkové príslušenstvo</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Doplnkové príslušenstvo
+                  </label>
                   <label className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    adapterAdded ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                    adapterAdded
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
                   }`}>
-                    <input type="checkbox" checked={adapterAdded}
+                    <input
+                      type="checkbox"
+                      checked={adapterAdded}
                       onChange={(e) => setAdapterAdded(e.target.checked)}
-                      className="w-5 h-5 accent-orange-500 flex-shrink-0" />
+                      className="w-5 h-5 accent-orange-500 flex-shrink-0"
+                    />
                     <div className={`p-2 rounded-lg flex-shrink-0 transition-colors ${adapterAdded ? 'bg-orange-500' : 'bg-gray-200'}`}>
                       <Zap className={`w-6 h-6 transition-colors ${adapterAdded ? 'text-white' : 'text-gray-500'}`} />
                     </div>
@@ -356,10 +384,12 @@ export default function Checkout() {
                 {/* Poznámka */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Poznámka k objednávke</label>
-                  <textarea value={formData.notes}
+                  <textarea
+                    value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    rows={3} />
+                    rows={3}
+                  />
                 </div>
 
                 <button type="submit" disabled={loading}
