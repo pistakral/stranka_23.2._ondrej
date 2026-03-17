@@ -18,7 +18,7 @@ export default function GradeInfoModal({ isOpen, onClose }: GradeInfoModalProps)
         'Bez viditeľných poškodení',
         'Displej v perfektnom stave',
         'Rám bez škrabancov',
-        'Zdravie batérie 100%',
+        'Batéria v dobrom stave',
         'Kompletne otestovaný',
       ],
     },
