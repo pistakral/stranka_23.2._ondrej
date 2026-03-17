@@ -33,70 +33,68 @@ export default function OrderSummary({
   finalTotal,
 }: OrderSummaryProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 sticky top-24">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Zhrnutie</h2>
+    <div className="bg-white rounded-2xl shadow-xl p-5 sticky top-24 text-sm">
+      <h2 className="text-base font-bold text-gray-900 mb-4">Zhrnutie</h2>
 
-      <div className="space-y-4 mb-6">
+      <div className="space-y-3 mb-4">
         {cart.map((item) => (
-          <div key={item.id} className="flex gap-4">
+          <div key={item.id} className="flex gap-3 items-center">
             <img
               src={item.images?.[0] || ''}
               alt={item.name}
-              className="w-16 h-16 object-contain bg-gray-50 rounded-lg"
+              className="w-12 h-12 object-contain bg-gray-50 rounded-lg flex-shrink-0"
             />
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">{item.name}</h3>
-              <p className="text-sm text-gray-600">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 leading-snug">{item.name}</p>
+              <p className="text-xs text-gray-500 mt-0.5">
                 {item.capacity} • {item.color}
               </p>
             </div>
-            <div className="font-bold text-blue-600">€{item.price}</div>
+            <div className="font-bold text-blue-600 flex-shrink-0">€{item.price}</div>
           </div>
         ))}
 
-        {/* Adapter v zhrnutí */}
+        {/* Adaptér */}
         {adapterAdded && (
-          <div className="flex gap-4 bg-orange-50 rounded-xl p-3 border border-orange-200">
-            <div className="w-16 h-16 flex items-center justify-center bg-orange-100 rounded-lg flex-shrink-0">
-              <Zap className="w-8 h-8 text-orange-500" />
+          <div className="flex gap-3 items-center bg-orange-50 rounded-xl px-3 py-2 border border-orange-200">
+            <div className="w-12 h-12 flex items-center justify-center bg-orange-100 rounded-lg flex-shrink-0">
+              <Zap className="w-5 h-5 text-orange-500" />
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">Nabíjací adaptér 20W</h3>
-              <p className="text-sm text-gray-600">Apple USB-C Power Adapter</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 leading-snug">Nabíjací adaptér 20W</p>
+              <p className="text-xs text-gray-500 mt-0.5">Apple USB-C Power Adapter</p>
             </div>
-            <div className="font-bold text-orange-600">€{adapterPrice}</div>
+            <div className="font-bold text-orange-600 flex-shrink-0">€{adapterPrice}</div>
           </div>
         )}
       </div>
 
-      <div className="border-t border-gray-200 pt-4 space-y-3">
-        <div className="flex justify-between text-gray-700">
+      <div className="border-t border-gray-200 pt-3 space-y-2">
+        <div className="flex justify-between text-gray-600">
           <span>Medzisúčet:</span>
-          <span className="font-semibold">€{totalPrice.toFixed(2)}</span>
+          <span className="font-semibold text-gray-800">€{totalPrice.toFixed(2)}</span>
         </div>
 
         {adapterAdded && (
           <div className="flex justify-between text-orange-600">
-            <span>Nabíjací adaptér 20W:</span>
-            <span className="font-bold">+€{adapterPrice.toFixed(2)}</span>
+            <span>Adaptér 20W:</span>
+            <span className="font-semibold">+€{adapterPrice.toFixed(2)}</span>
           </div>
         )}
 
         {discountApplied && (
           <div className="flex justify-between text-green-600">
-            <span>
-              Zľava ({discountCode} -{discountPercent}%):
-            </span>
-            <span className="font-bold">-€{discountAmount.toFixed(2)}</span>
+            <span className="truncate mr-2">Zľava ({discountCode} -{discountPercent}%):</span>
+            <span className="font-semibold flex-shrink-0">-€{discountAmount.toFixed(2)}</span>
           </div>
         )}
 
         <div className="flex justify-between text-green-600">
           <span>Doprava:</span>
-          <span className="font-bold">ZADARMO ✅</span>
+          <span className="font-semibold">ZADARMO ✅</span>
         </div>
 
-        <div className="flex justify-between text-2xl font-black text-blue-600 pt-3 border-t border-gray-200">
+        <div className="flex justify-between text-lg font-black text-blue-600 pt-2 border-t border-gray-200">
           <span>Celkom:</span>
           <span>€{finalTotal.toFixed(2)}</span>
         </div>
