@@ -30,8 +30,8 @@ export default function GradeInfoModal({ isOpen, onClose }: GradeInfoModalProps)
       features: [
         'Jemné známky opotrebenia',
         'Pár menších škrabancov na ráme a displeji',
-        'Displej bez viditeľných vád',
-        'Batéria min. 85% zdravie',
+        'Displej bez výrazných škrabancov',
+        'Batéria v dobrom stave',
         'Plne funkčné',
       ],
     },
