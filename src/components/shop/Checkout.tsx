@@ -39,6 +39,13 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ZĽAVOVÝ KÓD
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [checkingCode, setCheckingCode] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+
   // Ak je košík prázdny, redirect späť
   if (cart.length === 0) {
     return (
@@ -61,15 +68,66 @@ export default function Checkout() {
 
   const selectedShipping = SHIPPING_METHODS.find((m) => m.id === formData.shippingMethod)!;
   const shippingPrice = selectedShipping.price;
-  const finalTotal = totalPrice + shippingPrice;
+  const discountAmount = (totalPrice * discountPercent) / 100;
+  const finalTotal = totalPrice - discountAmount + shippingPrice;
+
+  const applyDiscountCode = async () => {
+    if (!discountCode.trim()) {
+      setCodeError('Zadajte zľavový kód');
+      return;
+    }
+
+    setCheckingCode(true);
+    setCodeError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('discount_percent, is_active, max_uses, current_uses, valid_until')
+        .eq('code', discountCode.trim().toUpperCase())
+        .maybeSingle();
+
+      if (error || !data) {
+        setCodeError('Neplatný kód');
+        setDiscountApplied(false);
+        setDiscountPercent(0);
+        setCheckingCode(false);
+        return;
+      }
+
+      if (!data.is_active) {
+        setCodeError('Tento kód už nie je aktívny');
+        setCheckingCode(false);
+        return;
+      }
+
+      if (data.max_uses !== null && data.current_uses >= data.max_uses) {
+        setCodeError('Kód bol už použitý maximálny počet krát');
+        setCheckingCode(false);
+        return;
+      }
+
+      if (data.valid_until && new Date(data.valid_until) < new Date()) {
+        setCodeError('Platnosť kódu vypršala');
+        setCheckingCode(false);
+        return;
+      }
+
+      setDiscountPercent(data.discount_percent);
+      setDiscountApplied(true);
+      setCodeError(null);
+      setCheckingCode(false);
+    } catch (err) {
+      console.error('Discount code error:', err);
+      setCodeError('Chyba pri overovaní kódu');
+      setCheckingCode(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // ============================================
-    // RATE LIMITING - Kontrola
-    // ============================================
     const lastAttempt = localStorage.getItem(RATE_LIMIT_KEY);
     if (lastAttempt) {
       const timeSinceLastAttempt = Date.now() - parseInt(lastAttempt);
@@ -80,7 +138,6 @@ export default function Checkout() {
       }
     }
 
-    // Validácia
     if (!formData.name || !formData.email || !formData.phone || !formData.street || !formData.city || !formData.zip) {
       setError('Vyplňte prosím všetky povinné polia.');
       return;
@@ -96,17 +153,10 @@ export default function Checkout() {
       return;
     }
 
-    // EXTRA BEZPEČNOSŤ: Blokuj podozrivé znaky
     const dangerousPattern = /(<script|javascript:|onerror=|DROP|DELETE|INSERT|UPDATE|SELECT|;--|\/\*)/gi;
-    
     const allInputs = [
-      formData.name,
-      formData.email,
-      formData.phone,
-      formData.street,
-      formData.city,
-      formData.zip,
-      formData.notes
+      formData.name, formData.email, formData.phone,
+      formData.street, formData.city, formData.zip, formData.notes
     ].join(' ');
 
     if (dangerousPattern.test(allInputs)) {
@@ -114,7 +164,6 @@ export default function Checkout() {
       return;
     }
 
-    // Kontrola max dĺžky
     if (formData.name.length > 100 || formData.street.length > 200 || formData.notes.length > 500) {
       setError('Niektoré polia sú príliš dlhé.');
       return;
@@ -123,9 +172,6 @@ export default function Checkout() {
     setLoading(true);
 
     try {
-      // ============================================
-      // 1. VYTVOR OBJEDNÁVKU V SUPABASE
-      // ============================================
       const orderId = Date.now().toString();
 
       const { data: orderData, error: orderError } = await supabase
@@ -145,6 +191,9 @@ export default function Checkout() {
           payment_method: 'bank_transfer',
           status: 'pending',
           customer_notes: formData.notes || null,
+          discount_code: discountApplied ? discountCode : null,
+          discount_percent: discountApplied ? discountPercent : 0,
+          discount_amount: discountApplied ? discountAmount : 0,
         })
         .select()
         .single();
@@ -154,12 +203,9 @@ export default function Checkout() {
         throw new Error('Nepodarilo sa vytvoriť objednávku. Skúste to prosím znova.');
       }
 
-      // ============================================
-      // 2. VYTVOR POLOŽKY OBJEDNÁVKY
-      // ============================================
       const orderItems = cart.map((item) => ({
         order_id: orderData.id,
-        product_id: null, // Môžeš doplniť UUID produktu ak chceš
+        product_id: null,
         product_name: item.name,
         product_capacity: item.capacity,
         product_color: item.color,
@@ -169,41 +215,18 @@ export default function Checkout() {
         total_price: item.price,
       }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+      if (itemsError) console.error('Order items error:', itemsError);
 
-      if (itemsError) {
-        console.error('Order items error:', itemsError);
-        // Pokračuj aj tak - hlavná objednávka je vytvorená
-      }
-
-      // ============================================
-      // 3. VYTVOR REZERVÁCIE PRE PRODUKTY (48h systém)
-      // ============================================
       for (const item of cart) {
-        console.log('🔍 Hľadám produkt s slug:', item.id);
-        
-        // Nájdi produkt v databáze podľa slug
         const { data: productData, error: productError } = await supabase
           .from('products')
           .select('id, slug, stock, stock_status, name')
           .eq('slug', item.id)
           .maybeSingle();
 
-        if (productError) {
-          console.error('❌ Chyba pri hľadaní produktu:', productError);
-          continue;
-        }
+        if (productError || !productData) continue;
 
-        if (!productData) {
-          console.warn('⚠️ Produkt nebol nájdený! slug:', item.id);
-          continue;
-        }
-
-        console.log(`✅ Našiel som: ${productData.name}, stock = ${productData.stock}`);
-
-        // Vytvor rezerváciu
         const { error: reservationError } = await supabase
           .from('reservations')
           .insert({
@@ -215,42 +238,18 @@ export default function Checkout() {
             notes: `Objednávka #${orderId}`,
           });
 
-        if (reservationError) {
-          console.error('❌ Chyba rezervácie:', reservationError);
-        } else {
-          console.log('✅ Rezervácia vytvorená');
-        }
+        if (reservationError) console.error('Reservation error:', reservationError);
 
-        // Rezervuj produkt cez BEZPEČNÚ SERVER-SIDE FUNKCIU
         if (productData.stock === 1) {
-          console.log('🔒 Volám reserve_product()...');
-          
           const { data: reserveResult, error: reserveError } = await supabase
             .rpc('reserve_product', { product_slug: item.id });
 
-          if (reserveError) {
-            console.error('❌ Chyba RPC:', reserveError);
-          } else if (reserveResult && reserveResult.length > 0) {
-            const result = reserveResult[0];
-            if (result.success) {
-              console.log('✅ REZERVOVANÉ!', result.message);
-            } else {
-              console.warn('⚠️ Rezervácia zlyhala:', result.message);
-            }
-          }
-        } else {
-          console.log(`⏭️ Stock = ${productData.stock}, nerezerv ujem`);
+          if (reserveError) console.error('Reserve error:', reserveError);
         }
       }
 
-      // ============================================
-      // 4. ULOŽ RATE LIMITING TIMESTAMP
-      // ============================================
       localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
 
-      // ============================================
-      // 5. ULOŽ OBJEDNÁVKU DO LOCALSTORAGE (pre confirmation page)
-      // ============================================
       const orderForLocalStorage = {
         orderId,
         customerName: formData.name,
@@ -264,14 +263,14 @@ export default function Checkout() {
         shippingMethod: selectedShipping.name,
         shippingPrice,
         totalPrice: finalTotal,
+        discountCode: discountApplied ? discountCode : null,
+        discountPercent: discountApplied ? discountPercent : 0,
+        discountAmount: discountApplied ? discountAmount : 0,
         createdAt: new Date().toISOString(),
       };
 
       localStorage.setItem(`order-${orderId}`, JSON.stringify(orderForLocalStorage));
 
-      // ============================================
-      // 6. POŠLI EMAIL NOTIFIKÁCIU
-      // ============================================
       try {
         const emailData = {
           orderId,
@@ -288,6 +287,9 @@ export default function Checkout() {
             price: item.price,
           })),
           subtotal: totalPrice,
+          discountCode: discountApplied ? discountCode : null,
+          discountPercent: discountApplied ? discountPercent : 0,
+          discountAmount: discountApplied ? discountAmount : 0,
           shippingMethod: selectedShipping.name,
           shippingPrice,
           totalPrice: finalTotal,
@@ -302,18 +304,12 @@ export default function Checkout() {
         });
 
         if (!emailRes.ok) {
-          console.error('Email sa nepodarilo odoslať, ale objednávka bola vytvorená.');
-        } else {
-          console.log('✅ Email úspešne odoslaný!');
+          console.error('Email sa nepodarilo odoslať');
         }
       } catch (emailError) {
         console.error('Email error:', emailError);
-        // Pokračuj aj keď email zlyhá - objednávka je už v Supabase
       }
 
-      // ============================================
-      // 7. VYČISTI KOŠÍK A REDIRECT
-      // ============================================
       clearCart();
       navigate(`/store/confirmation/${orderId}`);
     } catch (err: any) {
@@ -338,19 +334,14 @@ export default function Checkout() {
           )}
 
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* LEFT: Formulár */}
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Kontaktné údaje</h2>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Meno a priezvisko *
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Meno a priezvisko *</label>
                   <input
-                    type="text"
-                    required
-                    value={formData.name}
+                    type="text" required value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Ján Novák"
@@ -360,9 +351,7 @@ export default function Checkout() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
                   <input
-                    type="email"
-                    required
-                    value={formData.email}
+                    type="email" required value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="jan.novak@example.com"
@@ -372,9 +361,7 @@ export default function Checkout() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Telefón *</label>
                   <input
-                    type="tel"
-                    required
-                    value={formData.phone}
+                    type="tel" required value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="0949 123 456"
@@ -382,13 +369,9 @@ export default function Checkout() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Ulica a číslo domu *
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Ulica a číslo domu *</label>
                   <input
-                    type="text"
-                    required
-                    value={formData.street}
+                    type="text" required value={formData.street}
                     onChange={(e) => setFormData({ ...formData, street: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Hlavná 42"
@@ -399,9 +382,7 @@ export default function Checkout() {
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Mesto *</label>
                     <input
-                      type="text"
-                      required
-                      value={formData.city}
+                      type="text" required value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Trenčín"
@@ -410,9 +391,7 @@ export default function Checkout() {
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">PSČ *</label>
                     <input
-                      type="text"
-                      required
-                      value={formData.zip}
+                      type="text" required value={formData.zip}
                       onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="911 01"
@@ -421,26 +400,59 @@ export default function Checkout() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Spôsob doručenia *
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Zľavový kód (voliteľné)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={discountCode}
+                      onChange={(e) => {
+                        setDiscountCode(e.target.value.toUpperCase());
+                        setDiscountApplied(false);
+                        setCodeError(null);
+                      }}
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                      placeholder="napr. ZLAVA05"
+                      disabled={discountApplied}
+                    />
+                    <button
+                      type="button"
+                      onClick={applyDiscountCode}
+                      disabled={checkingCode || discountApplied || !discountCode.trim()}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {checkingCode ? 'Overujem...' : discountApplied ? '✓ Použité' : 'Použiť'}
+                    </button>
+                  </div>
+                  
+                  {codeError && (
+                    <p className="text-sm text-red-600 mt-2">❌ {codeError}</p>
+                  )}
+                  
+                  {discountApplied && (
+                    <div className="mt-2 flex items-center gap-2 text-green-600">
+                      <span className="text-sm font-semibold">✅ Zľava {discountPercent}% aplikovaná!</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDiscountCode('');
+                          setDiscountPercent(0);
+                          setDiscountApplied(false);
+                        }}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Odstrániť
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Spôsob doručenia *</label>
                   <div className="space-y-3">
                     {SHIPPING_METHODS.map((method) => (
-                      <label
-                        key={method.id}
-                        className="flex items-center gap-3 p-4 border-2 border-green-500 bg-green-50 rounded-xl cursor-pointer"
-                      >
-                        <input
-                          type="radio"
-                          name="shipping"
-                          value={method.id}
-                          checked={true}
-                          readOnly
-                          className="w-5 h-5 text-green-600"
-                        />
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">{method.name}</div>
-                        </div>
+                      <label key={method.id} className="flex items-center gap-3 p-4 border-2 border-green-500 bg-green-50 rounded-xl cursor-pointer">
+                        <input type="radio" name="shipping" value={method.id} checked={true} readOnly className="w-5 h-5 text-green-600" />
+                        <div className="flex-1"><div className="font-semibold text-gray-900">{method.name}</div></div>
                         <div className="font-bold text-green-600 text-lg">ZADARMO ✅</div>
                       </label>
                     ))}
@@ -448,9 +460,7 @@ export default function Checkout() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Poznámka k objednávke
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Poznámka k objednávke</label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -475,13 +485,10 @@ export default function Checkout() {
                   )}
                 </button>
 
-                <p className="text-sm text-gray-500 text-center">
-                  Platba prevodom. Údaje na úhradu dostanete na email.
-                </p>
+                <p className="text-sm text-gray-500 text-center">Platba prevodom. Údaje na úhradu dostanete na email.</p>
               </form>
             </div>
 
-            {/* RIGHT: Zhrnutie */}
             <div>
               <div className="bg-white rounded-2xl shadow-xl p-8 sticky top-24">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Zhrnutie</h2>
@@ -489,16 +496,10 @@ export default function Checkout() {
                 <div className="space-y-4 mb-6">
                   {cart.map((item) => (
                     <div key={item.id} className="flex gap-4">
-                      <img
-                        src={item.images?.[0] || ''}
-                        alt={item.name}
-                        className="w-16 h-16 object-contain bg-gray-50 rounded-lg"
-                      />
+                      <img src={item.images?.[0] || ''} alt={item.name} className="w-16 h-16 object-contain bg-gray-50 rounded-lg" />
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          {item.capacity} • {item.color}
-                        </p>
+                        <p className="text-sm text-gray-600">{item.capacity} • {item.color}</p>
                       </div>
                       <div className="font-bold text-blue-600">€{item.price}</div>
                     </div>
@@ -510,10 +511,19 @@ export default function Checkout() {
                     <span>Medzisúčet:</span>
                     <span className="font-semibold">€{totalPrice.toFixed(2)}</span>
                   </div>
+                  
+                  {discountApplied && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Zľava ({discountCode} -{discountPercent}%):</span>
+                      <span className="font-bold">-€{discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between text-green-600">
                     <span>Doprava:</span>
                     <span className="font-bold">ZADARMO ✅</span>
                   </div>
+                  
                   <div className="flex justify-between text-2xl font-black text-blue-600 pt-3 border-t border-gray-200">
                     <span>Celkom:</span>
                     <span>€{finalTotal.toFixed(2)}</span>
