@@ -309,7 +309,7 @@ export default function VopPage() {
               </div>
 
               <div className="space-y-2">
-                <p><strong>5.1</strong> Zákonná zodpovednosť za vady je pri použitom tovare skrátená dohodou na <strong>12 mesiacov</strong> podľa § 612 ods. 4 Občianskeho zákonníka. Toto je zákonom stanovené minimum — kratšiu dobu nie je možné dohodnúť.</p>
+                <p><strong>5.1</strong> Zákonná zodpovednosť za vady je pri použitom tovare skrátená dohodou na <strong>12 mesiacov</strong> podľa § 612 ods. 4 Občianskeho zákonníka. </p>
                 <p><strong>5.2</strong> Pri každom predávanom iPhone predávajúci povinne uvádza: <strong>kategóriu stavu (A+/A/B)</strong>, <strong>zdravie batérie v %</strong>, popis všetkých viditeľných vád a obsah balenia. Zákazník súhlasom s objednávkou potvrdzuje, že bol s týmito informáciami oboznámený.</p>
                 <p><strong>5.3</strong> Predávajúci nezodpovedá za vady, ktoré boli zákazníkovi <strong>výslovne oznámené pred kúpou</strong> a zákazník s nimi súhlasil (napr. kozmetické poškodenia triedy B popísané a nafotené v ponuke).</p>
                 <p><strong>5.4</strong> Predávajúci si vyhradzuje právo odmietnuť objednávku, ak iPhone medzičasom nie je k dispozícii. Prípadná platba bude vrátená do 5 pracovných dní.</p>
