@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import GoogleAnalytics from '../components/GoogleAnalytics';
 import CookieBanner from '../components/CookieBanner';
@@ -15,7 +14,9 @@ import {
   Clock,
   Info,
   Battery,
-  Tag
+  Tag,
+  AlertTriangle,
+  FileText,
 } from 'lucide-react';
 
 export default function ReklamaciePage() {
@@ -45,7 +46,7 @@ export default function ReklamaciePage() {
               <AlertCircle className="w-12 h-12 text-blue-200" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold mb-3">Reklamačný poriadok</h1>
-            <p className="text-blue-100 text-sm mb-1">Platné od 22. decembra 2025 | Verzia 2.0</p>
+            <p className="text-blue-100 text-sm mb-1">Platné od 22. decembra 2025 | Verzia 3.0</p>
             <p className="text-blue-200 text-xs">
               V súlade so zákonom č. 108/2024 Z.z. o ochrane spotrebiteľa a Občianskym zákonníkom č. 40/1964 Zb.
             </p>
@@ -87,14 +88,13 @@ export default function ReklamaciePage() {
           {/* ===== PREDAJ IPHONOV ===== */}
           {activeTab === 'predaj' && (
             <>
-              {/* Záručné karty */}
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Smartphone className="w-5 h-5 text-blue-600" />
                 Záruky na predávané iPhony
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                {/* Použitý iPhone – hlavná karta */}
+                {/* Použitý iPhone */}
                 <div className="bg-white rounded-xl p-5 border-2 border-blue-400 shadow-sm relative">
                   <span className="absolute top-3 right-3 text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">
                     Bežný prípad
@@ -106,7 +106,7 @@ export default function ReklamaciePage() {
                   <p className="text-3xl font-bold text-blue-600 mb-1">12 mesiacov</p>
                   <p className="text-xs text-gray-500">
                     Zákonná zodpovednosť za vady skrátená dohodou na 12 mesiacov podľa § 612 ods. 4
-                    Občianskeho zákonníka. Toto je minimálna zákonom povolená doba – nemožno ju skrátiť.
+                    Občianskeho zákonníka. Skrátenie je potvrdené súhlasom zákazníka pri kúpe.
                     Platí pre všetky použité iPhony predávané cez Fixanto.
                   </p>
                 </div>
@@ -124,23 +124,29 @@ export default function ReklamaciePage() {
                   </p>
                 </div>
 
-                {/* Odstúpenie – online */}
+                {/* Online nákup – 14 dní */}
                 <div className="bg-white rounded-xl p-5 border border-green-200 shadow-sm sm:col-span-2">
                   <div className="flex items-center gap-2 mb-2">
                     <RotateCcw className="w-5 h-5 text-green-600" />
                     <span className="font-semibold text-gray-800">Vrátenie tovaru – online nákup</span>
                   </div>
                   <p className="text-3xl font-bold text-green-600 mb-1">14 dní</p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Právo na vrátenie bez udania dôvodu platí <strong>výlučne pri zmluvách uzavretých na diaľku</strong> —
+                    t.j. keď k celkovému uzavretiu kúpnej zmluvy (vrátane potvrdenia ceny a podmienok) došlo
+                    prostredníctvom internetu, e-mailu alebo správy (napr. WhatsApp), <strong>bez fyzickej
+                    prítomnosti zákazníka na predajnom mieste</strong>.
+                  </p>
                   <p className="text-xs text-gray-500">
-                    Ak ste iPhone kúpili cez internet / WhatsApp / email (zmluva uzavretá na diaľku), máte
-                    právo odstúpiť od zmluvy <strong>bez udania dôvodu</strong> do 14 kalendárnych dní odo
-                    dňa prevzatia tovaru podľa § 19 zákona č. 108/2024 Z.z. iPhone musí byť vrátený
-                    nepoškodený, kompletný, s príslušenstvom.
+                    Toto právo <strong>nevzniká</strong>, ak zákazník prišiel osobne na predajné miesto
+                    a zmluva bola uzavretá pri osobnom stretnutí — bez ohľadu na to, či predchádzala
+                    komunikácia cez telefón alebo správy.
                   </p>
                   <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                     <p className="text-yellow-800 text-xs">
-                      ⚠️ Právo na 14-dňové vrátenie sa <strong>nevzťahuje</strong> na osobný nákup priamo
-                      v servise/na výdajnom mieste.
+                      ⚠️ iPhone musí byť vrátený <strong>nepoškodený, kompletný, s príslušenstvom</strong>.
+                      Zákazník zodpovedá za zníženie hodnoty spôsobené zaobchádzaním nad rámec bežného
+                      zoznámenia sa s tovarom.
                     </p>
                   </div>
                 </div>
@@ -150,11 +156,12 @@ export default function ReklamaciePage() {
               <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-5 mb-8">
                 <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
                   <Info className="w-5 h-5 text-blue-600" />
-                  Čo je povinne uvedené pri každom inzeráte / produkte
+                  Čo je povinne uvedené pri každom produkte
                 </h3>
                 <p className="text-xs text-blue-700 mb-3">
                   Zákon vyžaduje, aby predávajúci <strong>pred kúpou informoval kupujúceho o všetkých
-                  známych vadách</strong>. Tieto informácie sú vždy súčasťou každej ponuky:
+                  známych vadách</strong>. Zákazník svojím súhlasom potvrdzuje, že bol s týmito informáciami
+                  oboznámený. Na vady výslovne oznámené pred kúpou sa zodpovednosť za vady <strong>nevzťahuje</strong>.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="bg-white rounded-lg p-3 border border-blue-200">
@@ -163,9 +170,9 @@ export default function ReklamaciePage() {
                       <span className="text-sm font-semibold text-gray-800">Kategória stavu</span>
                     </div>
                     <p className="text-xs text-gray-500">
+                      <strong>A+ – ako nový</strong>: bez stôp použitia<br />
                       <strong>A – výborný</strong>: minimálne stopy použitia<br />
                       <strong>B – dobrý</strong>: viditeľné škrabance<br />
-                      <strong>Repasovaný</strong>: vymenené diely<br />
                       Všetky viditeľné vady sú popísané a/alebo nafotené.
                     </p>
                   </div>
@@ -176,8 +183,8 @@ export default function ReklamaciePage() {
                     </div>
                     <p className="text-xs text-gray-500">
                       Pri každom použitom iPhone je uvedená <strong>aktuálna kapacita batérie v %</strong>.
-                      Prirodzené opotrebenie batérie (postupné znižovanie kapacity) nie je vada a
-                      nevzťahuje sa naň záruka.
+                      Prirodzené opotrebenie batérie nie je vada. Kapacita batérie sa časom
+                      prirodzene znižuje — zákazník s tým uzavretím zmluvy súhlasí.
                     </p>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-blue-200">
@@ -186,11 +193,26 @@ export default function ReklamaciePage() {
                       <span className="text-sm font-semibold text-gray-800">Príslušenstvo</span>
                     </div>
                     <p className="text-xs text-gray-500">
-                      Je vždy uvedené, čo je súčasťou balenia (nabíjačka, kábel, krabica).
-                      Ak príslušenstvo nie je originálne alebo chýba, je to explicitne uvedené.
+                      Je vždy uvedené, čo je súčasťou balenia. Ak príslušenstvo nie je originálne
+                      alebo chýba, je to explicitne uvedené pred kúpou.
                     </p>
                   </div>
                 </div>
+              </div>
+
+              {/* Softvér */}
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 mb-8">
+                <h3 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  Softvér a iOS — dôležité upozornenie
+                </h3>
+                <p className="text-xs text-orange-800">
+                  Predávajúci nezodpovedá za <strong>softvérové problémy</strong> vzniknuté po prevzatí
+                  zariadenia — vrátane problémov spôsobených aktualizáciami iOS, inštaláciou aplikácií
+                  treťou stranou, resetom zariadenia alebo obnovením zo zálohy zákazníka. Predávajúci tiež
+                  nezodpovedá za <strong>kompatibilitu so softvérom alebo aplikáciami tretích strán</strong>.
+                  Predaný iPhone je plne funkčný v čase odovzdania — táto skutočnosť je overená pred expedíciou.
+                </p>
               </div>
 
               {/* Kategórie stavu */}
@@ -203,9 +225,9 @@ export default function ReklamaciePage() {
                     desc: 'Nerozbalený iPhone. Zodpovednosť za vady 24 mesiacov.',
                   },
                   {
-                    label: 'Repasovaný',
+                    label: 'Použitý – ako nový (A+)',
                     color: 'bg-blue-100 text-blue-700',
-                    desc: 'Profesionálne repasovaný s prípadnou výmenou dielov. Stav batérie a príslušenstvo vždy uvedené. Zodpovednosť za vady 12 mesiacov.',
+                    desc: 'Bez viditeľných stôp použitia, stav ako nový. Zdravie batérie vždy uvedené. Zodpovednosť za vady 12 mesiacov.',
                   },
                   {
                     label: 'Použitý – výborný (A)',
@@ -215,7 +237,7 @@ export default function ReklamaciePage() {
                   {
                     label: 'Použitý – dobrý (B)',
                     color: 'bg-orange-100 text-orange-700',
-                    desc: 'Viditeľné škrabance alebo kozmetické poškodenia, plná funkčnosť. Všetky nedostatky sú vždy popísané a nafotené v ponuke. Zodpovednosť za vady 12 mesiacov.',
+                    desc: 'Viditeľné škrabance alebo kozmetické poškodenia, plná funkčnosť. Všetky nedostatky sú popísané a nafotené v ponuke. Zákazník s nimi bol oboznámený pred kúpou — na tieto vady sa zodpovednosť nevzťahuje. Zodpovednosť za vady 12 mesiacov.',
                   },
                 ].map((item) => (
                   <div key={item.label} className="flex items-start gap-4 p-4 border-b last:border-b-0 border-gray-100">
@@ -227,7 +249,7 @@ export default function ReklamaciePage() {
                 ))}
               </div>
 
-              {/* Postup reklamácie / vrátenia */}
+              {/* Postup reklamácie */}
               <h2 className="text-xl font-bold text-gray-800 mb-4">Postup pri reklamácii alebo vrátení iPhonu</h2>
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8">
                 {[
@@ -239,7 +261,7 @@ export default function ReklamaciePage() {
                   {
                     step: '2',
                     title: 'Potvrdenie vytknutia vady',
-                    desc: 'Bezodkladne vám vystavíme písomné potvrdenie o vytknutí vady s primeranou lehotou, v ktorej vadu odstránime (povinnosť podľa zákona č. 108/2024 Z.z.).',
+                    desc: 'Bezodkladne vám vystavíme písomné potvrdenie o vytknutí vady s primeranou lehotou na jej odstránenie (povinnosť podľa zákona č. 108/2024 Z.z.).',
                   },
                   {
                     step: '3',
@@ -273,7 +295,7 @@ export default function ReklamaciePage() {
                 <Wrench className="w-5 h-5 text-blue-600" />
                 Záruky na opravy
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div className="bg-white rounded-xl p-5 border border-blue-100 shadow-sm">
                   <div className="flex items-center gap-2 mb-2">
                     <Shield className="w-5 h-5 text-blue-500" />
@@ -293,6 +315,7 @@ export default function ReklamaciePage() {
                   <p className="text-2xl font-bold text-blue-600 mb-1">3 mesiace</p>
                   <p className="text-xs text-gray-500">
                     Záruka na vykonanú prácu. Platí len na konkrétnu opravu, nie na celý telefón.
+                    Maximálna výška náhrady škody je obmedzená na cenu vykonanej opravy.
                   </p>
                 </div>
                 <div className="bg-white rounded-xl p-5 border border-blue-100 shadow-sm">
@@ -302,8 +325,8 @@ export default function ReklamaciePage() {
                   </div>
                   <p className="text-2xl font-bold text-green-600 mb-1">24 mesiacov</p>
                   <p className="text-xs text-gray-500">
-                    Platí na nabíjanie a vypínanie zariadenia. Batéria sa musí správne nabíjať a nesmie sa
-                    samovoľne vypínať.
+                    Platí na nabíjanie a vypínanie zariadenia. Batéria sa musí správne nabíjať
+                    a nesmie sa samovoľne vypínať.
                   </p>
                 </div>
                 <div className="bg-white rounded-xl p-5 border border-blue-100 shadow-sm">
@@ -317,6 +340,51 @@ export default function ReklamaciePage() {
                     Vada sa uznáva, ak batéria má výrazne nízku kapacitu krátko po výmene (prvých 6 mesiacov).
                   </p>
                 </div>
+              </div>
+
+              {/* Zariadenie v servise */}
+              <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6">
+                <h3 className="font-bold text-red-900 mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  Odovzdanie zariadenia do servisu — dôležité
+                </h3>
+                <div className="space-y-2 text-xs text-red-800">
+                  <p>
+                    <strong>Záloha dát:</strong> Zákazník je <strong>výlučne zodpovedný</strong> za zálohu
+                    všetkých dát pred odovzdaním zariadenia. Predávajúci nezodpovedá za stratu, poškodenie
+                    alebo zničenie dát počas opravy, a to ani v prípade chyby na strane servisu.
+                  </p>
+                  <p>
+                    <strong>Stav pred opravou:</strong> Zákazník odovzdaním zariadenia potvrdzuje jeho stav
+                    v čase odovzdania. Predávajúci zodpovedá len za škody preukázateľne spôsobené servisným
+                    zásahom, nie za predchádzajúce poškodenia.
+                  </p>
+                  <p>
+                    <strong>Obmedzenie zodpovednosti:</strong> V prípade poškodenia zariadenia vinou servisu
+                    je maximálna výška náhrady škody obmedzená na <strong>cenu vykonanej opravy</strong>,
+                    prípadne na <strong>trhovú hodnotu zariadenia</strong> v stave v akom bolo odovzdané —
+                    podľa toho, ktorá suma je nižšia.
+                  </p>
+                  <p>
+                    <strong>Neprevzaté zariadenia:</strong> Ak si zákazník neprevezme zariadenie do
+                    <strong> 60 dní</strong> od výzvy na prevzatie, predávajúci si vyhradzuje právo účtovať
+                    poplatok za uskladnenie vo výške 1 €/deň po uplynutí tejto lehoty.
+                  </p>
+                </div>
+              </div>
+
+              {/* Softvér – opravy */}
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 mb-8">
+                <h3 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  Softvér — vylúčenie zodpovednosti
+                </h3>
+                <p className="text-xs text-orange-800">
+                  Predávajúci nezodpovedá za <strong>softvérové problémy</strong> existujúce pred opravou
+                  ani za softvérové problémy vzniknuté po oprave hardvéru, ak nesúvisia priamo so servisným
+                  zásahom. Záruka sa nevzťahuje na problémy spôsobené aktualizáciami operačného systému,
+                  aplikáciami tretích strán alebo nesprávnym používaním zariadenia zákazníkom po oprave.
+                </p>
               </div>
 
               {/* Postup reklamácie – Opravy */}
@@ -336,7 +404,7 @@ export default function ReklamaciePage() {
                   {
                     step: '3',
                     title: 'Riešenie',
-                    desc: 'Oprava zdarma, výmena dielu, primeraná zľava alebo vrátenie peňazí (podľa vašej voľby a závažnosti vady).',
+                    desc: 'Oprava zdarma, výmena dielu, primeraná zľava alebo vrátenie peňazí podľa závažnosti vady a vašej voľby.',
                   },
                   {
                     step: '4',
@@ -367,9 +435,9 @@ export default function ReklamaciePage() {
               </div>
               <div className="p-5 space-y-3 text-sm text-gray-700">
                 <p>
-                  <strong>1.1</strong> Tento reklamačný poriadok upravuje podmienky a spôsob uplatnenia práv
-                  zákazníka z vadného plnenia na <strong>opravy zariadení, použité náhradné diely aj predávaný
-                  tovar</strong> (najmä použité iPhony), ktoré boli poskytnuté alebo predané predávajúcim{' '}
+                  <strong>1.1</strong> Tento reklamačný poriadok upravuje podmienky uplatnenia práv zákazníka
+                  z vadného plnenia na <strong>opravy zariadení, použité náhradné diely aj predávaný tovar</strong>{' '}
+                  (najmä použité iPhony), ktoré boli poskytnuté alebo predané predávajúcim{' '}
                   <strong>Štefan Hupčík – Fixanto</strong>.
                 </p>
                 <p>
@@ -382,7 +450,13 @@ export default function ReklamaciePage() {
                 <p>
                   <strong>1.4</strong> Pri <strong>použitých iPhonoch</strong> predávajúci nezodpovedá za vady,
                   ktoré boli zákazníkovi <strong>výslovne oznámené pred kúpou</strong> (napr. kozmetické
-                  poškodenia kategórie B popísané a nafotené v inzeráte) a zákazník s nimi súhlasil.
+                  poškodenia kategórie B popísané a nafotené v inzeráte alebo na webe) a zákazník s nimi
+                  súhlasil. Súhlas zákazníka je potvrdený dokončením kúpy.
+                </p>
+                <p>
+                  <strong>1.5</strong> Záručný list alebo doklad o kúpe musí obsahovať: identifikáciu zariadenia
+                  (model, sériové číslo ak je dostupné), popis stavu, zdravie batérie v %, dátum predaja,
+                  cenu a záručnú dobu. Bez tohto dokladu nie je možné uplatniť reklamáciu.
                 </p>
               </div>
             </div>
@@ -394,30 +468,30 @@ export default function ReklamaciePage() {
               <div className="p-5 space-y-3 text-sm text-gray-700">
                 <p>
                   <strong>2.1</strong> Kupujúci je povinný vytknúť vadu u predávajúceho{' '}
-                  <strong>do dvoch mesiacov od jej zistenia</strong>, najneskôr do uplynutia doby zodpovednosti
-                  za vady.
+                  <strong>do dvoch mesiacov od jej zistenia</strong>, najneskôr do uplynutia záručnej doby.
+                  Na neskôr uplatnené reklamácie nie je možné prihliadnuť.
                 </p>
                 <p>
-                  <strong>2.2</strong> Reklamáciu je možné uplatniť telefonicky{' '}
-                  <strong>+421 949 344 600</strong>, emailom <strong>phoneservissk@gmail.com</strong>,
-                  cez WhatsApp alebo osobne.
+                  <strong>2.2</strong> Reklamáciu je možné uplatniť telefonicky <strong>+421 949 344 600</strong>,
+                  emailom <strong>phoneservissk@gmail.com</strong>, cez WhatsApp alebo osobne.
                 </p>
                 <p>
                   <strong>2.3</strong> Pri podaní reklamácie musí zákazník preukázať kúpu predložením dokladu
-                  (faktúra, záručný list, doklad o zaplatení).
+                  (faktúra, záručný list, doklad o zaplatení). <strong>Bez dokladu o kúpe nie je možné
+                  reklamáciu prijať.</strong>
                 </p>
                 <p>
-                  <strong>2.4</strong> Zákazník je povinný popísať vadu, spôsob jej prejavenia a uviesť, ktoré
-                  práva uplatňuje.
+                  <strong>2.4</strong> Zákazník je povinný popísať vadu, spôsob jej prejavenia a uviesť,
+                  ktoré práva uplatňuje (§ 622 alebo § 623 Občianskeho zákonníka).
                 </p>
                 <p>
                   <strong>2.5</strong> Reklamovaný tovar je potrebné doručiť osobne alebo zaslať na adresu
-                  predávajúceho (nie na dobierku), vhodne zabalený, ideálne ako poistená zásielka.
+                  predávajúceho (nie na dobierku), vhodne zabalený. Odporúčame zaslať ako poistenú zásielku.
+                  Náklady na dopravu reklamovaného tovaru k predávajúcemu znáša zákazník.
                 </p>
                 <p>
                   <strong>2.6</strong> Bezodkladne po vytknutí vady predávajúci vydá zákazníkovi{' '}
-                  <strong>písomné potvrdenie o jej vytknutí s primeranou lehotou</strong>, v ktorej vadu
-                  odstráni (§ zákon č. 108/2024 Z.z.).
+                  <strong>písomné potvrdenie o jej vytknutí s primeranou lehotou</strong> na odstránenie vady.
                 </p>
               </div>
             </div>
@@ -428,13 +502,15 @@ export default function ReklamaciePage() {
               </div>
               <div className="p-5 space-y-3 text-sm text-gray-700">
                 <p>
-                  <strong>3.1</strong> Predávajúci je povinný bezodkladne po vytknutí vady vystaviť potvrdenie
-                  s <strong>primeranou lehotou na odstránenie vady</strong>. Táto lehota nesmie byť dlhšia ako{' '}
-                  <strong>30 dní</strong>, s výnimkou objektívnych dôvodov, ktoré predávajúci nemôže ovplyvniť.
+                  <strong>3.1</strong> Predávajúci je povinný vystaviť potvrdenie o vytknutí vady s{' '}
+                  <strong>primeranou lehotou na jej odstránenie</strong>, ktorá nesmie byť dlhšia ako{' '}
+                  <strong>30 dní</strong>, s výnimkou objektívnych dôvodov, ktoré predávajúci nemôže
+                  ovplyvniť (napr. nedostupnosť náhradného dielu).
                 </p>
                 <p>
                   <strong>3.2</strong> Ak predávajúci nevybaví reklamáciu v stanovenej lehote, má zákazník
-                  právo od zmluvy odstúpiť a bude mu vrátená plná kúpna cena, alebo má právo na výmenu tovaru.
+                  právo od zmluvy odstúpiť a bude mu vrátená plná kúpna cena, alebo má právo na výmenu
+                  tovaru.
                 </p>
                 <p>
                   <strong>3.3</strong> Po vybavení reklamácie predávajúci vydá zákazníkovi{' '}
@@ -465,7 +541,7 @@ export default function ReklamaciePage() {
                 </p>
                 <p>
                   <strong>4.4</strong> Tie isté práva má kupujúci pri opakovanej vade po oprave (viac ako
-                  2-krát) alebo väčšom počte vád (viac ako 3 rôzne vady súčasne) – § 623 ods. 2 Občianskeho
+                  2×) alebo väčšom počte vád (viac ako 3 rôzne vady súčasne) – § 623 ods. 2 Občianskeho
                   zákonníka.
                 </p>
                 <p>
@@ -481,30 +557,35 @@ export default function ReklamaciePage() {
               </div>
               <div className="p-5 space-y-3 text-sm text-gray-700">
                 <p>
-                  <strong>5.1</strong> Ak zákazník zakúpil iPhone prostredníctvom webu, e-mailu alebo WhatsApp,
-                  má právo <strong>odstúpiť od zmluvy bez udania dôvodu do 14 kalendárnych dní</strong> odo dňa
-                  prevzatia tovaru (§ 19 zákona č. 108/2024 Z.z.).
+                  <strong>5.1</strong> Právo odstúpiť od zmluvy bez udania dôvodu do 14 dní platí{' '}
+                  <strong>výlučne pri zmluvách uzavretých na diaľku</strong> — t.j. keď k uzavretiu kúpnej
+                  zmluvy vrátane potvrdenia ceny, stavu a podmienok došlo prostredníctvom internetu, e-mailu
+                  alebo správy, <strong>bez fyzickej prítomnosti zákazníka na predajnom mieste v čase
+                  uzavretia zmluvy</strong> (§ 19 zákona č. 108/2024 Z.z.).
                 </p>
                 <p>
-                  <strong>5.2</strong> Oznámenie o odstúpení musí zákazník zaslať pred uplynutím 14-dňovej
-                  lehoty písomne alebo emailom. Predávajúci bezodkladne potvrdí jeho doručenie.
+                  <strong>5.2</strong> Toto právo <strong>nevzniká</strong>, ak zákazník prišiel osobne na
+                  predajné miesto a zmluva bola uzavretá pri osobnom stretnutí.
                 </p>
                 <p>
-                  <strong>5.3</strong> Zákazník je povinný vrátiť tovar do 14 dní odo dňa odstúpenia. Náklady
-                  na vrátenie znáša zákazník.
+                  <strong>5.3</strong> Zákazník je povinný vrátiť tovar do 14 dní odo dňa odstúpenia.
+                  Náklady na vrátenie znáša zákazník.
                 </p>
                 <p>
                   <strong>5.4</strong> Predávajúci vráti všetky platby{' '}
-                  <strong>do 14 dní odo dňa doručenia vráteného tovaru</strong>.
+                  <strong>do 14 dní odo dňa doručenia vráteného tovaru</strong> — nie odo dňa oznámenia
+                  o odstúpení.
                 </p>
                 <p>
-                  <strong>5.5</strong> Zákazník zodpovedá za zníženie hodnoty tovaru nad rámec bežného
-                  zoznámenia sa s jeho povahou a funkčnosťou.
+                  <strong>5.5</strong> Zákazník zodpovedá za <strong>zníženie hodnoty tovaru</strong> nad
+                  rámec bežného zoznámenia sa s jeho povahou, vlastnosťami a funkčnosťou. Predávajúci je
+                  oprávnený jednostranne započítať nárok na náhradu škody voči nároku zákazníka na vrátenie
+                  kúpnej ceny.
                 </p>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
                   <p className="text-yellow-800 text-xs font-medium">
-                    ⚠️ Právo na odstúpenie od zmluvy sa <strong>nevzťahuje</strong> na nákup pri osobnej
-                    návšteve servisu / výdajného miesta.
+                    ⚠️ Právo na odstúpenie sa <strong>nevzťahuje</strong> na nákup pri osobnej návšteve
+                    servisu / výdajného miesta.
                   </p>
                 </div>
               </div>
@@ -520,21 +601,24 @@ export default function ReklamaciePage() {
                   <li>vadu spôsobil zákazník nesprávnym používaním alebo zanedbaním starostlivosti,</li>
                   <li>zariadenie bolo mechanicky poškodené (náraz, prasknutie displeja, ohnutý rám),</li>
                   <li>zariadenie bolo poškodené tekutinou,</li>
-                  <li>na zariadení vykonal neoprávnený zásah zákazník alebo tretia osoba,</li>
+                  <li>na zariadení vykonal neoprávnený zásah zákazník alebo tretia osoba po prevzatí,</li>
                   <li>vada vznikla v dôsledku živelnej udalosti alebo iných vonkajších vplyvov,</li>
                   <li>zákazník uplatňuje reklamáciu po uplynutí záručnej doby,</li>
-                  <li>
-                    ide o vadu, ktorá bola <strong>výslovne oznámená zákazníkovi pred kúpou</strong> (kozmetické
-                    poškodenia kategórie B popísané v inzeráte).
-                  </li>
+                  <li>zákazník neuplatnil reklamáciu do 2 mesiacov od zistenia vady,</li>
+                  <li>ide o vadu výslovne oznámenú zákazníkovi pred kúpou (kozmetické poškodenia
+                    v inzeráte / na webe),</li>
+                  <li>ide o prirodzené opotrebenie zariadenia alebo jeho súčastí (vrátane batérie),</li>
+                  <li>ide o softvérové problémy nesúvisiace so servisným zásahom,</li>
+                  <li>zákazník nepredložil doklad o kúpe.</li>
                 </ul>
                 <p>
-                  <strong>6.2</strong> Predávajúci nenesie zodpovednosť za stratu dát. Zákazník je zodpovedný
-                  za zálohu dát pred odovzdaním zariadenia.
+                  <strong>6.2</strong> Predávajúci nenesie zodpovednosť za stratu dát. Zákazník je
+                  zodpovedný za zálohu dát pred odovzdaním zariadenia na opravu.
                 </p>
                 <p>
-                  <strong>6.3</strong> Prirodzené opotrebenie batérie (postupné znižovanie kapacity) nie je
-                  vada.
+                  <strong>6.3</strong> Maximálna výška náhrady škody je obmedzená na cenu vykonanej opravy,
+                  prípadne na trhovú hodnotu zariadenia v stave v akom bolo odovzdané — podľa toho, ktorá
+                  suma je nižšia.
                 </p>
               </div>
             </div>
@@ -554,7 +638,7 @@ export default function ReklamaciePage() {
                 </ul>
                 <p>
                   <strong>7.2</strong> O výsledku vybavenia reklamácie bude predávajúci informovať zákazníka
-                  telefonicky alebo emailom a vydá písomný doklad o spôsobe vybavenia reklamácie.
+                  telefonicky alebo emailom a vydá písomný doklad o spôsobe jej vybavenia.
                 </p>
               </div>
             </div>
@@ -574,23 +658,13 @@ export default function ReklamaciePage() {
                   <p className="text-xs text-gray-600">Inšpektorát SOI pre Trenčiansky kraj</p>
                   <p className="text-xs text-gray-600">Hurbanova 59, 911 01 Trenčín</p>
                   <p className="text-xs text-gray-600">Tel: 032/640 01 09 | Email: tn@soi.sk</p>
-                  <a
-                    href="https://www.soi.sk"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:underline"
-                  >
-                    www.soi.sk
-                  </a>
+                  <a href="https://www.soi.sk" target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:underline">www.soi.sk</a>
                 </div>
                 <p>
-                  <strong>8.3</strong> Online platforma EÚ pre riešenie sporov (zákon č. 391/2015 Z.z.):{' '}
-                  <a
-                    href="https://ec.europa.eu/consumers/odr"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
+                  <strong>8.3</strong> Online platforma EÚ pre riešenie sporov:{' '}
+                  <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline">
                     https://ec.europa.eu/consumers/odr
                   </a>
                 </p>
@@ -599,7 +673,10 @@ export default function ReklamaciePage() {
 
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="bg-gray-800 text-white px-5 py-3">
-                <h3 className="font-bold text-sm">9. Záverečné ustanovenia</h3>
+                <h3 className="font-bold text-sm flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  9. Záverečné ustanovenia
+                </h3>
               </div>
               <div className="p-5 space-y-3 text-sm text-gray-700">
                 <p><strong>9.1</strong> Vzťahy neupravené týmto poriadkom sa riadia:</p>
@@ -614,11 +691,11 @@ export default function ReklamaciePage() {
                   Aktuálne znenie je vždy dostupné na{' '}
                   <a href="https://www.fixanto.sk" className="text-blue-600 hover:underline">
                     www.fixanto.sk
-                  </a>
+                  </a>. Na reklamácie uplatnené pred zmenou poriadku sa vzťahuje verzia platná v čase kúpy.
                 </p>
                 <p>
                   <strong>9.3</strong> Tento reklamačný poriadok nadobúda účinnosť{' '}
-                  <strong>22. decembra 2025</strong> a je v súlade so zákonom č. 108/2024 Z.z.
+                  <strong>22. decembra 2025</strong>.
                 </p>
                 <p>
                   <strong>9.4</strong> Tieto reklamačné podmienky sú neoddeliteľnou súčasťou všeobecných
@@ -629,20 +706,25 @@ export default function ReklamaciePage() {
 
           </div>
 
-          {/* Footer */}
-          <div className="mt-10 text-center text-xs text-gray-400">
-            <p>Tento reklamačný poriadok nadobúda účinnosť 22. decembra 2025</p>
+          {/* Kontakt */}
+          <div className="mt-10 bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8 rounded-2xl text-center">
+            <h3 className="text-xl font-bold mb-3">Máte otázku alebo problém?</h3>
+            <p className="text-blue-100 text-sm mb-5">Neváhajte nás kontaktovať – sme tu pre vás</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center font-bold">
+              <a href="tel:0949344600" className="hover:text-yellow-300 transition">📞 0949 344 600</a>
+              <span className="hidden sm:inline text-blue-300">•</span>
+              <a href="https://wa.me/421949344600" target="_blank" rel="noopener noreferrer"
+                className="hover:text-green-300 transition">💬 WhatsApp</a>
+              <span className="hidden sm:inline text-blue-300">•</span>
+              <a href="mailto:phoneservissk@gmail.com" className="hover:text-yellow-300 transition">
+                ✉️ phoneservissk@gmail.com
+              </a>
+            </div>
+          </div>
+
+          <div className="mt-6 text-center text-xs text-gray-400">
+            <p>Reklamačný poriadok v. 3.0 — účinnosť od 22. decembra 2025</p>
             <p className="mt-1">© 2025 Štefan Hupčík – Fixanto. Všetky práva vyhradené.</p>
-            <p className="mt-2 text-gray-500">
-              Ďakujeme, že ste si vybrali Fixanto. Robíme všetko pre to, aby ste boli spokojní.
-            </p>
-            <p className="mt-1">
-              Neváhajte nás kontaktovať –{' '}
-              <a href="tel:+421949344600" className="text-blue-500 hover:underline">
-                +421 949 344 600
-              </a>{' '}
-              | sme tu pre vás
-            </p>
           </div>
 
         </div>
