@@ -74,7 +74,7 @@ export default function VopPage() {
     },
     {
       q: 'Čo je nabíjací adaptér 20W ako doplnok?',
-      a: 'Pri objednaní iPhonu cez e-shop je možné dokúpiť nabíjací adaptér USB-C 20W za 15 €. Ide o nový doplnkový tovar — vzťahuje sa naň zákonná zodpovednosť za vady 24 mesiacov (nový tovar, skrátenie nie je možné).',
+      a: 'Pri objednaní iPhonu cez e-shop je možné dokúpiť nabíjací adaptér USB-C 20W za 15 €. Ide o nový doplnkový tovar — vzťahuje sa naň zákonná zodpovednosť za vady 24 mesiacov',
     },
     {
       q: 'Sú predávané iPhony repasované?',
