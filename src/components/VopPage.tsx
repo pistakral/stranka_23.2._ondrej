@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import GoogleAnalytics from '../components/GoogleAnalytics';
 import CookieBanner from '../components/CookieBanner';
@@ -22,9 +21,10 @@ import {
   Database,
   Lock,
   Eye,
-  Trash2,
   UserCheck,
-  Server
+  Server,
+  ShoppingCart,
+  AlertTriangle,
 } from 'lucide-react';
 
 export default function VopPage() {
@@ -42,11 +42,11 @@ export default function VopPage() {
   const faqs = [
     {
       q: 'Môžem odstúpiť od zmluvy po oprave telefónu?',
-      a: 'Áno, ale iba v prípade online objednávky máte právo odstúpiť od zmluvy do 14 dní od prevzatia opraveného zariadenia bez udania dôvodu. Právo na odstúpenie nevzniká v prípade služby, ktorá bola úplne vykonaná s vaším výslovným súhlasom. Pri osobnej návšteve servisu právo na odstúpenie nie je.',
+      a: 'Áno, ale iba v prípade online objednávky (uzavretej na diaľku) máte právo odstúpiť od zmluvy do 14 dní od prevzatia opraveného zariadenia bez udania dôvodu, pokiaľ oprava ešte nebola úplne vykonaná. Ak bola oprava dokončená s vaším výslovným súhlasom, právo na odstúpenie zaniká. Pri osobnej návšteve servisu právo na odstúpenie nevzniká.',
     },
     {
-      q: 'Môžem vrátiť zakúpený iPhone?',
-      a: 'Áno, pri online nákupe (cez web, WhatsApp alebo email) máte právo vrátiť iPhone bez udania dôvodu do 14 kalendárnych dní od prevzatia. iPhone musí byť v pôvodnom stave, nepoškodený, s príslušenstvom. Pri osobnom nákupe v servise právo na vrátenie nevzniká.',
+      q: 'Môžem vrátiť zakúpený iPhone z e-shopu?',
+      a: 'Áno, pri online nákupe cez e-shop (web, WhatsApp alebo email) máte právo vrátiť iPhone bez udania dôvodu do 14 kalendárnych dní od prevzatia. iPhone musí byť v pôvodnom stave, nepoškodený, s príslušenstvom. Pri osobnom nákupe v servise právo na vrátenie nevzniká.',
     },
     {
       q: 'Čo ak sa vada vyskytne viackrát?',
@@ -62,7 +62,7 @@ export default function VopPage() {
     },
     {
       q: 'Ako uplatniť reklamáciu?',
-      a: 'Reklamáciu uplatníte kontaktovaním poskytovateľa na tel. 0949 344 600 alebo emailom na phoneservissk@gmail.com. Tovar zašlite s popisom vady a záručným listom. Reklamácia bude vybavená v primeranej lehote, najneskôr do 30 dní.',
+      a: 'Reklamáciu uplatníte kontaktovaním poskytovateľa na tel. 0949 344 600 alebo emailom na phoneservissk@gmail.com. Reklamácia bude potvrdená písomne s primeranou lehotou na vybavenie, najneskôr do 30 dní. Bez dokladu o kúpe nie je možné reklamáciu prijať.',
     },
     {
       q: 'Kde môžem riešiť spor mimosúdne?',
@@ -70,7 +70,15 @@ export default function VopPage() {
     },
     {
       q: 'Ako požiadam o vymazanie svojich osobných údajov?',
-      a: 'Môžete kedykoľvek písomne alebo emailom (phoneservissk@gmail.com) požiadať o vymazanie vašich osobných údajov z našej databázy. Vymazanie vykonáme do 30 dní, pokiaľ nám zákon neukladá povinnosť uchovávania (napr. účtovné doklady).',
+      a: 'Môžete kedykoľvek emailom (phoneservissk@gmail.com) požiadať o vymazanie vašich osobných údajov z našej databázy. Vymazanie vykonáme do 30 dní, pokiaľ nám zákon neukladá povinnosť uchovávania (napr. účtovné doklady — 10 rokov).',
+    },
+    {
+      q: 'Čo je nabíjací adaptér 20W ako doplnok?',
+      a: 'Pri objednaní iPhonu cez e-shop je možné dokúpiť nabíjací adaptér Apple USB-C 20W za 15 €. Ide o nový doplnkový tovar — vzťahuje sa naň zákonná zodpovednosť za vady 24 mesiacov (nový tovar, skrátenie nie je možné).',
+    },
+    {
+      q: 'Sú predávané iPhony repasované?',
+      a: 'Každý predávaný iPhone bol pred predajom skontrolovaný, otestovaný a prípadne opravený v našom servise. Ide o použitý tovar — zákazník je vopred informovaný o kategórii stavu (A+/A/B), zdraví batérie a prípadných viditeľných vadách. Záručná doba je 12 mesiacov.',
     },
   ];
 
@@ -91,7 +99,7 @@ export default function VopPage() {
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
               Všeobecné obchodné podmienky
             </h1>
-            <p className="text-gray-300 text-sm mb-1">Platné od 22. decembra 2025 | Verzia 2.0</p>
+            <p className="text-gray-300 text-sm mb-1">Platné od 22. decembra 2025 | Verzia 3.0</p>
             <p className="text-gray-400 text-xs">
               Komplexné informácie o vašich právach a našich povinnostiach v súlade s platnou legislatívou SR a nariadeniami EÚ
             </p>
@@ -100,7 +108,7 @@ export default function VopPage() {
 
         <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
 
-          {/* ── IDENTIFIKÁCIA PREDÁVAJÚCEHO ── */}
+          {/* 1. IDENTIFIKÁCIA */}
           <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="bg-gray-800 text-white px-5 py-3 flex items-center gap-2">
               <Building2 className="w-4 h-4" />
@@ -118,11 +126,12 @@ export default function VopPage() {
                 <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-blue-500" /><a href="tel:+421949344600" className="text-blue-600 hover:underline">0949 344 600</a></p>
                 <p className="flex items-center gap-2"><Mail className="w-4 h-4 text-blue-500" /><a href="mailto:phoneservissk@gmail.com" className="text-blue-600 hover:underline">phoneservissk@gmail.com</a></p>
                 <p className="flex items-center gap-2"><Home className="w-4 h-4 text-blue-500" /><a href="https://www.fixanto.sk" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">www.fixanto.sk</a></p>
+                <p className="flex items-center gap-2"><ShoppingCart className="w-4 h-4 text-blue-500" /><a href="https://www.fixanto.sk/store" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">fixanto.sk/store (e-shop)</a></p>
               </div>
             </div>
           </section>
 
-          {/* ── PREHĽAD PRÁV – TABUĽKA ── */}
+          {/* 2. PREHĽAD PRÁV */}
           <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="bg-blue-700 text-white px-5 py-3 flex items-center gap-2">
               <Scale className="w-4 h-4" />
@@ -139,17 +148,20 @@ export default function VopPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {[
-                    ['Odstúpenie od zmluvy – online oprava / nákup', '14 dní od prevzatia', '§ 19 zák. č. 108/2024 Z.z.'],
-                    ['Záruka na nové displeje', '24 mesiacov (funkčnosť a výrobné vady)', '§ 620 Občianskeho zákonníka'],
+                    ['Odstúpenie od zmluvy – online nákup / oprava', '14 dní od prevzatia', '§ 19 zák. č. 108/2024 Z.z.'],
+                    ['Záruka na nové displeje', '24 mesiacov', '§ 620 Občianskeho zákonníka'],
                     ['Záruka na prácu servisu', '3 mesiace', '§ 620 Občianskeho zákonníka'],
                     ['Záruka na batérie – funkčnosť', '24 mesiacov', '§ 620 Občianskeho zákonníka'],
                     ['Záruka na batérie – kapacita', '6 mesiacov', '§ 620 Občianskeho zákonníka'],
                     ['Záruka na nový iPhone', '24 mesiacov', '§ 609 Občianskeho zákonníka'],
-                    ['Záruka na použitý iPhone', '12 mesiacov (skrátená dohodou)', '§ 612 ods. 4 Občianskeho zákonníka'],
-                    ['Vybavenie reklamácie', 'Primeraná lehota, max. 30 dní', '§ zákon č. 108/2024 Z.z.'],
-                    ['Dodacia lehota', '0–5 pracovných dní (bežne)', 'Obchodné podmienky'],
-                    ['Bezplatná diagnostika', 'Pri pristúpení k oprave / 15 € pri odmietnutí', 'Obchodné podmienky'],
-                    ['Vrátenie sumy pri online odstúpení', '14 dní od doručenia vráteného tovaru', '§ zákon č. 108/2024 Z.z.'],
+                    ['Záruka na použitý iPhone (A+/A/B)', '12 mesiacov (skrátená dohodou)', '§ 612 ods. 4 Občianskeho zákonníka'],
+                    ['Záruka na nabíjací adaptér (nový tovar)', '24 mesiacov', '§ 609 Občianskeho zákonníka'],
+                    ['Vybavenie reklamácie', 'Primeraná lehota, max. 30 dní', 'Zákon č. 108/2024 Z.z.'],
+                    ['Dodacia lehota – oprava', '0–5 pracovných dní', 'Obchodné podmienky'],
+                    ['Dodacia lehota – e-shop iPhone', '1–3 pracovné dni od platby', 'Obchodné podmienky'],
+                    ['Bezplatná diagnostika', 'Pri súhlase s opravou / 15 € pri odmietnutí', 'Obchodné podmienky'],
+                    ['Vrátenie sumy pri online odstúpení', '14 dní od doručenia vráteného tovaru', 'Zákon č. 108/2024 Z.z.'],
+                    ['Neprevzaté zariadenie zo servisu', 'Poplatok 1 €/deň po 60 dňoch od výzvy', 'Obchodné podmienky'],
                   ].map(([pravo, lehota, zaklad]) => (
                     <tr key={pravo} className="hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-gray-800">{pravo}</td>
@@ -162,7 +174,7 @@ export default function VopPage() {
             </div>
           </section>
 
-          {/* ── OPRAVY ── */}
+          {/* 3. OPRAVY */}
           <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="bg-gray-800 text-white px-5 py-3 flex items-center gap-2">
               <Package className="w-4 h-4" />
@@ -183,28 +195,80 @@ export default function VopPage() {
                   </div>
                 ))}
               </div>
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2">
                 <p><strong>3.1</strong> Cena opravy je dohodnutá pred začatím opravy. Zákazník bude o cene informovaný po diagnostike a môže opravu odmietnuť.</p>
-                <p><strong>3.2</strong> Bezplatná diagnostika pri súhlase s opravou. Pri odmietnutí opravy po diagnostike sa účtuje diagnostický poplatok <strong>15 €</strong>.</p>
+                <p><strong>3.2</strong> Diagnostika je bezplatná pri súhlase s opravou. Pri odmietnutí opravy po vykonaní diagnostiky sa účtuje poplatok <strong>15 €</strong>. Zákazník je o tomto poplatku informovaný pred začatím diagnostiky.</p>
                 <p><strong>3.3</strong> O dokončení opravy bude zákazník informovaný telefonicky, WhatsApp alebo emailom.</p>
-                <p><strong>3.4</strong> Zariadenie neprevzaté do <strong>90 dní</strong> od dokončenia opravy môže byť po predchádzajúcom upozornení zlikvidované.</p>
-                <p><strong>3.5</strong> Poskytovateľ nezodpovedá za stratu dát. Zákazník je povinný zálohovať dáta pred odovzdaním zariadenia.</p>
+                <p><strong>3.4</strong> Zariadenie neprevzaté do <strong>60 dní</strong> od výzvy na prevzatie — predávajúci účtuje poplatok za uskladnenie <strong>1 €/deň</strong>. Zariadenie neprevzaté do 180 dní môže byť po písomnom upozornení predané alebo zlikvidované.</p>
+                <p><strong>3.5</strong> Poskytovateľ nezodpovedá za stratu dát. Zákazník je povinný zálohovať dáta pred odovzdaním zariadenia. Maximálna výška náhrady škody za poškodenie vinou servisu je obmedzená na cenu vykonanej opravy alebo trhovú hodnotu zariadenia v čase odovzdania — podľa toho, ktorá suma je nižšia.</p>
+                <p><strong>3.6</strong> Poskytovateľ nezodpovedá za softvérové problémy existujúce pred opravou ani za softvérové problémy nesúvisiace so servisným zásahom.</p>
               </div>
             </div>
           </section>
 
-          {/* ── PREDAJ IPHONOV ── */}
-          <section className="bg-white rounded-xl border border-blue-200 shadow-sm overflow-hidden">
-            <div className="bg-blue-700 text-white px-5 py-3 flex items-center gap-2">
-              <Smartphone className="w-4 h-4" />
-              <h2 className="font-bold text-sm">4. Podmienky predaja iPhonov</h2>
+          {/* 4. E-SHOP */}
+          <section className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
+            <div className="bg-blue-600 text-white px-5 py-3 flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              <h2 className="font-bold text-sm">4. Podmienky nákupu cez e-shop (fixanto.sk/store)</h2>
             </div>
             <div className="p-5 space-y-4 text-sm text-gray-700">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+                <strong>4.0</strong> E-shop na adrese fixanto.sk/store umožňuje online nákup použitých iPhonov
+                a doplnkového príslušenstva. Všetky nákupy cez e-shop sú zmluvami uzavretými na diaľku
+                podľa § 19 zákona č. 108/2024 Z.z. — zákazník má právo na 14-dňové vrátenie tovaru.
+              </div>
+              <div className="space-y-2">
+                <p><strong>4.1 Uzavretie zmluvy.</strong> Zmluva je uzavretá okamihom odoslania potvrdenia objednávky predávajúcim na emailovú adresu zákazníka. Pred uzavretím zmluvy je zákazník povinný oboznámiť sa s týmito VOP a reklamačným poriadkom.</p>
+                <p><strong>4.2 Platba.</strong> Objednávky cez e-shop sú hradené <strong>výlučne bankovým prevodom vopred</strong>. Zákazník obdrží platobné údaje (IBAN, variabilný symbol) v potvrdzovacom emaili. Platba musí byť pripísaná do <strong>48 hodín</strong>, inak je rezervácia zrušená.</p>
+                <p><strong>4.3 Expedícia.</strong> iPhone je expedovaný do <strong>1–3 pracovných dní</strong> od pripísania platby. Zákazník obdrží tracking číslo emailom.</p>
+                <p><strong>4.4 Doprava.</strong> Doprava Slovenskou poštou je zadarmo. Zákazník je povinný skontrolovať obsah zásielky pri prevzatí a prípadné poškodenie prepravou oznámiť doručovateľovi na mieste.</p>
+                <p><strong>4.5 Rezervácia.</strong> Produkt je rezervovaný od odoslania objednávky. Ak platba nie je prijatá do 48 hodín, rezervácia zaniká.</p>
+                <p><strong>4.6 Nedostupnosť tovaru.</strong> Ak iPhone nie je k dispozícii po potvrdení objednávky, predávajúci zákazníka bezodkladne informuje a prípadná platba bude vrátená do 5 pracovných dní.</p>
+              </div>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <h3 className="font-semibold text-orange-900 mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-orange-600" />
+                  4.7 Doplnkový tovar — Nabíjací adaptér 20W
+                </h3>
+                <p className="text-xs text-orange-800">
+                  Pri objednaní iPhonu je možné dokúpiť <strong>nabíjací adaptér Apple USB-C 20W za 15 €</strong>.
+                  Adaptér je <strong>nový tovar</strong> — vzťahuje sa naň zákonná zodpovednosť za vady{' '}
+                  <strong>24 mesiacov</strong> (na nový tovar nie je možné záručnú dobu skrátiť).
+                  Zľavový kód sa vzťahuje na celkovú sumu objednávky vrátane adaptéra.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* 5. PREDAJ IPHONOV */}
+          <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="bg-gray-800 text-white px-5 py-3 flex items-center gap-2">
+              <Smartphone className="w-4 h-4" />
+              <h2 className="font-bold text-sm">5. Podmienky predaja iPhonov</h2>
+            </div>
+            <div className="p-5 space-y-4 text-sm text-gray-700">
+
+              {/* Kľúčová veta o kontrole */}
+              <div className="bg-green-50 border-2 border-green-400 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-green-900 mb-1">Každý predávaný iPhone bol pred predajom skontrolovaný, otestovaný a prípadne opravený v našom servise.</p>
+                    <p className="text-xs text-green-800">
+                      Ide o <strong>použitý tovar</strong> — zákazník je pred kúpou vždy informovaný o kategórii stavu
+                      (A+/A/B), zdraví batérie v % a prípadných viditeľných vadách. Záručná doba na použitý iPhone
+                      je <strong>12 mesiacov</strong> (skrátená dohodou podľa § 612 ods. 4 Občianskeho zákonníka).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { label: 'Nový iPhone', value: '24 mesiacov', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
-                  { label: 'Použitý iPhone', value: '12 mesiacov', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-                  { label: 'Vrátenie – online', value: '14 dní', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
+                  { label: 'Použitý iPhone (A+/A/B)', value: '12 mesiacov', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+                  { label: 'Vrátenie – e-shop', value: '14 dní', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
                 ].map(item => (
                   <div key={item.label} className={`${item.bg} border ${item.border} rounded-lg p-3 text-center`}>
                     <div className="text-xs text-gray-500 mb-1">{item.label}</div>
@@ -212,82 +276,149 @@ export default function VopPage() {
                   </div>
                 ))}
               </div>
-              <div className="space-y-2 pt-2">
-                <p><strong>4.1</strong> Predávajúci predáva <strong>prevažne použité iPhony</strong>. Zákonná zodpovednosť za vady je pri použitom tovare skrátená dohodou na <strong>12 mesiacov</strong> podľa § 612 ods. 4 Občianskeho zákonníka. Toto je zákonom stanovené minimum – kratšiu dobu nie je možné dohodnúť.</p>
-                <p><strong>4.2</strong> Pri každom predávanom iPhone predávajúci povinne uvádza: <strong>kategóriu stavu (A/B/Repasovaný)</strong>, <strong>zdravie batérie v %</strong>, popis všetkých viditeľných vád a obsah balenia.</p>
-                <p><strong>4.3</strong> Predávajúci nezodpovedá za vady, ktoré boli zákazníkovi <strong>výslovne oznámené pred kúpou</strong> a zákazník s nimi výslovne súhlasil (napr. kozmetické poškodenia popísané a nafotené v inzeráte).</p>
-                <p><strong>4.4</strong> Zmluva je uzavretá okamihom potvrdenia objednávky zo strany predávajúceho. Kúpna cena je splatná pri prevzatí alebo vopred bankovým prevodom.</p>
-                <p><strong>4.5</strong> Predávajúci si vyhradzuje právo odmietnuť objednávku, ak iPhone medzičasom nie je k dispozícii. V takom prípade bude zákazník bezodkladne informovaný a prípadná platba vrátená.</p>
+
+              {/* Kategórie stavu */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+                <div className="bg-gray-700 text-white px-4 py-2">
+                  <p className="text-xs font-semibold">Kategórie stavu predávaných iPhonov</p>
+                </div>
+                {[
+                  {
+                    label: 'Trieda A+ – ako nový',
+                    color: 'bg-blue-100 text-blue-700',
+                    desc: 'Bez viditeľných stôp použitia. Stav ako nový, bez škrabancov na ráme ani displeji. Skontrolovaný a otestovaný v servise.',
+                  },
+                  {
+                    label: 'Trieda A – výborný',
+                    color: 'bg-yellow-100 text-yellow-700',
+                    desc: 'Minimálne stopy používania, plná funkčnosť. Prípadné drobné stopy sú vždy popísané v ponuke. Skontrolovaný a otestovaný v servise.',
+                  },
+                  {
+                    label: 'Trieda B – dobrý',
+                    color: 'bg-orange-100 text-orange-700',
+                    desc: 'Viditeľné škrabance alebo kozmetické poškodenia, plná funkčnosť. Všetky nedostatky sú popísané a nafotené v ponuke pred kúpou — zákazník s nimi súhlasí dokončením objednávky. Na tieto vady sa zodpovednosť za vady nevzťahuje.',
+                  },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-start gap-3 p-3 border-b last:border-b-0 border-gray-100">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${item.color}`}>
+                      {item.label}
+                    </span>
+                    <p className="text-xs text-gray-600">{item.desc}</p>
+                  </div>
+                ))}
               </div>
+
+              <div className="space-y-2">
+                <p><strong>5.1</strong> Zákonná zodpovednosť za vady je pri použitom tovare skrátená dohodou na <strong>12 mesiacov</strong> podľa § 612 ods. 4 Občianskeho zákonníka. Toto je zákonom stanovené minimum — kratšiu dobu nie je možné dohodnúť.</p>
+                <p><strong>5.2</strong> Pri každom predávanom iPhone predávajúci povinne uvádza: <strong>kategóriu stavu (A+/A/B)</strong>, <strong>zdravie batérie v %</strong>, popis všetkých viditeľných vád a obsah balenia. Zákazník súhlasom s objednávkou potvrdzuje, že bol s týmito informáciami oboznámený.</p>
+                <p><strong>5.3</strong> Predávajúci nezodpovedá za vady, ktoré boli zákazníkovi <strong>výslovne oznámené pred kúpou</strong> a zákazník s nimi súhlasil (napr. kozmetické poškodenia triedy B popísané a nafotené v ponuke).</p>
+                <p><strong>5.4</strong> Predávajúci si vyhradzuje právo odmietnuť objednávku, ak iPhone medzičasom nie je k dispozícii. Prípadná platba bude vrátená do 5 pracovných dní.</p>
+                <p><strong>5.5</strong> Predávajúci nezodpovedá za softvérové problémy vzniknuté po prevzatí zariadenia — vrátane problémov spôsobených aktualizáciami iOS, aplikáciami tretích strán alebo obnovou zo zálohy zákazníka. iPhone je plne funkčný v čase odovzdania — táto skutočnosť je overená pred expedíciou.</p>
+              </div>
+
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="text-yellow-800 text-xs font-medium">
-                  ⚠️ Právo na 14-dňové vrátenie (§ 19 zák. č. 108/2024 Z.z.) platí <strong>iba pri online nákupe</strong> (cez web, WhatsApp, email). Pri osobnom nákupe v servise toto právo nevzniká.
+                  ⚠️ Právo na 14-dňové vrátenie platí <strong>iba pri online nákupe cez e-shop</strong>.
+                  Pri osobnom nákupe v servise toto právo nevzniká.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* ── PLATBY ── */}
+          {/* 6. PLATBY */}
           <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="bg-gray-800 text-white px-5 py-3 flex items-center gap-2">
               <Euro className="w-4 h-4" />
-              <h2 className="font-bold text-sm">5. Platobné podmienky</h2>
+              <h2 className="font-bold text-sm">6. Platobné podmienky</h2>
             </div>
             <div className="p-5 text-sm text-gray-700 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  { icon: '💵', label: 'Hotovosť', desc: 'Pri osobnom prevzatí' },
-                  { icon: '💳', label: 'Platobná karta', desc: 'Pri prevzatí' },
-                  { icon: '🏦', label: 'Bankový prevod', desc: 'Na účet pred expedíciou' },
-                ].map(item => (
-                  <div key={item.label} className="bg-gray-50 rounded-lg p-3 text-center">
-                    <div className="text-2xl mb-1">{item.icon}</div>
-                    <div className="font-semibold text-gray-800 text-xs">{item.label}</div>
-                    <div className="text-xs text-gray-500">{item.desc}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                    <ShoppingCart className="w-4 h-4" />
+                    E-shop (online objednávky)
+                  </p>
+                  <div className="space-y-1 text-xs text-blue-800">
+                    <p>🏦 <strong>Bankový prevod vopred</strong> — výlučný spôsob platby</p>
+                    <p>⏱️ Splatnosť: <strong>48 hodín</strong> od objednávky</p>
+                    <p>📧 Platobné údaje v potvrdzovacom emaili</p>
+                    <p>🚚 Expedícia po pripísaní platby (1–3 prac. dni)</p>
                   </div>
-                ))}
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <p className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    <Package className="w-4 h-4" />
+                    Servis (osobný odber)
+                  </p>
+                  <div className="space-y-1 text-xs text-gray-600">
+                    <p>💵 Hotovosť pri prevzatí</p>
+                    <p>💳 Platobná karta pri prevzatí</p>
+                    <p>🏦 Bankový prevod (dohodou)</p>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-gray-500">📋 Doklad o zaplatení slúži zároveň ako záručný list. Splatnosť: pri prevzatí tovaru/služby, ak nie je dohodnuté inak.</p>
+              <p className="text-xs text-gray-500">
+                📋 Doklad o zaplatení (faktúra / email s potvrdením objednávky) slúži zároveň ako záručný list.
+                <strong> Bez dokladu o kúpe nie je možné uplatniť reklamáciu.</strong>
+              </p>
             </div>
           </section>
 
-          {/* ── DODACIE LEHOTY ── */}
+          {/* 7. DODACIE LEHOTY */}
           <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="bg-gray-800 text-white px-5 py-3 flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              <h2 className="font-bold text-sm">6. Dodacie lehoty</h2>
+              <h2 className="font-bold text-sm">7. Dodacie lehoty</h2>
             </div>
-            <div className="p-5 text-sm text-gray-700 space-y-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                {[
-                  { label: 'Štandardná lehota', value: '0–5 pracovných dní' },
-                  { label: 'Pri objednávke dielov', value: '+1–2 pracovné dni' },
-                  { label: 'Maximálna lehota', value: '30 dní (zákonná)' },
-                  { label: 'Náhradné zariadenie', value: 'Bezplatne (podľa dostupnosti)' },
-                ].map(item => (
-                  <div key={item.label} className="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-2">
-                    <span className="text-gray-600">{item.label}</span>
-                    <span className="font-semibold text-gray-800">{item.value}</span>
+            <div className="p-5 text-sm text-gray-700 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Opravy – servis</p>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Štandardná oprava', value: '0–5 pracovných dní' },
+                      { label: 'Pri objednávke dielov', value: '+1–2 pracovné dni' },
+                      { label: 'Maximálna zákonná lehota', value: '30 dní' },
+                    ].map(item => (
+                      <div key={item.label} className="flex justify-between items-center bg-gray-50 rounded-lg px-3 py-2 text-xs">
+                        <span className="text-gray-600">{item.label}</span>
+                        <span className="font-semibold text-gray-800">{item.value}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">E-shop – iPhone</p>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Expedícia po platbe', value: '1–3 pracovné dni' },
+                      { label: 'Doručenie (Slovenská pošta)', value: '1–3 pracovné dni' },
+                      { label: 'Doprava', value: 'ZADARMO' },
+                    ].map(item => (
+                      <div key={item.label} className="flex justify-between items-center bg-blue-50 rounded-lg px-3 py-2 text-xs">
+                        <span className="text-gray-600">{item.label}</span>
+                        <span className="font-semibold text-blue-700">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
               <p className="text-xs text-gray-500">🔔 O dokončení opravy / odoslaní tovaru informujeme cez WhatsApp, telefón alebo email.</p>
             </div>
           </section>
 
-          {/* ── OCHRANA OSOBNÝCH ÚDAJOV / GDPR + SUPABASE ── */}
+          {/* 8. GDPR */}
           <section className="bg-white rounded-xl border border-purple-200 shadow-sm overflow-hidden">
             <div className="bg-purple-700 text-white px-5 py-3 flex items-center gap-2">
               <Shield className="w-4 h-4" />
-              <h2 className="font-bold text-sm">7. Ochrana osobných údajov (GDPR)</h2>
+              <h2 className="font-bold text-sm">8. Ochrana osobných údajov (GDPR)</h2>
             </div>
             <div className="p-5 space-y-5 text-sm text-gray-700">
 
-              {/* Prevádzkovateľ */}
               <div>
                 <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
                   <UserCheck className="w-4 h-4 text-purple-600" />
-                  7.1 Prevádzkovateľ osobných údajov
+                  8.1 Prevádzkovateľ osobných údajov
                 </h3>
                 <p>
                   Prevádzkovateľom osobných údajov v zmysle čl. 4 ods. 7 nariadenia GDPR je:{' '}
@@ -296,30 +427,35 @@ export default function VopPage() {
                 </p>
               </div>
 
-              {/* Aké údaje zbierame */}
               <div>
                 <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
                   <Eye className="w-4 h-4 text-purple-600" />
-                  7.2 Aké osobné údaje spracúvame
+                  8.2 Aké osobné údaje spracúvame
                 </h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  <p className="text-xs text-gray-500 mb-2">Pri odoslaní objednávky (opravy alebo kúpy iPhonu) cez webový formulár zhromažďujeme:</p>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-xs text-gray-500 mb-2">Pri odoslaní objednávky cez webový formulár zhromažďujeme:</p>
                   <ul className="space-y-1 text-xs text-gray-600">
-                    <li className="flex items-start gap-2"><CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" /><span><strong>Meno a priezvisko</strong> – identifikácia zákazníka</span></li>
-                    <li className="flex items-start gap-2"><CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" /><span><strong>Telefónne číslo</strong> – komunikácia ohľadom objednávky</span></li>
-                    <li className="flex items-start gap-2"><CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" /><span><strong>Emailová adresa</strong> – potvrdenie objednávky, reklamačná komunikácia</span></li>
-                    <li className="flex items-start gap-2"><CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" /><span><strong>Adresa doručenia</strong> – pri zaslaní opraveného zariadenia alebo zakúpeného iPhonu</span></li>
-                    <li className="flex items-start gap-2"><CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" /><span><strong>Popis zariadenia a závady</strong> – technické informácie pre vybavenie opravy</span></li>
-                    <li className="flex items-start gap-2"><CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" /><span><strong>Informácie o objednávke</strong> – typ opravy/produktu, cena, dátum</span></li>
+                    {[
+                      ['Meno a priezvisko', 'identifikácia zákazníka'],
+                      ['Telefónne číslo', 'komunikácia ohľadom objednávky'],
+                      ['Emailová adresa', 'potvrdenie objednávky, reklamačná komunikácia'],
+                      ['Adresa doručenia', 'pri zaslaní zakúpeného iPhonu alebo opraveného zariadenia'],
+                      ['Popis zariadenia a závady', 'technické informácie pre vybavenie opravy'],
+                      ['Informácie o objednávke', 'typ produktu, cena, dátum, zľavový kód'],
+                    ].map(([field, desc]) => (
+                      <li key={field} className="flex items-start gap-2">
+                        <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span><strong>{field}</strong> – {desc}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
 
-              {/* Účel a právny základ */}
               <div>
                 <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
                   <FileText className="w-4 h-4 text-purple-600" />
-                  7.3 Účel a právny základ spracúvania
+                  8.3 Účel a právny základ spracúvania
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
@@ -331,83 +467,60 @@ export default function VopPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      <tr>
-                        <td className="p-2">Vybavenie objednávky / opravy</td>
-                        <td className="p-2 text-purple-700 font-medium">Čl. 6 ods. 1 písm. b) – plnenie zmluvy</td>
-                        <td className="p-2">Po dobu trvania záručnej doby + 1 rok</td>
-                      </tr>
-                      <tr className="bg-gray-50">
-                        <td className="p-2">Komunikácia so zákazníkom</td>
-                        <td className="p-2 text-purple-700 font-medium">Čl. 6 ods. 1 písm. b) – plnenie zmluvy</td>
-                        <td className="p-2">Po dobu trvania záručnej doby + 1 rok</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2">Vedenie účtovných dokladov</td>
-                        <td className="p-2 text-purple-700 font-medium">Čl. 6 ods. 1 písm. c) – zákonná povinnosť</td>
-                        <td className="p-2">10 rokov (zákon o účtovníctve)</td>
-                      </tr>
-                      <tr className="bg-gray-50">
-                        <td className="p-2">Riešenie reklamácií a sporov</td>
-                        <td className="p-2 text-purple-700 font-medium">Čl. 6 ods. 1 písm. c) + f) – zákonná povinnosť / oprávnený záujem</td>
-                        <td className="p-2">Po dobu reklamačného konania + 3 roky</td>
-                      </tr>
+                      {[
+                        ['Vybavenie objednávky / opravy', 'Čl. 6 ods. 1 písm. b) – plnenie zmluvy', 'Po dobu záručnej doby + 1 rok'],
+                        ['Komunikácia so zákazníkom', 'Čl. 6 ods. 1 písm. b) – plnenie zmluvy', 'Po dobu záručnej doby + 1 rok'],
+                        ['Vedenie účtovných dokladov', 'Čl. 6 ods. 1 písm. c) – zákonná povinnosť', '10 rokov (zákon o účtovníctve)'],
+                        ['Riešenie reklamácií a sporov', 'Čl. 6 ods. 1 písm. c) + f)', 'Po dobu reklamačného konania + 3 roky'],
+                      ].map(([ucel, zaklad, doba], i) => (
+                        <tr key={i} className={i % 2 === 1 ? 'bg-gray-50' : ''}>
+                          <td className="p-2">{ucel}</td>
+                          <td className="p-2 text-purple-700 font-medium">{zaklad}</td>
+                          <td className="p-2">{doba}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              {/* Supabase – sprostredkovateľ */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
                   <Server className="w-4 h-4 text-blue-600" />
-                  7.4 Technické spracúvanie údajov – Supabase
+                  8.4 Technické spracúvanie údajov – Supabase
                 </h3>
                 <p className="text-xs text-blue-800 mb-3">
-                  Osobné údaje zadané prostredníctvom objednávkového formulára sú ukladané do databázy
-                  prevádzkovanej službou <strong>Supabase</strong>. Supabase vystupuje ako{' '}
-                  <strong>sprostredkovateľ osobných údajov</strong> (data processor) v zmysle čl. 28 GDPR.
+                  Osobné údaje zadané prostredníctvom objednávkového formulára e-shopu sú ukladané do databázy
+                  prevádzkovanej službou <strong>Supabase</strong> (sprostredkovateľ osobných údajov podľa čl. 28 GDPR).
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="bg-white rounded-lg p-3 border border-blue-200">
-                    <p className="text-xs font-semibold text-gray-800 mb-1">📍 Sídlo prevádzkovateľa služby</p>
-                    <p className="text-xs text-gray-600">Supabase Inc., San Francisco, CA, USA</p>
-                    <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">supabase.com/privacy</a>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-blue-200">
-                    <p className="text-xs font-semibold text-gray-800 mb-1">🖥️ Umiestnenie serverov</p>
-                    <p className="text-xs text-gray-600">Dáta sú ukladané na serveroch v <strong>Európskej únii</strong> (AWS EU región). Výber EU regiónu zabezpečuje súlad s požiadavkami GDPR na ukladanie dát.</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-blue-200">
-                    <p className="text-xs font-semibold text-gray-800 mb-1">📄 Zmluva o spracúvaní (DPA)</p>
-                    <p className="text-xs text-gray-600">S poskytovateľom Supabase je uzavretá <strong>Zmluva o spracúvaní osobných údajov (DPA)</strong> v súlade s čl. 28 GDPR. Supabase spracúva údaje výlučne na základe pokynov prevádzkovateľa.</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-blue-200">
-                    <p className="text-xs font-semibold text-gray-800 mb-1">🔒 Prenosy mimo EÚ</p>
-                    <p className="text-xs text-gray-600">V prípade prípadného prenosu osobných údajov mimo EÚ/EHP využíva Supabase <strong>štandardné zmluvné doložky (SCC)</strong> schválené Európskou komisiou.</p>
-                  </div>
-                </div>
-                <div className="mt-3 bg-blue-100 rounded-lg p-3">
-                  <p className="text-xs text-blue-800">
-                    <strong>Čo Supabase uchováva:</strong> Objednávkové formuláre obsahujú meno, telefón, email,
-                    adresu doručenia a popis závady/objednávky. Tieto údaje slúžia <strong>výlučne na vybavenie
-                    vašej objednávky alebo opravy</strong> a nie sú poskytované tretím stranám na marketingové účely.
-                  </p>
+                  {[
+                    { title: '📍 Sídlo', content: 'Supabase Inc., San Francisco, CA, USA', link: { href: 'https://supabase.com/privacy', label: 'supabase.com/privacy' } },
+                    { title: '🖥️ Servery', content: 'Dáta ukladané v Európskej únii (AWS EU región) — súlad s GDPR.', link: null },
+                    { title: '📄 DPA', content: 'Uzavretá Zmluva o spracúvaní osobných údajov podľa čl. 28 GDPR.', link: null },
+                    { title: '🔒 Prenosy mimo EÚ', content: 'Využívajú sa štandardné zmluvné doložky (SCC) Európskej komisie.', link: null },
+                  ].map(item => (
+                    <div key={item.title} className="bg-white rounded-lg p-3 border border-blue-200">
+                      <p className="text-xs font-semibold text-gray-800 mb-1">{item.title}</p>
+                      <p className="text-xs text-gray-600">{item.content}</p>
+                      {item.link && <a href={item.link.href} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">{item.link.label}</a>}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Práva dotknutej osoby */}
               <div>
                 <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
                   <Lock className="w-4 h-4 text-purple-600" />
-                  7.5 Vaše práva ako dotknutej osoby
+                  8.5 Vaše práva ako dotknutej osoby
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {[
                     { icon: '👁️', title: 'Právo na prístup', desc: 'Kedykoľvek môžete požiadať o informáciu, aké údaje o vás spracúvame.' },
                     { icon: '✏️', title: 'Právo na opravu', desc: 'Môžete požiadať o opravu nesprávnych alebo neúplných údajov.' },
-                    { icon: '🗑️', title: 'Právo na vymazanie', desc: 'Môžete požiadať o vymazanie údajov (právo na zabudnutie), ak pominul účel spracúvania.' },
+                    { icon: '🗑️', title: 'Právo na vymazanie', desc: 'Môžete požiadať o vymazanie údajov, ak pominul účel spracúvania.' },
                     { icon: '⏸️', title: 'Právo na obmedzenie', desc: 'Môžete požiadať o dočasné obmedzenie spracúvania vašich údajov.' },
-                    { icon: '📦', title: 'Právo na prenosnosť', desc: 'Môžete požiadať o poskytnutie údajov v štruktúrovanom, strojovo čitateľnom formáte.' },
+                    { icon: '📦', title: 'Právo na prenosnosť', desc: 'Môžete požiadať o poskytnutie údajov v strojovo čitateľnom formáte.' },
                     { icon: '🚫', title: 'Právo namietať', desc: 'Môžete namietať voči spracúvaniu na základe oprávneného záujmu.' },
                   ].map(item => (
                     <div key={item.title} className="bg-gray-50 rounded-lg p-3 flex items-start gap-3">
@@ -421,42 +534,35 @@ export default function VopPage() {
                 </div>
                 <div className="mt-3 bg-purple-50 border border-purple-200 rounded-lg p-3">
                   <p className="text-xs text-purple-800">
-                    📧 Žiadosť o uplatnenie práv zasielajte na:{' '}
-                    <a href="mailto:phoneservissk@gmail.com" className="font-semibold hover:underline">
-                      phoneservissk@gmail.com
-                    </a>{' '}
-                    – odpovieme do <strong>30 dní</strong>. Ak nie ste spokojní s vybavením, máte právo podať
-                    sťažnosť na <strong>Úrad na ochranu osobných údajov SR</strong> (ÚOOÚ), Hraničná 12,
-                    820 07 Bratislava,{' '}
-                    <a href="https://www.dataprotection.gov.sk" target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:underline">
-                      www.dataprotection.gov.sk
-                    </a>
+                    📧 Žiadosť zasielajte na:{' '}
+                    <a href="mailto:phoneservissk@gmail.com" className="font-semibold hover:underline">phoneservissk@gmail.com</a>
+                    {' '}– odpovieme do <strong>30 dní</strong>. Sťažnosť môžete podať na{' '}
+                    <strong>ÚOOÚ SR</strong>, Hraničná 12, 820 07 Bratislava —{' '}
+                    <a href="https://www.dataprotection.gov.sk" target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:underline">www.dataprotection.gov.sk</a>
                   </p>
                 </div>
               </div>
 
-              {/* Cookies */}
               <div>
                 <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
                   <Database className="w-4 h-4 text-purple-600" />
-                  7.6 Cookies a analytika
+                  8.6 Cookies a analytika
                 </h3>
                 <p className="text-xs text-gray-600">
                   Webová stránka www.fixanto.sk používa <strong>Google Analytics</strong> na analýzu návštevnosti.
-                  Google Analytics zbiera anonymizované údaje o správaní návštevníkov (počet návštev, zdroje
-                  návštevnosti, zariadenia). Tieto údaje neumožňujú identifikáciu konkrétnej osoby. Súhlas
-                  s analytickými cookies môžete kedykoľvek odvolať cez cookie banner na stránke.
+                  Google Analytics zbiera anonymizované údaje o správaní návštevníkov. Tieto údaje neumožňujú
+                  identifikáciu konkrétnej osoby. Súhlas s analytickými cookies môžete kedykoľvek odvolať
+                  cez cookie banner na stránke.
                 </p>
               </div>
-
             </div>
           </section>
 
-          {/* ── ALTERNATÍVNE RIEŠENIE SPOROV ── */}
+          {/* 9. ALTERNATÍVNE RIEŠENIE SPOROV */}
           <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="bg-gray-800 text-white px-5 py-3 flex items-center gap-2">
               <Scale className="w-4 h-4" />
-              <h2 className="font-bold text-sm">8. Alternatívne riešenie sporov</h2>
+              <h2 className="font-bold text-sm">9. Alternatívne riešenie sporov</h2>
             </div>
             <div className="p-5 text-sm text-gray-700 space-y-3">
               <p>V prípade sporu má zákazník právo na mimosúdne riešenie podľa zákona č. 391/2015 Z.z.:</p>
@@ -476,11 +582,11 @@ export default function VopPage() {
             </div>
           </section>
 
-          {/* ── FAQ ── */}
+          {/* 10. FAQ */}
           <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="bg-gray-800 text-white px-5 py-3 flex items-center gap-2">
               <Info className="w-4 h-4" />
-              <h2 className="font-bold text-sm">9. Časté otázky (FAQ)</h2>
+              <h2 className="font-bold text-sm">10. Časté otázky (FAQ)</h2>
             </div>
             <div className="divide-y divide-gray-100">
               {faqs.map((faq, i) => (
@@ -490,11 +596,7 @@ export default function VopPage() {
                     className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
                   >
                     <span className="font-medium text-gray-800 text-sm pr-4">{faq.q}</span>
-                    <ChevronUp
-                      className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${
-                        openFaq === i ? 'rotate-0' : 'rotate-180'
-                      }`}
-                    />
+                    <ChevronUp className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-0' : 'rotate-180'}`} />
                   </button>
                   {openFaq === i && (
                     <div className="px-4 pb-4">
@@ -506,11 +608,11 @@ export default function VopPage() {
             </div>
           </section>
 
-          {/* ── ZÁVEREČNÉ USTANOVENIA ── */}
+          {/* 11. ZÁVEREČNÉ USTANOVENIA */}
           <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="bg-gray-800 text-white px-5 py-3 flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
-              <h2 className="font-bold text-sm">10. Záverečné ustanovenia</h2>
+              <h2 className="font-bold text-sm">11. Záverečné ustanovenia</h2>
             </div>
             <div className="p-5 text-sm text-gray-700 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -526,14 +628,15 @@ export default function VopPage() {
                 ))}
               </div>
               <p className="text-xs text-gray-500 pt-2">
-                Tieto VOP nadobúdajú účinnosť <strong>22. decembra 2025</strong>. Predávajúci si vyhradzuje
-                právo na ich zmenu; aktuálne znenie je vždy dostupné na{' '}
+                Tieto VOP nadobúdajú účinnosť <strong>22. decembra 2025</strong>. Na objednávky zadané pred
+                zmenou VOP sa vzťahuje verzia platná v čase uzavretia zmluvy. Predávajúci si vyhradzuje
+                právo na zmenu; aktuálne znenie je vždy dostupné na{' '}
                 <a href="https://www.fixanto.sk" className="text-blue-600 hover:underline">www.fixanto.sk</a>
               </p>
             </div>
           </section>
 
-          {/* Sticky sidebar summary */}
+          {/* Rýchly prehľad */}
           <section className="bg-blue-600 text-white rounded-xl p-5 shadow-md">
             <h3 className="font-bold mb-4 flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
@@ -544,10 +647,10 @@ export default function VopPage() {
                 { icon: '📱', label: 'Displeje (nové)', value: '24 mes.' },
                 { icon: '🔧', label: 'Práca servisu', value: '3 mes.' },
                 { icon: '📦', label: 'Použitý iPhone', value: '12 mes.' },
-                { icon: '⏱️', label: 'Dodacia lehota', value: '0–5 dní' },
+                { icon: '⚡', label: 'Adaptér 20W', value: '24 mes.' },
                 { icon: '🔍', label: 'Diagnostika', value: 'Zadarmo / 15 €' },
                 { icon: '📋', label: 'Reklamácia', value: 'max 30 dní' },
-                { icon: '🔄', label: 'Vrátenie online', value: '14 dní' },
+                { icon: '🔄', label: 'Vrátenie e-shop', value: '14 dní' },
                 { icon: '🔒', label: 'Databáza', value: 'Supabase EU' },
               ].map(item => (
                 <div key={item.label} className="bg-blue-700 rounded-lg p-2">
@@ -562,17 +665,11 @@ export default function VopPage() {
               <span>✉️ phoneservissk@gmail.com</span>
               <span>🌐 www.fixanto.sk</span>
             </div>
-            <p className="text-center text-xs text-blue-300 mt-3">
-              Kontaktujte nás: WhatsApp • Messenger • Instagram • Email • Telefón
-            </p>
           </section>
 
-          {/* Footer */}
           <div className="text-center text-xs text-gray-400 pb-6">
-            <p>© 2025 Štefan Hupčík – Fixanto. Všetky práva vyhradené.</p>
-            <p className="mt-1 text-gray-500">
-              Ďakujeme, že ste si vybrali Fixanto. Sme tu pre vás.
-            </p>
+            <p>VOP v. 3.0 — účinnosť od 22. decembra 2025</p>
+            <p className="mt-1">© 2025 Štefan Hupčík – Fixanto. Všetky práva vyhradené.</p>
           </div>
 
         </div>
