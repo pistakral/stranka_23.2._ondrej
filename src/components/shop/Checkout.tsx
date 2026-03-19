@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import Navbar from '../Navbar';
@@ -196,10 +196,9 @@ export default function Checkout() {
             </div>
           )}
 
-          {/* Na mobile: summary hore, form dole. Na desktop: form vľavo, summary vpravo */}
           <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 sm:gap-8">
 
-            {/* Zhrnutie — na mobile zobrazené PRVÉ (hore) */}
+            {/* Zhrnutie — na mobile hore */}
             <div className="lg:hidden">
               <OrderSummary
                 cart={cart} totalPrice={totalPrice}
@@ -327,6 +326,29 @@ export default function Checkout() {
                     className={inputClass} rows={3} />
                 </div>
 
+                {/* ── Súhlas s podmienkami ── */}
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Odoslaním objednávky potvrdzujete, že ste sa oboznámili s{' '}
+                  <Link
+                    to="/vseobecne-obchodne-podmienky"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 underline underline-offset-2 hover:text-blue-600 transition-colors"
+                  >
+                    Všeobecnými obchodnými podmienkami
+                  </Link>
+                  {' '}a{' '}
+                  <Link
+                    to="/ochrana-osobnych-udajov"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 underline underline-offset-2 hover:text-blue-600 transition-colors"
+                  >
+                    Zásadami ochrany osobných údajov
+                  </Link>
+                  {' '}a súhlasíte s nimi.
+                </p>
+
                 <button type="submit" disabled={loading}
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 sm:px-8 sm:py-5 rounded-xl font-black text-lg sm:text-xl shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
                   {loading ? (
@@ -343,7 +365,7 @@ export default function Checkout() {
               </form>
             </div>
 
-            {/* Zhrnutie — na desktop vpravo, na mobile skryté (zobrazené hore) */}
+            {/* Zhrnutie — na desktop vpravo */}
             <div className="hidden lg:block">
               <OrderSummary
                 cart={cart} totalPrice={totalPrice}
