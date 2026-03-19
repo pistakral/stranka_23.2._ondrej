@@ -1,86 +1,96 @@
-import { Shield, FileText, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Navbar from './Navbar';
 import GoogleAnalytics from '../components/GoogleAnalytics';
 import CookieBanner from '../components/CookieBanner';
+import { Shield, FileText, AlertCircle, ChevronRight, Lock, Smartphone } from 'lucide-react';
 
 export default function LegalInfoPage() {
-return (
-<>
-{/* ✅ GOOGLE ANALYTICS */}
-<GoogleAnalytics />
+  const cards = [
+    {
+      icon: <Shield className="w-8 h-8 text-purple-500" />,
+      title: 'Ochrana osobných údajov (GDPR)',
+      desc: 'Informácie o spracúvaní vašich údajov vrátane databázy Supabase, vašich právach a dobe uchovávania.',
+      link: '/vop',
+      anchor: '#gdpr',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+    },
+    {
+      icon: <FileText className="w-8 h-8 text-gray-600" />,
+      title: 'Všeobecné obchodné podmienky',
+      desc: 'Pravidlá pre objednávku opravy aj kúpu iPhonu, platby, záruky, dodacie lehoty a zodpovednosť.',
+      link: '/vop',
+      anchor: '',
+      bg: 'bg-gray-50',
+      border: 'border-gray-200',
+    },
+    {
+      icon: <Smartphone className="w-8 h-8 text-blue-500" />,
+      title: 'Podmienky predaja iPhonov',
+      desc: 'Záručná doba, kategórie stavu (A/B/Repasovaný), zdravie batérie a 14-dňové vrátenie pri online nákupe.',
+      link: '/vop',
+      anchor: '',
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+    },
+    {
+      icon: <AlertCircle className="w-8 h-8 text-red-500" />,
+      title: 'Reklamačný poriadok',
+      desc: 'Postup pri reklamácii opravy aj zakúpeného iPhonu s garantovanou kvalitou a jasnými lehotami.',
+      link: '/reklamacia',
+      anchor: '',
+      bg: 'bg-red-50',
+      border: 'border-red-200',
+    },
+  ];
 
-<section id="pravne-informacie" className="py-16 sm:py-20 bg-gradient-to-br from-blue-50 to-white">
-<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div className="text-center mb-12">
-<h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-Právne informácie
-</h2>
-<div className="h-1 w-24 bg-blue-600 mx-auto mb-8 rounded-full"></div>
-<p className="text-lg text-gray-600 max-w-2xl mx-auto">
-Dôležité dokumenty a pravidlá pre našu spoluprácu
-</p>
-</div>
+  return (
+    <>
+      <GoogleAnalytics />
+      <CookieBanner />
+      <Navbar />
 
-<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-<Link
-to="/ochrana-osobnych-udajov"
-className="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 p-8 text-left hover:scale-105 transform no-underline block"
->
-<div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-lg mb-4 group-hover:scale-110 transition-transform duration-300">
-<Shield className="w-8 h-8" />
-</div>
-<h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-Ochrana osobných údajov
-</h3>
-<p className="text-gray-600 leading-relaxed">
-Informácie o spracúvaní vašich údajov a vašich právach v súlade s GDPR.
-</p>
-<div className="mt-4 flex items-center gap-2 text-blue-600 font-semibold group-hover:gap-3 transition-all">
-Čítať viac →
-</div>
-</Link>
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="bg-gradient-to-r from-gray-700 to-gray-900 text-white py-10 px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <Lock className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">Právne informácie</h1>
+            <p className="text-gray-300 text-sm">
+              Dôležité dokumenty a pravidlá pre našu spoluprácu
+            </p>
+          </div>
+        </div>
 
-<Link
-to="/vseobecne-obchodne-podmienky"
-className="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 p-8 text-left hover:scale-105 transform no-underline block"
->
-<div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-lg mb-4 group-hover:scale-110 transition-transform duration-300">
-<FileText className="w-8 h-8" />
-</div>
-<h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-Všeobecné podmienky
-</h3>
-<p className="text-gray-600 leading-relaxed">
-Pravidlá pre objednávku, platby, záruku a zodpovednosť pri opravách.
-</p>
-<div className="mt-4 flex items-center gap-2 text-blue-600 font-semibold group-hover:gap-3 transition-all">
-Čítať viac →
-</div>
-</Link>
+        <div className="max-w-3xl mx-auto px-4 py-10 space-y-4">
+          {cards.map((card) => (
+            <Link
+              key={card.title}
+              to={card.link + card.anchor}
+              className={`flex items-start gap-4 ${card.bg} border ${card.border} rounded-xl p-5 hover:shadow-md transition-shadow group`}
+            >
+              <div className="flex-shrink-0 mt-0.5">{card.icon}</div>
+              <div className="flex-1">
+                <h2 className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                  {card.title}
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">{card.desc}</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors flex-shrink-0 mt-1" />
+            </Link>
+          ))}
 
-<Link
-to="/reklamacny-poriadok"
-className="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 p-8 text-left hover:scale-105 transform no-underline block"
->
-<div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-lg mb-4 group-hover:scale-110 transition-transform duration-300">
-<AlertCircle className="w-8 h-8" />
-</div>
-<h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-Reklamačný poriadok
-</h3>
-<p className="text-gray-600 leading-relaxed">
-Postup pri reklamácii opravy a riešenie problémov s garantovanou kvalitou.
-</p>
-<div className="mt-4 flex items-center gap-2 text-blue-600 font-semibold group-hover:gap-3 transition-all">
-Čítať viac →
-</div>
-</Link>
-</div>
-</div>
-</section>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-6">
+            <p className="text-xs text-blue-700 text-center">
+              Všetky dokumenty sú v súlade so zákonom č. 108/2024 Z.z., GDPR (nariadenie EÚ 2016/679)
+              a zákonom č. 18/2018 Z.z. o ochrane osobných údajov.
+            </p>
+          </div>
 
-{/* ✅ COOKIE BANNER */}
-<CookieBanner />
-</>
-);
+          <div className="text-center text-xs text-gray-400 pt-4">
+            <p>© 2025 Štefan Hupčík – Fixanto | phoneservissk@gmail.com | 0949 344 600</p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
