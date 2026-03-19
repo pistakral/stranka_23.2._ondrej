@@ -333,7 +333,7 @@ export default function Checkout() {
                     to="/vseobecne-obchodne-podmienky"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-600 underline underline-offset-2 hover:text-blue-600 transition-colors"
+                    className="text-blue-600 underline underline-offset-2 hover:text-blue-700 transition-colors"
                   >
                     Všeobecnými obchodnými podmienkami
                   </Link>
@@ -342,7 +342,7 @@ export default function Checkout() {
                     to="/ochrana-osobnych-udajov"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-600 underline underline-offset-2 hover:text-blue-600 transition-colors"
+                    className="text-blue-600 underline underline-offset-2 hover:text-blue-700 transition-colors"
                   >
                     Zásadami ochrany osobných údajov
                   </Link>
