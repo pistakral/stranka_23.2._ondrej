@@ -210,11 +210,11 @@ export default function VopPage() {
           <section className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
             <div className="bg-blue-600 text-white px-5 py-3 flex items-center gap-2">
               <ShoppingCart className="w-4 h-4" />
-              <h2 className="font-bold text-sm">4. Podmienky nákupu cez e-shop (fixanto.sk/store)</h2>
+              <h2 className="font-bold text-sm">4. Podmienky nákupu cez e-shop (fixanto.sk/eshop)</h2>
             </div>
             <div className="p-5 space-y-4 text-sm text-gray-700">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
-                <strong>4.0</strong> E-shop na adrese fixanto.sk/store umožňuje online nákup použitých iPhonov
+                <strong>4.0</strong> E-shop na adrese fixanto.sk/eshop umožňuje online nákup použitých iPhonov
                 a doplnkového príslušenstva. Všetky nákupy cez e-shop sú zmluvami uzavretými na diaľku
                 podľa § 19 zákona č. 108/2024 Z.z. — zákazník má právo na 14-dňové vrátenie tovaru.
               </div>
