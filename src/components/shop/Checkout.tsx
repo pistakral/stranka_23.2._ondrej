@@ -171,7 +171,7 @@ export default function Checkout() {
       }));
 
       clearCart();
-      navigate(`/store/confirmation/${orderId}`);
+      navigate(`/eshop/confirmation/${orderId}`);
     } catch (err: any) {
       console.error('Checkout error:', err);
       setError(err.message || 'Nastala chyba. Skúste to prosím znova.');
