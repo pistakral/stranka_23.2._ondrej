@@ -50,7 +50,7 @@ export default function Cart({ isOpen, onClose }: CartProps) {
       return;
     }
     onClose();
-    navigate('/store/checkout');
+    navigate('/eshop/checkout');
   };
 
   return (
