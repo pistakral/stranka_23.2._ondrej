@@ -101,7 +101,7 @@ export default function OchranaOsobnychUdajov() {
                   <strong className="text-gray-900">Web:</strong>{' '}
                   <a href="https://fixanto.sk" className="text-blue-600 hover:underline">fixanto.sk</a>
                   {' | '}
-                  <a href="https://fixanto.sk/store" className="text-blue-600 hover:underline">fixanto.sk/store (e-shop)</a>
+                  <a href="https://fixanto.sk/eshop" className="text-blue-600 hover:underline">fixanto.sk/store (e-shop)</a>
                 </p>
               </div>
             </div>
