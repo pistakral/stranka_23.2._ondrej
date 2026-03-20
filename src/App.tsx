@@ -79,7 +79,7 @@ function App() {
         <Route path="/eshop/confirmation/:orderId" element={<OrderConfirmation />} />
       </Routes>
     </CartProvider>
-  );
+  ); 
 }
 
 export default App;
