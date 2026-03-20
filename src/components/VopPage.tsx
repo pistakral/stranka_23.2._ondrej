@@ -126,7 +126,7 @@ export default function VopPage() {
                 <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-blue-500" /><a href="tel:+421949344600" className="text-blue-600 hover:underline">0949 344 600</a></p>
                 <p className="flex items-center gap-2"><Mail className="w-4 h-4 text-blue-500" /><a href="mailto:phoneservissk@gmail.com" className="text-blue-600 hover:underline">phoneservissk@gmail.com</a></p>
                 <p className="flex items-center gap-2"><Home className="w-4 h-4 text-blue-500" /><a href="https://www.fixanto.sk" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">www.fixanto.sk</a></p>
-                <p className="flex items-center gap-2"><ShoppingCart className="w-4 h-4 text-blue-500" /><a href="https://www.fixanto.sk/eshop" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">fixanto.sk/store (e-shop)</a></p>
+                <p className="flex items-center gap-2"><ShoppingCart className="w-4 h-4 text-blue-500" /><a href="https://www.fixanto.sk/eshop" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">fixanto.sk/eshop (e-shop)</a></p>
               </div>
             </div>
           </section>
