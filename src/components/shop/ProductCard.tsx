@@ -22,7 +22,7 @@ export default function ProductCard({
   
   return (
     <Link
-      to={isAvailable ? `/store/${id}` : '#'}
+      to={isAvailable ? `/eshop/${id}` : '#'}
       className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 group ${
         isAvailable ? 'hover:shadow-2xl hover:scale-105' : 'opacity-75 cursor-not-allowed'
       }`}
