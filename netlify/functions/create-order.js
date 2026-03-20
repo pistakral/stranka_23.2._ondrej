@@ -23,6 +23,7 @@ function isValidPrice(num) {
 }
 
 const IBAN_DISPLAY = 'SK48 0900 0000 0052 4269 0350';
+const RECIPIENT_NAME = 'Štefan Hupčík';
 const ADAPTER_PRICE = 15;
 const ADAPTER_NAME = 'Nabíjací adaptér 20W (USB-C Power Adapter)';
 
@@ -32,13 +33,11 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  // Veľkosť requestu
   const bodySize = Buffer.byteLength(event.body || '', 'utf8');
   if (bodySize > 50000) {
     return { statusCode: 413, body: 'Request too large' };
   }
 
-  // Parse JSON
   let body;
   try {
     body = JSON.parse(event.body);
@@ -84,7 +83,6 @@ exports.handler = async (event) => {
     }
   }
 
-  // Injection ochrana
   const dangerousPattern = /(<script|javascript:|onerror=|DROP\s|DELETE\s|INSERT\s|UPDATE\s|SELECT\s|;--|\/\*)/gi;
   const allInputs = [customerName, customerEmail, customerPhone, customerStreet, customerCity, customerZip, notes || ''].join(' ');
   if (dangerousPattern.test(allInputs)) {
@@ -95,7 +93,7 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: 'Input too long' };
   }
 
-  // ── Supabase service_role klient (server-side only) ──────────
+  // ── Supabase ──────────────────────────────────────────────────
   const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -261,6 +259,7 @@ exports.handler = async (event) => {
       <div style="background:#e3f2fd;border:2px solid #1976d2;border-radius:10px;padding:24px;margin:24px 0;">
         <h2 style="color:#0d47a1;margin:0 0 16px;">💳 Platobné údaje</h2>
         <table style="width:100%;border-collapse:collapse;">
+          <tr><td style="color:#555;padding:6px 0;width:160px;"><strong>Príjemca:</strong></td><td style="color:#0d47a1;font-weight:bold;">${RECIPIENT_NAME}</td></tr>
           <tr><td style="color:#555;padding:6px 0;width:160px;"><strong>IBAN:</strong></td><td style="color:#0d47a1;font-weight:bold;">${IBAN_DISPLAY}</td></tr>
           <tr><td style="color:#555;padding:6px 0;"><strong>Variabilný symbol:</strong></td><td style="color:#0d47a1;font-weight:bold;font-size:18px;">${orderId}</td></tr>
           <tr><td style="color:#555;padding:6px 0;"><strong>Suma:</strong></td><td style="color:#0d47a1;font-weight:bold;font-size:22px;">€${safeTotal}</td></tr>
@@ -334,7 +333,7 @@ exports.handler = async (event) => {
         to: sanitize(customerEmail),
         subject: `✅ Objednávka #${orderId} prijatá – Fixanto`,
         html: customerHtml,
-        text: `Objednávka #${orderId}\nIBAN: ${IBAN_DISPLAY}\nVS: ${orderId}\nSuma: €${safeTotal}\n\n${productListText}\n\n${discountTextLine}Doprava: ${safeShipping === '0.00' ? 'ZADARMO' : '€' + safeShipping}\nAdresa: ${customerStreet}, ${customerZip} ${customerCity}\n\nFixanto | 0949 344 600 | phoneservissk@gmail.com`,
+        text: `Objednávka #${orderId}\nPríjemca: ${RECIPIENT_NAME}\nIBAN: ${IBAN_DISPLAY}\nVS: ${orderId}\nSuma: €${safeTotal}\n\n${productListText}\n\n${discountTextLine}Doprava: ${safeShipping === '0.00' ? 'ZADARMO' : '€' + safeShipping}\nAdresa: ${customerStreet}, ${customerZip} ${customerCity}\n\nFixanto | 0949 344 600 | phoneservissk@gmail.com`,
       });
 
       await transporter.sendMail({
@@ -346,7 +345,6 @@ exports.handler = async (event) => {
       });
 
     } catch (emailErr) {
-      // Email zlyhanie neprekazí objednávku
       console.error('Email error:', emailErr);
     }
 
