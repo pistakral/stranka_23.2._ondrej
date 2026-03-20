@@ -295,7 +295,7 @@ export default function ProductDetail() {
                 { label: 'Vzhľad', value: product.condition_appearance },
                 { label: 'Displej', value: product.condition_display },
                 { label: 'Funkčnosť', value: product.condition_functionality },
-                { label: 'Batéria', value: `${product.condition_battery_percent}%` },
+                { label: 'Batéria', value: `Zdravie batérie - ${product.condition_battery_percent}%` },
               ].map(({ label, value }) => (
                 <div key={label}>
                   <h3 className="text-sm sm:text-lg font-bold text-blue-600 mb-1 sm:mb-2">{label}</h3>
