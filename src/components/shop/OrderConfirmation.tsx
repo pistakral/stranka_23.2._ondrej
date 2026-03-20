@@ -61,7 +61,7 @@ export default function OrderConfirmation() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!orderId) { navigate('/store'); return; }
+    if (!orderId) { navigate('/eshop'); return; }
     const stored = localStorage.getItem(`order-${orderId}`);
     if (stored) {
       const orderData = JSON.parse(stored) as OrderData;
@@ -70,7 +70,7 @@ export default function OrderConfirmation() {
         .then(setQrCodeDataUrl)
         .catch((err) => console.error('QR generation error:', err));
     } else {
-      navigate('/store');
+      navigate('/eshop');
     }
   }, [orderId, navigate]);
 
@@ -269,7 +269,7 @@ export default function OrderConfirmation() {
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-all text-sm sm:text-base">
                   <Home className="w-4 h-4 sm:w-5 sm:h-5" /> Domov
                 </button>
-                <button onClick={() => navigate('/store')}
+                <button onClick={() => navigate('/eshop')}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all text-sm sm:text-base">
                   <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" /> E-shop
                 </button>
