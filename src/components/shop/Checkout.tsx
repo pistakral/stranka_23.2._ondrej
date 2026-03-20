@@ -46,7 +46,7 @@ export default function Checkout() {
         <div className="min-h-screen pt-32 flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Košík je prázdny</h1>
-            <button onClick={() => navigate('/store')}
+            <button onClick={() => navigate('/eshop')}
               className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">
               Späť na obchod
             </button>
