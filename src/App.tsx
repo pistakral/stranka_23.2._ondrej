@@ -73,10 +73,10 @@ function App() {
         <Route path="/mapa" element={<MapPage />} />
         <Route path="/bonusy" element={<SpeakerCleaner />} />
         
-        <Route path="/store" element={<><ProductGrid /><Footer /></>} />
-        <Route path="/store/:id" element={<><ProductDetail /><Footer /></>} />
-        <Route path="/store/checkout" element={<Checkout />} />
-        <Route path="/store/confirmation/:orderId" element={<OrderConfirmation />} />
+        <Route path="/eshop" element={<><ProductGrid /><Footer /></>} />
+        <Route path="/eshop/:id" element={<><ProductDetail /><Footer /></>} />
+        <Route path="/eshop/checkout" element={<Checkout />} />
+        <Route path="/eshop/confirmation/:orderId" element={<OrderConfirmation />} />
       </Routes>
     </CartProvider>
   );
