@@ -234,10 +234,10 @@ export default function ProductDetail() {
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl p-3 sm:p-4 mb-4 sm:mb-5 shadow-lg sm:hover:scale-105 sm:hover:shadow-xl transition-transform duration-200 cursor-default">
                   <div className="flex items-center gap-3">
                     <div className="bg-green-500 p-2 sm:p-2.5 rounded-xl flex-shrink-0">
-                      <Gift className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+                      <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-black text-green-900 text-sm sm:text-xl leading-tight">DARČEK ZADARMO! 🎁</p>
+                      <p className="font-black text-green-900 text-sm sm:text-lg leading-tight">DARČEK ZADARMO! 🎁</p>
                       <p className="text-xs sm:text-sm text-green-700 mt-0.5">
                         Ochranné sklo v hodnote{' '}
                         <span className="font-black text-green-900">€10</span> k telefónu
@@ -250,13 +250,13 @@ export default function ProductDetail() {
                 </div>
 
                 {/* Názov */}
-                <h1 className="text-xl sm:text-4xl font-black text-gray-900 mb-1 leading-tight">
+                <h1 className="text-lg sm:text-3xl font-black text-gray-900 mb-1 leading-tight">
                   {product.name} ({product.capacity})
                 </h1>
-                <p className="text-base sm:text-2xl text-gray-600 mb-3 sm:mb-6">{product.color}</p>
+                <p className="text-sm sm:text-xl text-gray-600 mb-3 sm:mb-6">{product.color}</p>
 
                 {/* Cena */}
-                <div className="text-3xl sm:text-5xl font-black text-blue-600 mb-4 sm:mb-8">
+                <div className="text-2xl sm:text-4xl font-black text-blue-600 mb-4 sm:mb-8">
                   €{product.price}
                 </div>
 
@@ -269,8 +269,8 @@ export default function ProductDetail() {
                     { label: `Skladom: ${product.stock} ks`, suffix: '📦' },
                   ].map(({ label, suffix }) => (
                     <div key={label} className="flex items-start gap-2 sm:gap-3">
-                      <Check className="w-4 h-4 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm sm:text-lg leading-snug">
+                      <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm sm:text-base leading-snug">
                         {label} {suffix}
                       </span>
                     </div>
@@ -280,7 +280,7 @@ export default function ProductDetail() {
                 {/* Tlačidlo */}
                 <button
                   onClick={handleAddToCart}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3.5 sm:px-8 sm:py-5 rounded-xl font-black text-base sm:text-xl shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all sm:hover:scale-105 flex items-center justify-center gap-2 sm:gap-3"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3.5 sm:px-8 sm:py-4 rounded-xl font-black text-base sm:text-lg shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all sm:hover:scale-105 flex items-center justify-center gap-2 sm:gap-3"
                 >
                   🛒 PRIDAŤ DO KOŠÍKA
                 </button>
@@ -294,7 +294,7 @@ export default function ProductDetail() {
 
           {/* Stav zariadenia */}
           <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-5 sm:mb-8">
-            <h2 className="text-xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Stav zariadenia</h2>
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Stav zariadenia</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {[
                 { label: 'Vzhľad', value: product.condition_appearance },
@@ -303,8 +303,8 @@ export default function ProductDetail() {
                 { label: 'Batéria', value: `${product.condition_battery_percent}% - Výborný stav` },
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <h3 className="text-base sm:text-xl font-bold text-blue-600 mb-1 sm:mb-2">{label}</h3>
-                  <p className="text-gray-700 text-sm sm:text-base">{value}</p>
+                  <h3 className="text-sm sm:text-lg font-bold text-blue-600 mb-1 sm:mb-2">{label}</h3>
+                  <p className="text-gray-700 text-xs sm:text-sm">{value}</p>
                 </div>
               ))}
             </div>
@@ -313,7 +313,7 @@ export default function ProductDetail() {
           {/* Technické špecifikácie */}
           {product.specs && Object.keys(product.specs).length > 0 && (
             <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8">
-              <h2 className="text-xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Technické špecifikácie
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
