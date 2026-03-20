@@ -73,7 +73,7 @@ export default function Navbar() {
             {/* Mobile: košík ikona + hamburger */}
             <div className="md:hidden flex items-center gap-1.5">
               <Link
-                to="/store"
+                to="/eshop"
                 className="bg-yellow-400 text-blue-900 px-2.5 py-2 rounded-lg font-black text-xs transition-all shadow-md hover:scale-105 whitespace-nowrap"
               >
                 🛒 E-shop
@@ -108,7 +108,7 @@ export default function Navbar() {
                 )
               ))}
 
-              <Link to="/store"
+              <Link to="/eshop"
                 className="flex items-center gap-2 px-5 py-2 rounded-full font-black shadow-lg transition-all duration-300 bg-yellow-400 text-blue-900 hover:bg-yellow-300 hover:scale-110"
               >
                 <ShoppingBag className="w-5 h-5" />
@@ -125,7 +125,7 @@ export default function Navbar() {
           <div className="md:hidden bg-gradient-to-b from-blue-900 to-blue-950 border-t border-blue-700 shadow-xl">
             <div className="flex flex-col space-y-2 px-4 py-4">
 
-              <Link to="/store" onClick={() => setIsOpen(false)}
+              <Link to="/eshop" onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 w-full px-4 py-3 rounded-xl font-black transition-all hover:scale-105 bg-yellow-400 text-blue-900 hover:bg-yellow-300"
               >
                 <ShoppingBag className="w-5 h-5" />
