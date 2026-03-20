@@ -60,7 +60,7 @@ export default function ProductGrid() {
               Vyber si svoj iPhone
             </h2>
             <p className="text-xl text-gray-600">
-              Všetky telefóny sú overené, testované a dobrom stave
+              Všetky telefóny sú testované a plne funkčné.
             </p>
           </div>
 
