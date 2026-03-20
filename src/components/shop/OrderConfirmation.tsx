@@ -7,7 +7,7 @@ import Footer from '../Footer';
 
 const IBAN = 'SK4809000000005242690350';
 const IBAN_DISPLAY = 'SK48 0900 0000 0052 4269 0350';
-const RECIPIENT_NAME = 'Fixanto';
+const RECIPIENT_NAME = 'Štefan Hupčík';
 
 interface OrderItem {
   id: string;
