@@ -253,13 +253,13 @@ export default function ProductDetail() {
                 <div className="text-2xl sm:text-4xl font-black text-blue-600 mb-1 sm:mb-2">
                   €{product.price}
                 </div>
-                <p className="text-xs text-gray-400 mb-4 sm:mb-8">(Predajca nie je platca DPH)</p>
+                <p className="text-xs text-gray-400 mb-4 sm:mb-8">Predajca nie je platca DPH</p>
 
                 {/* Vlastnosti */}
                 <div className="space-y-2 sm:space-y-3 mb-5 sm:mb-8">
                   {[
                     { label: `Trieda: ${product.grade}`, suffix: '✅' },
-                    { label: `Batéria: ${product.condition_battery_percent}%`, suffix: '⚡' },
+                    { label: `Batéria: ${product.condition_battery_percent}`, suffix: '⚡' },
                     { label: `Záruka: ${product.warranty}`, suffix: '🛡️' },
                     { label: `Skladom: ${product.stock} ks`, suffix: '📦' },
                   ].map(({ label, suffix }) => (
@@ -295,7 +295,7 @@ export default function ProductDetail() {
                 { label: 'Vzhľad', value: product.condition_appearance },
                 { label: 'Displej', value: product.condition_display },
                 { label: 'Funkčnosť', value: product.condition_functionality },
-                { label: 'Batéria', value: `Zdravie batérie - ${product.condition_battery_percent}%` },
+                { label: 'Batéria', value: product.condition_battery_percent },
               ].map(({ label, value }) => (
                 <div key={label}>
                   <h3 className="text-sm sm:text-lg font-bold text-blue-600 mb-1 sm:mb-2">{label}</h3>
