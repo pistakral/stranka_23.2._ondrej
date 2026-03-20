@@ -74,9 +74,9 @@ function App() {
         <Route path="/bonusy" element={<SpeakerCleaner />} />
         
         <Route path="/eshop" element={<><ProductGrid /><Footer /></>} />
-        <Route path="/eshop/:id" element={<><ProductDetail /><Footer /></>} />
         <Route path="/eshop/checkout" element={<Checkout />} />
         <Route path="/eshop/confirmation/:orderId" element={<OrderConfirmation />} />
+        <Route path="/eshop/:id" element={<><ProductDetail /><Footer /></>} />
       </Routes>
     </CartProvider>
   ); 
