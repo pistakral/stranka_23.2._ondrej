@@ -153,13 +153,7 @@ export default function ProductDetail() {
                     {currentImageIndex + 1} / {displayImages.length}
                   </div>
 
-                  {/* Zoom hint — len na hover (desktop) */}
-                  <div className="absolute inset-0 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/5 rounded-2xl pointer-events-none hidden sm:flex">
-                    <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-                      <ZoomIn className="w-4 h-4 text-blue-600" />
-                      <span className="text-xs font-semibold text-blue-600">Zobraziť väčšie</span>
-                    </div>
-                  </div>
+                  {/* Zoom hint — skrytý */}
 
                   {/* Šípky */}
                   {displayImages.length > 1 && (
@@ -239,7 +233,7 @@ export default function ProductDetail() {
                     <div className="min-w-0">
                       <p className="font-black text-green-900 text-sm sm:text-lg leading-tight">DARČEK ZADARMO! 🎁</p>
                       <p className="text-xs sm:text-sm text-green-700 mt-0.5">
-                        Ochranné sklo v hodnote{' '}
+                        Ochranný kryt a nabíjací kábel v hodnote{' '}
                         <span className="font-black text-green-900">€10</span> k telefónu
                       </p>
                       <p className="text-xs text-green-600 mt-1 opacity-75">
@@ -331,7 +325,7 @@ export default function ProductDetail() {
                 )}
               </div>
               <p className="text-xs text-gray-400 mt-5 leading-relaxed">
-                Predávané ako použitý/repasovaný tovar skontrolovaný v servise Fixanto (§ 612 ods. 4 OZ). Zdravie batérie {product.condition_battery_percent}% platí v čase predaja — prirodzené znižovanie kapacity nie je vada. Záruka 12 mesiacov (skrátená dohodou). Vrátenie do 14 dní platí pre online nákup.
+                Predávané ako použitý/repasovaný tovar skontrolovaný v servise Fixanto (§ 612 ods. 4 OZ). Zdravie batérie platí v čase predaja — prirodzené znižovanie kapacity nie je vada. Záruka 12 mesiacov (skrátená dohodou). Možnosť vrátenia do 14 dní platí pre online nákup.
               </p>
             </div>
           )}
