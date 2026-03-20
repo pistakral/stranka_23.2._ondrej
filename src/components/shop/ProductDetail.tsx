@@ -239,8 +239,11 @@ export default function ProductDetail() {
                     <div className="min-w-0">
                       <p className="font-black text-green-900 text-sm sm:text-xl leading-tight">DARČEK ZADARMO! 🎁</p>
                       <p className="text-xs sm:text-sm text-green-700 mt-0.5">
-                        Ochranný kryt a nabíjací kábel v hodnote{' '}
+                        Ochranné sklo v hodnote{' '}
                         <span className="font-black text-green-900">€10</span> k telefónu
+                      </p>
+                      <p className="text-xs text-green-600 mt-1 opacity-75">
+                        * Príslušenstvo je plne kompatibilné, nemusí ísť o originálne príslušenstvo Apple.
                       </p>
                     </div>
                   </div>
@@ -285,6 +288,19 @@ export default function ProductDetail() {
                 <p className="text-xs sm:text-sm text-gray-500 text-center mt-3">
                   Doprava zadarmo
                 </p>
+
+                {/* Právne info — diskrétne pod tlačidlom */}
+                <div className="mt-4 pt-4 border-t border-gray-100 space-y-1.5">
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    ✓ <strong className="text-gray-500">Použitý tovar</strong> — zariadenie je predávané ako použitý tovar skontrolovaný v servise Fixanto v zmysle § 612 ods. 4 Občianskeho zákonníka.
+                  </p>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    ✓ <strong className="text-gray-500">Zdravie batérie {product.condition_battery_percent}%</strong> — kapacita platí v čase predaja. Prirodzené znižovanie kapacity bežným používaním nie je vada.
+                  </p>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    ✓ <strong className="text-gray-500">Záruka 12 mesiacov</strong> — doba zodpovednosti za vady skrátená dohodou na 12 mesiacov (použitý tovar). Vrátenie do 14 dní platí pre online nákup.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -304,6 +320,29 @@ export default function ProductDetail() {
                   <p className="text-gray-700 text-sm sm:text-base">{value}</p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Právne informácie o produkte */}
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8">
+            <h2 className="text-sm sm:text-base font-bold text-gray-600 mb-3">Právne informácie</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-500 leading-relaxed">
+              <div>
+                <p className="font-semibold text-gray-600 mb-0.5">Status tovaru</p>
+                <p>Zariadenie je predávané ako použitý tovar skontrolovaný a otestovaný v servise Fixanto, v zmysle § 612 ods. 4 Občianskeho zákonníka.</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-600 mb-0.5">Zdravie batérie {product.condition_battery_percent}%</p>
+                <p>Kapacita batérie je aktuálna v čase predaja. Prirodzené znižovanie kapacity spôsobené bežným používaním nie je vada — na toto sa záruka nevzťahuje.</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-600 mb-0.5">Doba zodpovednosti za vady</p>
+                <p>12 mesiacov (skrátená dohodou pre použitý tovar). Zákonný štandard pre nový tovar je 24 mesiacov; pre použitý tovar zákon umožňuje skrátenie na 12 mesiacov.</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-600 mb-0.5">Vrátenie tovaru</p>
+                <p>14 dní bez udania dôvodu — platí výlučne pre online nákup cez e-shop (zmluva uzavretá na diaľku). Pri osobnom nákupe toto právo nevzniká.</p>
+              </div>
             </div>
           </div>
 
