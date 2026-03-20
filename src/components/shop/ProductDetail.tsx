@@ -59,7 +59,7 @@ export default function ProductDetail() {
         <div className="min-h-screen pt-32 flex items-center justify-center px-4">
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Produkt nenájdený</h1>
-            <button onClick={() => navigate('/store')}
+            <button onClick={() => navigate('/eshop')}
               className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">
               Späť na obchod
             </button>
@@ -119,7 +119,7 @@ export default function ProductDetail() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
 
           <button
-            onClick={() => navigate('/store')}
+            onClick={() => navigate('/eshop')}
             className="mb-4 sm:mb-6 flex items-center gap-1 text-blue-600 hover:text-blue-700 font-semibold text-sm sm:text-base"
           >
             <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
