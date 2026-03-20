@@ -101,7 +101,7 @@ export default function OchranaOsobnychUdajov() {
                   <strong className="text-gray-900">Web:</strong>{' '}
                   <a href="https://fixanto.sk" className="text-blue-600 hover:underline">fixanto.sk</a>
                   {' | '}
-                  <a href="https://fixanto.sk/eshop" className="text-blue-600 hover:underline">fixanto.sk/store (e-shop)</a>
+                  <a href="https://fixanto.sk/eshop" className="text-blue-600 hover:underline">fixanto.sk/eshop (e-shop)</a>
                 </p>
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function OchranaOsobnychUdajov() {
 
                 {/* b) E-shop — NOVÉ */}
                 <div className="bg-blue-50 rounded-lg p-6 border-l-4 border-blue-600">
-                  <h3 className="font-bold text-gray-900 mb-3 text-lg">🛒 b) Vybavenie objednávky cez e-shop (fixanto.sk/store)</h3>
+                  <h3 className="font-bold text-gray-900 mb-3 text-lg">🛒 b) Vybavenie objednávky cez e-shop (fixanto.sk/eshop)</h3>
                   <p className="text-gray-700 leading-relaxed mb-2">
                     <strong>Rozsah údajov:</strong> Meno a priezvisko, telefónne číslo, e-mail, adresa doručenia, obsah objednávky (produkt, cena, prípadný zľavový kód)
                   </p>
