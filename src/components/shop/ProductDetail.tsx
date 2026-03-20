@@ -153,7 +153,7 @@ export default function ProductDetail() {
                     {currentImageIndex + 1} / {displayImages.length}
                   </div>
 
-                  {/* Zoom hint - skrytý */}
+                  {/* Zoom hint — skrytý */}
 
                   {/* Šípky */}
                   {displayImages.length > 1 && (
@@ -209,7 +209,7 @@ export default function ProductDetail() {
             <div>
               <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8">
 
-                {/* Trieda + "Čo je trieda?" - vždy na jednom riadku, wrap ak treba */}
+                {/* Trieda + "Čo je trieda?" — vždy na jednom riadku, wrap ak treba */}
                 <div className="flex items-center gap-2 mb-4 flex-wrap">
                   <span className="bg-yellow-400 text-blue-900 px-3 py-1.5 rounded-lg font-bold text-sm whitespace-nowrap">
                     TRIEDA {product.grade}
@@ -224,7 +224,7 @@ export default function ProductDetail() {
                   </button>
                 </div>
 
-                {/* Darček banner - bez hover scale na mobile (spôsobuje overflow) */}
+                {/* Darček banner — bez hover scale na mobile (spôsobuje overflow) */}
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-xl p-3 sm:p-4 mb-4 sm:mb-5 shadow-lg sm:hover:scale-105 sm:hover:shadow-xl transition-transform duration-200 cursor-default">
                   <div className="flex items-center gap-3">
                     <div className="bg-green-500 p-2 sm:p-2.5 rounded-xl flex-shrink-0">
@@ -250,9 +250,10 @@ export default function ProductDetail() {
                 <p className="text-sm sm:text-xl text-gray-600 mb-3 sm:mb-6">{product.color}</p>
 
                 {/* Cena */}
-                <div className="text-2xl sm:text-4xl font-black text-blue-600 mb-4 sm:mb-8">
+                <div className="text-2xl sm:text-4xl font-black text-blue-600 mb-1 sm:mb-2">
                   €{product.price}
                 </div>
+                <p className="text-xs text-gray-400 mb-4 sm:mb-8">Predajca nie je platca DPH</p>
 
                 {/* Vlastnosti */}
                 <div className="space-y-2 sm:space-y-3 mb-5 sm:mb-8">
@@ -325,7 +326,7 @@ export default function ProductDetail() {
                 )}
               </div>
               <p className="text-xs text-gray-400 mt-5 leading-relaxed">
-                Predávané ako použitý/repasovaný tovar skontrolovaný v servise Fixanto (§ 612 ods. 4 OZ). Zdravie batérie platí v čase predaja - prirodzené znižovanie kapacity nie je vada. Záruka 12 mesiacov (skrátená dohodou). Možnosť vrátenia do 14 dní platí pre online nákup.
+                Predávané ako použitý/repasovaný tovar skontrolovaný v servise Fixanto (§ 612 ods. 4 OZ). Zdravie batérie platí v čase predaja — prirodzené znižovanie kapacity nie je vada. Záruka 12 mesiacov (skrátená dohodou). Možnosť vrátenia do 14 dní platí pre online nákup.
               </p>
             </div>
           )}
