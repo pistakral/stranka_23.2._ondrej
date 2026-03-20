@@ -7,7 +7,7 @@ import Footer from '../Footer';
 
 const IBAN = 'SK4809000000005242690350';
 const IBAN_DISPLAY = 'SK48 0900 0000 0052 4269 0350';
-const RECIPIENT_NAME = 'Štefan Hupčík';
+const RECIPIENT_NAME = 'Fixanto';
 
 interface OrderItem {
   id: string;
@@ -61,7 +61,7 @@ export default function OrderConfirmation() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!orderId) { navigate('/eshop'); return; }
+    if (!orderId) { navigate('/store'); return; }
     const stored = localStorage.getItem(`order-${orderId}`);
     if (stored) {
       const orderData = JSON.parse(stored) as OrderData;
@@ -70,7 +70,7 @@ export default function OrderConfirmation() {
         .then(setQrCodeDataUrl)
         .catch((err) => console.error('QR generation error:', err));
     } else {
-      navigate('/eshop');
+      navigate('/store');
     }
   }, [orderId, navigate]);
 
@@ -127,6 +127,10 @@ export default function OrderConfirmation() {
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 space-y-2 text-sm">
+                  <div className="flex justify-between gap-2 flex-wrap">
+                    <span className="text-gray-600">Príjemca:</span>
+                    <span className="font-bold text-blue-900 text-xs sm:text-sm">{RECIPIENT_NAME}</span>
+                  </div>
                   <div className="flex justify-between gap-2 flex-wrap">
                     <span className="text-gray-600">Bankový účet:</span>
                     <span className="font-mono font-bold text-blue-900 text-xs sm:text-sm">{IBAN_DISPLAY}</span>
@@ -189,7 +193,7 @@ export default function OrderConfirmation() {
                             {item.name}{item.capacity ? ` ${item.capacity}` : ''}
                           </p>
                           <p className="text-xs text-gray-500 mt-0.5">
-                            {adapter ? 'USB-C Power Adapter' : `${item.color} • Záruka 12 mesiacov`}
+                            {adapter ? 'Apple USB-C Power Adapter' : `${item.color} • Záruka 12 mesiacov`}
                           </p>
                         </div>
                         <span className={`font-bold flex-shrink-0 text-sm sm:text-base ${adapter ? 'text-orange-600' : 'text-blue-600'}`}>
@@ -269,7 +273,7 @@ export default function OrderConfirmation() {
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-all text-sm sm:text-base">
                   <Home className="w-4 h-4 sm:w-5 sm:h-5" /> Domov
                 </button>
-                <button onClick={() => navigate('/eshop')}
+                <button onClick={() => navigate('/store')}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all text-sm sm:text-base">
                   <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" /> E-shop
                 </button>
