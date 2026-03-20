@@ -325,7 +325,7 @@ export default function ProductDetail() {
                 )}
               </div>
               <p className="text-xs text-gray-400 mt-5 leading-relaxed">
-                Predávané ako použitý/repasovaný tovar skontrolovaný v servise Fixanto (§ 612 ods. 4 OZ). Zdravie batérie platí v čase predaja — prirodzené znižovanie kapacity nie je vada. Záruka 12 mesiacov (skrátená dohodou). Možnosť vrátenia do 14 dní platí pre online nákup.
+                Predávané ako použitý/repasovaný tovar skontrolovaný v servise Fixanto (§ 612 ods. 4 OZ). Zdravie batérie platí v čase predaja - prirodzené znižovanie kapacity nie je vada. Záruka 12 mesiacov (skrátená dohodou). Možnosť vrátenia do 14 dní platí pre online nákup.
               </p>
             </div>
           )}
