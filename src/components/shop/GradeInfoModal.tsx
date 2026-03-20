@@ -29,8 +29,8 @@ export default function GradeInfoModal({ isOpen, onClose }: GradeInfoModalProps)
       borderColor: 'border-blue-500',
       features: [
         'Jemné známky opotrebenia',
-        'Pár menších škrabancov na ráme a displeji',
-        'Displej bez výrazných škrabancov',
+        'Možné menšie škrabance na ráme',
+        'Displej bez výraznejších škrabancov',
         'Batéria v dobrom stave',
         'Repasovaný a kompletne otestovaný',
       ],
