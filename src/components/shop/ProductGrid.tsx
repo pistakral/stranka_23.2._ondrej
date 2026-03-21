@@ -5,11 +5,9 @@ import { supabase } from '../../lib/supabase';
 
 export default function ProductGrid() {
   const [products, setProducts] = useState<any[]>([]);
-  const [visibleCount, setVisibleCount] = useState(3);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch produktov z Supabase
   useEffect(() => {
     async function fetchProducts() {
       try {
@@ -36,20 +34,6 @@ export default function ProductGrid() {
     fetchProducts();
   }, []);
 
-  // Infinite scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
-        setVisibleCount(prev => Math.min(prev + 3, products.length));
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [products.length]);
-
-  const visibleProducts = products.slice(0, visibleCount);
-
   return (
     <>
       <Navbar />
@@ -64,7 +48,6 @@ export default function ProductGrid() {
             </p>
           </div>
 
-          {/* LOADING STATE */}
           {loading && (
             <div className="text-center py-12">
               <div className="inline-block w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -72,7 +55,6 @@ export default function ProductGrid() {
             </div>
           )}
 
-          {/* ERROR STATE */}
           {error && (
             <div className="text-center py-12">
               <p className="text-red-600 text-lg">{error}</p>
@@ -85,7 +67,6 @@ export default function ProductGrid() {
             </div>
           )}
 
-          {/* PRODUCTS GRID */}
           {!loading && !error && (
             <>
               {products.length === 0 ? (
@@ -93,36 +74,22 @@ export default function ProductGrid() {
                   <p className="text-gray-600 text-lg">Momentálne nemáme žiadne produkty na sklade.</p>
                 </div>
               ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {visibleProducts.map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        id={product.slug}
-                        name={product.name}
-                        capacity={product.capacity}
-                        color={product.color}
-                        price={product.price}
-                        image={product.main_image}
-                        grade={product.grade}
-                        stock={product.stock}
-                        stockStatus={product.stock_status}
-                      />
-                    ))}
-                  </div>
-
-                  {/* ZOBRAZ VIAC BUTTON */}
-                  {visibleCount < products.length && (
-                    <div className="text-center mt-12">
-                      <button
-                        onClick={() => setVisibleCount(prev => Math.min(prev + 3, products.length))}
-                        className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition-all"
-                      >
-                        Zobraziť viac
-                      </button>
-                    </div>
-                  )}
-                </>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      id={product.slug}
+                      name={product.name}
+                      capacity={product.capacity}
+                      color={product.color}
+                      price={product.price}
+                      image={product.main_image}
+                      grade={product.grade}
+                      stock={product.stock}
+                      stockStatus={product.stock_status}
+                    />
+                  ))}
+                </div>
               )}
             </>
           )}
