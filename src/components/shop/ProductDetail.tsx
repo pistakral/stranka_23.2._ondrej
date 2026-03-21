@@ -259,7 +259,7 @@ export default function ProductDetail() {
                 <div className="space-y-2 sm:space-y-3 mb-5 sm:mb-8">
                   {[
                     { label: `Trieda: ${product.grade}`, suffix: '✅' },
-                    { label: ${product.condition_battery_percent}`, suffix: '⚡' },
+                    { label: `${product.condition_battery_percent}`, suffix: '⚡' },
                     { label: `Záruka: ${product.warranty}`, suffix: '🛡️' },
                     { label: `Skladom: ${product.stock} ks`, suffix: '📦' },
                   ].map(({ label, suffix }) => (
