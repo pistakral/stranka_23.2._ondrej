@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Navbar from '../Navbar';
+import CookieBanner from '../CookieBanner';
+import GoogleAnalytics from '../GoogleAnalytics';
 import { supabase } from '../../lib/supabase';
 
 export default function ProductGrid() {
@@ -36,6 +38,7 @@ export default function ProductGrid() {
 
   return (
     <>
+      <GoogleAnalytics />
       <Navbar />
       <section id="products" className="py-16 bg-gray-50 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -95,6 +98,7 @@ export default function ProductGrid() {
           )}
         </div>
       </section>
+      <CookieBanner />
     </>
   );
 }
