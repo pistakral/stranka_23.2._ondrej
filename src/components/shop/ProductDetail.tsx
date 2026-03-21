@@ -253,7 +253,7 @@ export default function ProductDetail() {
                 <div className="text-2xl sm:text-4xl font-black text-blue-600 mb-1 sm:mb-2">
                   €{product.price}
                 </div>
-                <p className="text-xs text-gray-400 mb-4 sm:mb-8">Predajca nie je platca DPH</p>
+                <p className="text-xs text-gray-400 mb-4 sm:mb-8">(Predajca nie je platca DPH)</p>
 
                 {/* Vlastnosti */}
                 <div className="space-y-2 sm:space-y-3 mb-5 sm:mb-8">
