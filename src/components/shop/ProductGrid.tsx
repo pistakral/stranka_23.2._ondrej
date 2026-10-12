@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import ProductCard from './ProductCard';
 import Navbar from '../Navbar';
 import CookieBanner from '../CookieBanner';
@@ -110,6 +111,22 @@ export default function ProductGrid() {
 
   return (
     <>
+      <Helmet>
+        <title>E-shop – repasované iPhony a Android telefóny so zárukou | Fixanto</title>
+        <meta
+          name="description"
+          content="E-shop Fixanto: repasované iPhony, Samsung a Xiaomi telefóny otestované v servise v Trenčíne. Záruka 12 mesiacov, 14 dní na vrátenie, doprava zadarmo."
+        />
+        <link rel="canonical" href="https://fixanto.sk/eshop" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fixanto.sk/eshop" />
+        <meta property="og:title" content="E-shop Fixanto – repasované telefóny so zárukou" />
+        <meta
+          property="og:description"
+          content="Repasované iPhony a Android telefóny otestované v servise Fixanto. Záruka 12 mesiacov, doprava zadarmo."
+        />
+        <meta property="og:image" content="https://fixanto.sk/images/baner1.png" />
+      </Helmet>
       <GoogleAnalytics />
       <Navbar />
       <section id="products" className="pb-16 bg-gray-50 pt-24 sm:pt-28">
