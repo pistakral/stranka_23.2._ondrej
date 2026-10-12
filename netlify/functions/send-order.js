@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 function sanitize(str) {
   if (typeof str !== 'string') return '';
@@ -20,7 +20,7 @@ function isValidPrice(num) {
   return typeof num === 'number' && num >= 0 && num <= 99999;
 }
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
