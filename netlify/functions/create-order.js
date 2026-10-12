@@ -1,5 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
-const nodemailer = require('nodemailer');
+import { createClient } from '@supabase/supabase-js';
+import nodemailer from 'nodemailer';
 
 // ── Pomocné funkcie ──────────────────────────────────────────────
 function sanitize(str) {
@@ -28,7 +28,7 @@ const ADAPTER_PRICE = 15;
 const ADAPTER_NAME = 'Nabíjací adaptér 20W (USB-C Power Adapter)';
 
 // ── Handler ──────────────────────────────────────────────────────
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
