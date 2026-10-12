@@ -4,7 +4,8 @@ import { Zap, Truck, Store, MapPin, Clock } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import Navbar from '../Navbar';
 import OrderSummary from './OrderSummary';
-import { ADAPTERS, SHIPPING_METHODS, PICKUP, getPhoneType, ShippingId } from './shopOptions';
+import { ADAPTERS, SHIPPING_METHODS, PICKUP, getPhoneType } from './shopOptions';
+import type { ShippingId } from './shopOptions';
 
 const RATE_LIMIT_KEY = 'last_order_attempt';
 const RATE_LIMIT_COOLDOWN = 60000;
