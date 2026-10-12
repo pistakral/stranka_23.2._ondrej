@@ -1,18 +1,7 @@
-// Dynamická sitemap – produkty sa načítajú priamo zo Supabase.
-// Každý nový produkt (is_active = true) sa v sitemap objaví sám,
-// vypredaný/skrytý (is_active = false) z nej sám zmizne.
-//
-// Aktivácia: do public/_redirects (NAD riadok "/* /index.html 200") pridaj:
-//   /sitemap.xml  /.netlify/functions/sitemap  200!
-// Ak používaš netlify.toml, ekvivalent (nad SPA pravidlom):
-//   [[redirects]]
-//     from = "/sitemap.xml"
-//     to = "/.netlify/functions/sitemap"
-//     status = 200
-//     force = true
-// Starý statický public/sitemap.xml potom môžeš zmazať.
+// Dynamická sitemap – produkty zo Supabase (is_active = true).
+// Napojené cez netlify.toml: /sitemap.xml → /.netlify/functions/sitemap
 
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const SITE = 'https://fixanto.sk';
 
@@ -36,7 +25,7 @@ const esc = (s) =>
 
 const day = (iso) => (iso ? String(iso).slice(0, 10) : null);
 
-exports.handler = async () => {
+export const handler = async () => {
   let products = [];
 
   try {
