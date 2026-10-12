@@ -1,24 +1,13 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Zap } from 'lucide-react';
+import { Zap, Truck, Store, MapPin, Clock } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import Navbar from '../Navbar';
 import OrderSummary from './OrderSummary';
+import { ADAPTERS, SHIPPING_METHODS, PICKUP, getPhoneType, ShippingId } from './shopOptions';
 
 const RATE_LIMIT_KEY = 'last_order_attempt';
 const RATE_LIMIT_COOLDOWN = 60000;
-const ADAPTER_PRICE = 15;
-const ADAPTER_NAME = 'Nabíjací adaptér 20W (USB-C Power Adapter)';
-
-interface ShippingMethod {
-  id: string;
-  name: string;
-  price: number;
-}
-
-const SHIPPING_METHODS: ShippingMethod[] = [
-  { id: 'posta', name: 'Slovenská pošta – doručenie na adresu', price: 0 },
-];
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -27,7 +16,7 @@ export default function Checkout() {
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '',
     street: '', city: '', zip: '',
-    shippingMethod: 'posta', notes: '',
+    shippingMethod: 'posta' as ShippingId, notes: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -37,7 +26,7 @@ export default function Checkout() {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [checkingCode, setCheckingCode] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
-  const [adapterAdded, setAdapterAdded] = useState(false);
+  const [selectedAdapters, setSelectedAdapters] = useState<string[]>([]);
 
   if (cart.length === 0) {
     return (
@@ -56,10 +45,22 @@ export default function Checkout() {
     );
   }
 
-  const selectedShipping = SHIPPING_METHODS.find((m) => m.id === formData.shippingMethod)!;
+  const selectedShipping =
+    SHIPPING_METHODS.find((m) => m.id === formData.shippingMethod) ?? SHIPPING_METHODS[0];
+  const isPickup = selectedShipping.payment === 'cash_on_pickup';
   const shippingPrice = selectedShipping.price;
-  const adapterPrice = adapterAdded ? ADAPTER_PRICE : 0;
-  const subtotalWithAdapter = totalPrice + adapterPrice;
+
+  // Adaptér sa ponúkne podľa toho, aké telefóny sú v košíku
+  // (iPhone → 20W USB-C, Android → 10W USB-A, pri oboch typoch obidva)
+  const availableAdapters = ADAPTERS.filter((a) =>
+    cart.some((item) => getPhoneType(item.name) === a.forType)
+  );
+  const chosenAdapters = availableAdapters.filter((a) => selectedAdapters.includes(a.id));
+  const adaptersTotal = chosenAdapters.reduce((sum, a) => sum + a.price, 0);
+  const toggleAdapter = (id: string) =>
+    setSelectedAdapters((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const subtotalWithAdapter = totalPrice + adaptersTotal;
   const discountAmount = (subtotalWithAdapter * discountPercent) / 100;
   const finalTotal = subtotalWithAdapter - discountAmount + shippingPrice;
 
@@ -106,7 +107,7 @@ export default function Checkout() {
     }
 
     if (!formData.name || !formData.email || !formData.phone ||
-        !formData.street || !formData.city || !formData.zip) {
+        (!isPickup && (!formData.street || !formData.city || !formData.zip))) {
       setError('Vyplňte prosím všetky povinné polia.'); return;
     }
     if (!formData.email.includes('@')) { setError('Zadajte platný email.'); return; }
@@ -126,11 +127,13 @@ export default function Checkout() {
           customerName: formData.name,
           customerEmail: formData.email,
           customerPhone: formData.phone,
-          customerStreet: formData.street,
-          customerCity: formData.city,
-          customerZip: formData.zip,
+          customerStreet: isPickup ? '' : formData.street,
+          customerCity: isPickup ? '' : formData.city,
+          customerZip: isPickup ? '' : formData.zip,
+          shippingMethodId: selectedShipping.id,
           shippingMethod: selectedShipping.name,
           shippingPrice,
+          paymentMethod: selectedShipping.payment,
           notes: formData.notes || null,
           items: cart.map((item) => ({
             name: item.name, capacity: item.capacity, color: item.color,
@@ -141,7 +144,8 @@ export default function Checkout() {
           discountCode: discountApplied ? discountCode : null,
           discountPercent: discountApplied ? discountPercent : 0,
           discountAmount: discountApplied ? discountAmount : 0,
-          adapterAdded,
+          adapters: chosenAdapters.map((a) => a.id),
+          adapterAdded: chosenAdapters.length > 0,
         }),
       });
 
@@ -153,20 +157,24 @@ export default function Checkout() {
       localStorage.setItem(`order-${orderId}`, JSON.stringify({
         orderId,
         customerName: formData.name, customerEmail: formData.email,
-        customerPhone: formData.phone, customerStreet: formData.street,
-        customerCity: formData.city, customerZip: formData.zip,
+        customerPhone: formData.phone,
+        customerStreet: isPickup ? '' : formData.street,
+        customerCity: isPickup ? '' : formData.city,
+        customerZip: isPickup ? '' : formData.zip,
         items: [
           ...cart,
-          ...(adapterAdded ? [{ id: 'adapter-20w', name: ADAPTER_NAME, capacity: '', color: '', price: ADAPTER_PRICE, images: [] }] : []),
+          ...chosenAdapters.map((a) => ({
+            id: `adapter-${a.id}`, name: a.name, capacity: '', color: a.subtitle, price: a.price, images: [],
+          })),
         ],
         subtotal: subtotalWithAdapter,
+        shippingMethodId: selectedShipping.id,
         shippingMethod: selectedShipping.name, shippingPrice,
+        paymentMethod: selectedShipping.payment,
         totalPrice: finalTotal,
         discountCode: discountApplied ? discountCode : null,
         discountPercent: discountApplied ? discountPercent : 0,
         discountAmount: discountApplied ? discountAmount : 0,
-        adapterAdded,
-        adapterPrice: adapterAdded ? ADAPTER_PRICE : 0,
         createdAt: new Date().toISOString(),
       }));
 
@@ -204,7 +212,7 @@ export default function Checkout() {
                 cart={cart} totalPrice={totalPrice}
                 discountApplied={discountApplied} discountCode={discountCode}
                 discountPercent={discountPercent} discountAmount={discountAmount}
-                adapterAdded={adapterAdded} adapterPrice={ADAPTER_PRICE}
+                adapters={chosenAdapters} shippingLabel={isPickup ? 'Osobný odber' : 'Doprava'}
                 finalTotal={finalTotal}
               />
             </div>
@@ -235,27 +243,80 @@ export default function Checkout() {
                     className={inputClass} placeholder="0949 123 456" />
                 </div>
 
+                {/* Spôsob doručenia */}
                 <div>
-                  <label className={labelClass}>Ulica a číslo domu *</label>
-                  <input type="text" required value={formData.street}
-                    onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                    className={inputClass} placeholder="Hlavná 42" />
+                  <label className={labelClass}>Spôsob doručenia *</label>
+                  <div className="space-y-3">
+                    {SHIPPING_METHODS.map((method) => {
+                      const active = formData.shippingMethod === method.id;
+                      const Icon = method.id === 'osobny' ? Store : Truck;
+                      return (
+                        <label key={method.id} className={`flex items-center gap-3 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                          active ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'
+                        }`}>
+                          <input type="radio" name="shipping" value={method.id} checked={active}
+                            onChange={() => setFormData({ ...formData, shippingMethod: method.id })}
+                            className="w-5 h-5 accent-green-600 flex-shrink-0" />
+                          <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-green-600' : 'text-gray-400'}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-gray-900 text-sm sm:text-base">{method.name}</div>
+                            <div className="text-xs sm:text-sm text-gray-500">{method.description}</div>
+                          </div>
+                          <div className="font-bold text-green-600 text-sm sm:text-base flex-shrink-0">
+                            {method.price === 0 ? 'ZADARMO' : `€${method.price}`}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  {isPickup && (
+                    <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900 space-y-2">
+                      <p className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>
+                          <strong>{PICKUP.name}</strong>, {PICKUP.street}, {PICKUP.city} ·{' '}
+                          <a href={PICKUP.mapUrl} target="_blank" rel="noopener noreferrer" className="underline font-semibold">mapa</a>
+                        </span>
+                      </p>
+                      <p className="flex items-start gap-2">
+                        <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>{PICKUP.hours.join(' · ')}</span>
+                      </p>
+                      <p className="text-xs text-blue-700">
+                        Telefón vám rezervujeme. Pred príchodom nám prosím zavolajte na{' '}
+                        <a href={PICKUP.phoneHref} className="font-bold">{PICKUP.phone}</a>. Platíte až pri prevzatí.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className={labelClass}>Mesto *</label>
-                    <input type="text" required value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className={inputClass} placeholder="Trenčín" />
-                  </div>
-                  <div>
-                    <label className={labelClass}>PSČ *</label>
-                    <input type="text" required value={formData.zip}
-                      onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                      className={inputClass} placeholder="911 01" />
-                  </div>
-                </div>
+                {/* Adresa – len pri doručení poštou */}
+                {!isPickup && (
+                  <>
+                    <div>
+                      <label className={labelClass}>Ulica a číslo domu *</label>
+                      <input type="text" required value={formData.street}
+                        onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                        className={inputClass} placeholder="Hlavná 42" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      <div>
+                        <label className={labelClass}>Mesto *</label>
+                        <input type="text" required value={formData.city}
+                          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                          className={inputClass} placeholder="Trenčín" />
+                      </div>
+                      <div>
+                        <label className={labelClass}>PSČ *</label>
+                        <input type="text" required value={formData.zip}
+                          onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
+                          className={inputClass} placeholder="911 01" />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* Zľavový kód */}
                 <div>
@@ -282,41 +343,39 @@ export default function Checkout() {
                   )}
                 </div>
 
-                {/* Nabíjací adaptér */}
-                <div>
-                  <label className={labelClass}>Doplnkové príslušenstvo</label>
-                  <label className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    adapterAdded ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
-                  }`}>
-                    <input type="checkbox" checked={adapterAdded}
-                      onChange={(e) => setAdapterAdded(e.target.checked)}
-                      className="w-5 h-5 accent-orange-500 flex-shrink-0" />
-                    <div className={`p-2 rounded-lg flex-shrink-0 transition-colors ${adapterAdded ? 'bg-orange-500' : 'bg-gray-200'}`}>
-                      <Zap className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${adapterAdded ? 'text-white' : 'text-gray-500'}`} />
+                {/* Nabíjací adaptér – podľa typu telefónu v košíku */}
+                {availableAdapters.length > 0 && (
+                  <div>
+                    <label className={labelClass}>Doplnkové príslušenstvo</label>
+                    <div className="space-y-3">
+                      {availableAdapters.map((a) => {
+                        const active = selectedAdapters.includes(a.id);
+                        return (
+                          <label key={a.id} className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                            active ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                          }`}>
+                            <input type="checkbox" checked={active}
+                              onChange={() => toggleAdapter(a.id)}
+                              className="w-5 h-5 accent-orange-500 flex-shrink-0" />
+                            <div className={`p-2 rounded-lg flex-shrink-0 transition-colors ${active ? 'bg-orange-500' : 'bg-gray-200'}`}>
+                              <Zap className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${active ? 'text-white' : 'text-gray-500'}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-gray-900 text-sm sm:text-base">{a.name}</p>
+                              <p className="text-xs sm:text-sm text-gray-500">
+                                {a.subtitle}
+                                {availableAdapters.length > 1 && ` · pre ${a.forType === 'iphone' ? 'iPhone' : 'Android'}`}
+                              </p>
+                            </div>
+                            <div className={`font-black text-base sm:text-lg flex-shrink-0 transition-colors ${active ? 'text-orange-600' : 'text-gray-700'}`}>
+                              +€{a.price}
+                            </div>
+                          </label>
+                        );
+                      })}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-gray-900 text-sm sm:text-base">Nabíjací adaptér 20W</p>
-                      <p className="text-xs sm:text-sm text-gray-500">USB-C Power Adapter</p>
-                    </div>
-                    <div className={`font-black text-base sm:text-lg flex-shrink-0 transition-colors ${adapterAdded ? 'text-orange-600' : 'text-gray-700'}`}>
-                      +€{ADAPTER_PRICE}
-                    </div>
-                  </label>
-                </div>
-
-                {/* Spôsob doručenia */}
-                <div>
-                  <label className={labelClass}>Spôsob doručenia *</label>
-                  {SHIPPING_METHODS.map((method) => (
-                    <label key={method.id} className="flex items-center gap-3 p-3 sm:p-4 border-2 border-green-500 bg-green-50 rounded-xl cursor-pointer">
-                      <input type="radio" name="shipping" value={method.id} checked={true} readOnly className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900 text-sm sm:text-base">{method.name}</div>
-                      </div>
-                      <div className="font-bold text-green-600 text-sm sm:text-lg flex-shrink-0">ZADARMO ✅</div>
-                    </label>
-                  ))}
-                </div>
+                  </div>
+                )}
 
                 {/* Poznámka */}
                 <div>
@@ -360,7 +419,9 @@ export default function Checkout() {
                 </button>
 
                 <p className="text-xs sm:text-sm text-gray-500 text-center">
-                  Platba prevodom. Údaje na úhradu dostanete na email.
+                  {isPickup
+                    ? 'Nič neplatíte vopred – zaplatíte pri prevzatí. Potvrdenie dostanete na email.'
+                    : 'Platba prevodom. Údaje na úhradu dostanete na email.'}
                 </p>
               </form>
             </div>
@@ -371,7 +432,7 @@ export default function Checkout() {
                 cart={cart} totalPrice={totalPrice}
                 discountApplied={discountApplied} discountCode={discountCode}
                 discountPercent={discountPercent} discountAmount={discountAmount}
-                adapterAdded={adapterAdded} adapterPrice={ADAPTER_PRICE}
+                adapters={chosenAdapters} shippingLabel={isPickup ? 'Osobný odber' : 'Doprava'}
                 finalTotal={finalTotal}
               />
             </div>
