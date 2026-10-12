@@ -1,5 +1,4 @@
 import { Zap } from 'lucide-react';
-import type { AdapterOption } from './shopOptions';
 
 interface CartItem {
   id: string;
@@ -17,14 +16,14 @@ interface OrderSummaryProps {
   discountCode: string;
   discountPercent: number;
   discountAmount: number;
-  adapters: AdapterOption[];
-  shippingLabel: string;
+  adapterAdded: boolean;
+  adapterPrice: number;
   finalTotal: number;
 }
 
 export default function OrderSummary({
   cart, totalPrice, discountApplied, discountCode, discountPercent,
-  discountAmount, adapters, shippingLabel, finalTotal,
+  discountAmount, adapterAdded, adapterPrice, finalTotal,
 }: OrderSummaryProps) {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 lg:sticky lg:top-24 text-sm">
@@ -46,18 +45,18 @@ export default function OrderSummary({
           </div>
         ))}
 
-        {adapters.map((a) => (
-          <div key={a.id} className="flex gap-3 items-center bg-orange-50 rounded-xl px-3 py-2 border border-orange-200">
+        {adapterAdded && (
+          <div className="flex gap-3 items-center bg-orange-50 rounded-xl px-3 py-2 border border-orange-200">
             <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-orange-100 rounded-lg flex-shrink-0">
               <Zap className="w-5 h-5 text-orange-500" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 leading-snug text-xs sm:text-sm">{a.name}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{a.subtitle}</p>
+              <p className="font-semibold text-gray-900 leading-snug text-xs sm:text-sm">Nabíjací adaptér 20W</p>
+              <p className="text-xs text-gray-500 mt-0.5">USB-C Power Adapter</p>
             </div>
-            <div className="font-bold text-orange-600 flex-shrink-0 text-sm">€{a.price}</div>
+            <div className="font-bold text-orange-600 flex-shrink-0 text-sm">€{adapterPrice}</div>
           </div>
-        ))}
+        )}
       </div>
 
       <div className="border-t border-gray-200 pt-3 space-y-1.5">
@@ -66,12 +65,12 @@ export default function OrderSummary({
           <span className="font-semibold text-gray-800">€{totalPrice.toFixed(2)}</span>
         </div>
 
-        {adapters.map((a) => (
-          <div key={a.id} className="flex justify-between text-orange-600">
-            <span>{a.name.replace('Nabíjací adaptér', 'Adaptér')}:</span>
-            <span className="font-semibold">+€{a.price.toFixed(2)}</span>
+        {adapterAdded && (
+          <div className="flex justify-between text-orange-600">
+            <span>Adaptér 20W:</span>
+            <span className="font-semibold">+€{adapterPrice.toFixed(2)}</span>
           </div>
-        ))}
+        )}
 
         {discountApplied && (
           <div className="flex justify-between text-green-600">
@@ -81,7 +80,7 @@ export default function OrderSummary({
         )}
 
         <div className="flex justify-between text-green-600">
-          <span>{shippingLabel}:</span>
+          <span>Doprava:</span>
           <span className="font-semibold">ZADARMO ✅</span>
         </div>
 
