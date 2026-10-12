@@ -18,6 +18,25 @@ plugins = []
   [build.processing.js]
   [build.services]
 
+# ── Presmerovania ───────────────────────────────────────────────
+# Poradie je dôležité: Netlify použije PRVÉ pravidlo, ktoré sedí.
+# SPA pravidlo "/*" musí byť vždy POSLEDNÉ.
+
+# Dynamická sitemap – generuje ju funkcia netlify/functions/sitemap.js zo Supabase
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/.netlify/functions/sitemap"
+  status = 200
+  force = true
+
+# Starý odkaz, ktorý má Google zaindexovaný (iPhone 12 mini je 64GB)
+[[redirects]]
+  from = "/eshop/iphone-12-mini-128gb-white"
+  to = "/eshop/iphone-12-mini-64gb-white"
+  status = 301
+  force = true
+
+# SPA – React Router (musí byť posledné)
 [[redirects]]
   from = "/*"
   to = "/index.html"
