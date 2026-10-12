@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, Home, ShoppingBag } from 'lucide-react';
+import { CheckCircle, Home, ShoppingBag, MapPin, Clock } from 'lucide-react';
 import QRCode from 'qrcode';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
+import { PICKUP } from './shopOptions';
 
 const IBAN = 'SK4809000000005242690350';
 const IBAN_DISPLAY = 'SK48 0900 0000 0052 4269 0350';
@@ -28,8 +29,10 @@ interface OrderData {
   customerZip: string;
   items: OrderItem[];
   subtotal: number;
+  shippingMethodId?: string;
   shippingMethod: string;
   shippingPrice: number;
+  paymentMethod?: string;
   totalPrice: number;
   discountCode?: string | null;
   discountPercent?: number;
@@ -45,7 +48,7 @@ async function generateEpcQR(iban: string, amount: number, reference: string, re
 }
 
 function isAdapter(item: OrderItem): boolean {
-  return item.id === 'adapter-20w' || item.name.toLowerCase().includes('adaptér');
+  return item.id.startsWith('adapter-') || item.name.toLowerCase().includes('adaptér');
 }
 
 function getItemImage(item: OrderItem): string {
@@ -61,16 +64,19 @@ export default function OrderConfirmation() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!orderId) { navigate('/store'); return; }
+    if (!orderId) { navigate('/eshop'); return; }
     const stored = localStorage.getItem(`order-${orderId}`);
     if (stored) {
       const orderData = JSON.parse(stored) as OrderData;
       setOrder(orderData);
-      generateEpcQR(IBAN, orderData.totalPrice, orderId, RECIPIENT_NAME)
-        .then(setQrCodeDataUrl)
-        .catch((err) => console.error('QR generation error:', err));
+      // QR kód na platbu len pri platbe prevodom (nie pri osobnom odbere)
+      if (orderData.paymentMethod !== 'cash_on_pickup') {
+        generateEpcQR(IBAN, orderData.totalPrice, orderId, RECIPIENT_NAME)
+          .then(setQrCodeDataUrl)
+          .catch((err) => console.error('QR generation error:', err));
+      }
     } else {
-      navigate('/store');
+      navigate('/eshop');
     }
   }, [orderId, navigate]);
 
@@ -84,6 +90,22 @@ export default function OrderConfirmation() {
       </>
     );
   }
+
+  const isPickup = order.paymentMethod === 'cash_on_pickup' || order.shippingMethodId === 'osobny';
+
+  const nextSteps = isPickup
+    ? [
+        `Telefón máte rezervovaný – vyzdvihnite si ho na adrese ${PICKUP.street}`,
+        'Pred príchodom nám prosím zavolajte, aby sme vás určite čakali',
+        'Telefón si na mieste pozriete a vyskúšate',
+        'Zaplatíte až pri prevzatí',
+      ]
+    : [
+        'Uhraďte objednávku prevodom do 48 hodín (QR kód vľavo)',
+        'Po prijatí platby vám zašleme potvrdzujúci email',
+        'Zásielku expedujeme do 1-2 pracovných dní',
+        'Dostanete tracking číslo pre sledovanie balíka',
+      ];
 
   return (
     <>
@@ -108,6 +130,41 @@ export default function OrderConfirmation() {
           <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
             {/* LEFT */}
             <div className="space-y-5 sm:space-y-6">
+              {isPickup ? (
+                /* Osobný odber – platba pri prevzatí */
+                <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">🏪 Osobný odber</h2>
+                  <div className="space-y-2 text-sm mb-4">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-gray-500 flex-shrink-0">Zvolená platba:</span>
+                      <span className="font-semibold text-gray-900 text-right">Pri prevzatí</span>
+                    </div>
+                    <div className="flex justify-between gap-2 text-base font-black border-t pt-2 mt-2">
+                      <span className="text-gray-700">Zaplatíte pri prevzatí:</span>
+                      <span className="text-blue-600">€{order.totalPrice.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 space-y-2 text-sm text-blue-900">
+                    <p className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>
+                        <strong>{PICKUP.name}</strong><br />
+                        {PICKUP.street}, {PICKUP.city}<br />
+                        <a href={PICKUP.mapUrl} target="_blank" rel="noopener noreferrer" className="underline font-semibold">Otvoriť v mapách</a>
+                      </span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>{PICKUP.hours.map((h) => <span key={h} className="block">{h}</span>)}</span>
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3 text-center">
+                    Nič neplatíte vopred. Pred príchodom nám prosím zavolajte na{' '}
+                    <a href={PICKUP.phoneHref} className="font-bold">{PICKUP.phone}</a>.
+                  </p>
+                </div>
+              ) : (
+                <>
               {/* Platobné údaje */}
               <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">💳 Platba a doručenie</h2>
@@ -168,6 +225,8 @@ export default function OrderConfirmation() {
                   <p className="text-sm text-gray-500">Generujem QR kód...</p>
                 </div>
               )}
+                </>
+              )}
             </div>
 
             {/* RIGHT */}
@@ -193,7 +252,7 @@ export default function OrderConfirmation() {
                             {item.name}{item.capacity ? ` ${item.capacity}` : ''}
                           </p>
                           <p className="text-xs text-gray-500 mt-0.5">
-                            {adapter ? 'Apple USB-C Power Adapter' : `${item.color} • Záruka 12 mesiacov`}
+                            {adapter ? (item.color || 'USB-C Power Adapter') : `${item.color} • Záruka 12 mesiacov`}
                           </p>
                         </div>
                         <span className={`font-bold flex-shrink-0 text-sm sm:text-base ${adapter ? 'text-orange-600' : 'text-blue-600'}`}>
@@ -216,7 +275,7 @@ export default function OrderConfirmation() {
                     </div>
                   )}
                   <div className="flex justify-between text-gray-600">
-                    <span>Doprava</span>
+                    <span>{isPickup ? 'Osobný odber' : 'Doprava'}</span>
                     <span className="font-bold text-green-600">
                       {order.shippingPrice === 0 ? 'ZDARMA ✅' : `€${order.shippingPrice.toFixed(2)}`}
                     </span>
@@ -230,11 +289,11 @@ export default function OrderConfirmation() {
 
               {/* Adresa */}
               <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">🚚 Adresa doručenia</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">{isPickup ? '👤 Kontaktné údaje' : '🚚 Adresa doručenia'}</h2>
                 <div className="text-sm space-y-1 text-gray-700">
                   <p><strong>{order.customerName}</strong></p>
-                  <p>{order.customerStreet}</p>
-                  <p>{order.customerZip} {order.customerCity}</p>
+                  {order.customerStreet && <p>{order.customerStreet}</p>}
+                  {(order.customerZip || order.customerCity) && <p>{order.customerZip} {order.customerCity}</p>}
                   <p className="text-gray-500 pt-1">📞 {order.customerPhone}</p>
                 </div>
               </div>
@@ -243,12 +302,7 @@ export default function OrderConfirmation() {
               <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">📋 Čo bude ďalej?</h2>
                 <ol className="space-y-3">
-                  {[
-                    'Uhraďte objednávku prevodom do 48 hodín (QR kód vľavo)',
-                    'Po prijatí platby vám zašleme potvrdzujúci email',
-                    'Zásielku expedujeme do 1-2 pracovných dní',
-                    'Dostanete tracking číslo pre sledovanie balíka',
-                  ].map((text, i) => (
+                  {nextSteps.map((text, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 mt-0.5">
                         {i + 1}
@@ -273,7 +327,7 @@ export default function OrderConfirmation() {
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-all text-sm sm:text-base">
                   <Home className="w-4 h-4 sm:w-5 sm:h-5" /> Domov
                 </button>
-                <button onClick={() => navigate('/store')}
+                <button onClick={() => navigate('/eshop')}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all text-sm sm:text-base">
                   <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" /> E-shop
                 </button>
