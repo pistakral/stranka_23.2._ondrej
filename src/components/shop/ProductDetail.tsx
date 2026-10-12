@@ -55,6 +55,10 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <>
+        <Helmet>
+          <title>Produkt nenájdený | Fixanto</title>
+          <meta name="robots" content="noindex, follow" />
+        </Helmet>
         <Navbar />
         <div className="min-h-screen pt-32 flex items-center justify-center px-4">
           <div className="text-center">
@@ -68,6 +72,37 @@ export default function ProductDetail() {
       </>
     );
   }
+
+  // ── SEO ──
+  const canonicalUrl = `https://fixanto.sk/eshop/${product.slug}`;
+  const seoTitle =
+    product.meta_title || `${product.name} ${product.capacity} ${product.color} | Fixanto`;
+  const seoDescription =
+    product.meta_description ||
+    product.description?.substring(0, 155) ||
+    `${product.name} ${product.capacity} ${product.color} – repasovaný telefón so zárukou 12 mesiacov | Fixanto`;
+  const isAvailable =
+    product.stock > 0 && product.stock_status !== 'sold_out' && product.stock_status !== 'reserved';
+  // Štruktúrované dáta – Google môže vo výsledkoch ukázať cenu a dostupnosť
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${product.name} ${product.capacity} ${product.color}`,
+    image: product.images?.length ? product.images : [product.main_image],
+    description: seoDescription,
+    sku: product.slug,
+    brand: { '@type': 'Brand', name: product.name?.split(' ')[0] === 'iPhone' ? 'Apple' : product.name?.split(' ')[0] },
+    itemCondition: 'https://schema.org/RefurbishedCondition',
+    offers: {
+      '@type': 'Offer',
+      url: canonicalUrl,
+      priceCurrency: 'EUR',
+      price: Number(product.price).toFixed(2),
+      availability: isAvailable ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/RefurbishedCondition',
+      seller: { '@type': 'Organization', name: 'Fixanto' },
+    },
+  };
 
   const displayImages =
     product.images && product.images.length > 0
@@ -100,17 +135,19 @@ export default function ProductDetail() {
   return (
     <>
       <Helmet>
-        <title>
-          {product.meta_title || `${product.name} ${product.capacity} ${product.color} | Fixanto`}
-        </title>
-        <meta
-          name="description"
-          content={
-            product.meta_description ||
-            product.description?.substring(0, 155) ||
-            `${product.name} ${product.capacity} ${product.color} - Prémiový iPhone`
-          }
-        />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:image" content={product.main_image} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="twitter:image" content={product.main_image} />
+        <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
       </Helmet>
 
       <Navbar />
