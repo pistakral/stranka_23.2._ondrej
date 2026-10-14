@@ -96,7 +96,7 @@ export default function OrderConfirmation() {
 
   const nextSteps = isPickup
     ? [
-        `Telefón máte rezervovaný – vyzdvihnite si ho na adrese ${PICKUP.street}`,
+        `Telefón máte rezervovaný 48 hodín – vyzdvihnite si ho na adrese ${PICKUP.street}`,
         'Pred príchodom nám prosím zavolajte, aby sme vás určite čakali',
         'Telefón si na mieste pozriete a vyskúšate',
         'Zaplatíte až pri prevzatí',
@@ -164,7 +164,7 @@ export default function OrderConfirmation() {
                     </p>
                   </div>
                   <p className="text-xs text-gray-500 mt-3 text-center">
-                    Nič neplatíte vopred. Pred príchodom nám prosím zavolajte na{' '}
+                    Nič neplatíte vopred. Rezervácia platí 48 hodín. Pred príchodom nám prosím zavolajte na{' '}
                     <a href={PICKUP.phoneHref} className="font-bold">{PICKUP.phone}</a>.
                   </p>
                 </div>
