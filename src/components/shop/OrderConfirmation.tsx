@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { CheckCircle, Home, ShoppingBag, MapPin, Clock } from 'lucide-react';
 import QRCode from 'qrcode';
 import Navbar from '../Navbar';
@@ -109,6 +110,10 @@ export default function OrderConfirmation() {
 
   return (
     <>
+      <Helmet>
+        <title>Objednávka prijatá | Fixanto.sk</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Navbar />
       <div className="min-h-screen pt-20 sm:pt-24 pb-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
