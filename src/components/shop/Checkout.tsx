@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Zap, Truck, Store, MapPin, Clock } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import Navbar from '../Navbar';
@@ -9,6 +10,14 @@ import type { ShippingId } from './shopOptions';
 
 const RATE_LIMIT_KEY = 'last_order_attempt';
 const RATE_LIMIT_COOLDOWN = 60000;
+
+// Pokladňa nemá byť vo vyhľadávaní (noindex)
+const CheckoutHead = () => (
+  <Helmet>
+    <title>Pokladňa | Fixanto.sk</title>
+    <meta name="robots" content="noindex, nofollow" />
+  </Helmet>
+);
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -32,6 +41,7 @@ export default function Checkout() {
   if (cart.length === 0) {
     return (
       <>
+        <CheckoutHead />
         <Navbar />
         <div className="min-h-screen pt-32 flex items-center justify-center bg-gray-50">
           <div className="text-center">
@@ -194,6 +204,7 @@ export default function Checkout() {
 
   return (
     <>
+      <CheckoutHead />
       <Navbar />
       <div className="min-h-screen pt-20 sm:pt-24 pb-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
