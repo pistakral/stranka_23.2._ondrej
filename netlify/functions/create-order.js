@@ -62,8 +62,8 @@ export const handler = async (event) => {
     customerName, customerEmail, customerPhone,
     customerStreet, customerCity, customerZip,
     shippingMethodId,
-    items, subtotal, totalPrice,
-    discountCode, discountPercent, discountAmount,
+    items, totalPrice,
+    discountCode,
     adapters, adapterAdded, notes,
   } = body;
 
@@ -74,7 +74,6 @@ export const handler = async (event) => {
     return { statusCode: 400, body: 'Invalid shipping method' };
   }
   const isPickup = shipping.payment === 'cash_on_pickup';
-  const shippingPrice = shipping.price;
 
   // Adaptéry – len známe ID, bez duplicít (adapterAdded = spätná kompatibilita)
   const adapterIds = Array.isArray(adapters)
@@ -103,18 +102,18 @@ export const handler = async (event) => {
     return { statusCode: 400, body: 'Invalid phone' };
   }
 
-  if (!isValidPrice(Number(totalPrice)) || !isValidPrice(Number(shippingPrice))) {
+  // Suma, ktorú videl zákazník – server ju porovná s cenou vypočítanou z databázy
+  if (!isValidPrice(Number(totalPrice))) {
     return { statusCode: 400, body: 'Invalid price' };
   }
 
+  // Z prehliadača berieme LEN identifikátory telefónov (slug), nie ceny ani názvy
   if (!Array.isArray(items) || items.length === 0 || items.length > 20) {
     return { statusCode: 400, body: 'Invalid items' };
   }
-
-  for (const p of items) {
-    if (!p.name || typeof p.price !== 'number' || !isValidPrice(p.price)) {
-      return { statusCode: 400, body: 'Invalid item data' };
-    }
+  const slugs = [...new Set(items.map((i) => (typeof i?.slug === 'string' ? i.slug.trim() : '')))];
+  if (slugs.some((sl) => !/^[a-z0-9-]{1,120}$/i.test(sl))) {
+    return { statusCode: 400, body: 'Invalid item data' };
   }
 
   const dangerousPattern = /(<script|javascript:|onerror=|DROP\s|DELETE\s|INSERT\s|UPDATE\s|SELECT\s|;--|\/\*)/gi;
@@ -134,95 +133,88 @@ export const handler = async (event) => {
     { auth: { persistSession: false } }
   );
 
-  const orderId = Date.now().toString();
+  const json = (statusCode, data) => ({
+    statusCode,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  // ── Objednávka = JEDNA transakcia v databáze (funkcia place_order) ──
+  // Zamkne telefóny, overí dostupnosť, vypočíta ceny z DB, overí zľavu,
+  // uloží objednávku + položky + rezerváciu. Ak niečo zlyhá, neuloží sa nič.
+  // Číslo objednávky = variabilný symbol → max 10 číslic (limit bánk v SR).
+  let orderId;
+  let result;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    orderId = String(Math.floor(Date.now() / 1000) + attempt);
+    const { data, error } = await supabase.rpc('place_order', {
+      p_order_number: orderId,
+      p_customer: {
+        name: sanitize(customerName),
+        email: sanitize(customerEmail),
+        phone: sanitize(customerPhone),
+        street: street || '',
+        city: city || '',
+        zip: zip || '',
+        notes: notes ? sanitize(notes) : '',
+      },
+      p_shipping: { name: shipping.name, price: shipping.price, payment: shipping.payment },
+      p_slugs: slugs,
+      p_adapters: chosenAdapters.map((a) => ({ name: a.name, price: a.price })),
+      p_discount_code: discountCode ? String(discountCode).slice(0, 50) : null,
+      p_expected_total: Number(totalPrice),
+    });
+
+    if (error && error.code === '23505') continue; // rovnaké číslo objednávky v tej istej sekunde → skús ďalšie
+    if (error) {
+      console.error('place_order error:', error);
+      return json(500, { success: false, error: 'Nastala chyba pri spracovaní objednávky. Skúste to prosím znova.' });
+    }
+    result = data;
+    break;
+  }
+
+  if (!result) {
+    return json(503, { success: false, error: 'Systém je momentálne preťažený. Skúste to prosím o chvíľu znova.' });
+  }
+
+  if (!result.ok) {
+    if (result.code === 'unavailable') {
+      const names = (result.names || []).map((n) => sanitize(String(n))).join(', ') || 'Telefón';
+      return json(409, {
+        success: false,
+        code: 'unavailable',
+        unavailable: result.slugs || [],
+        error: `Ľutujeme, ${names} si medzitým objednal iný zákazník a už nie je dostupný. Odstránili sme ho z košíka.`,
+      });
+    }
+    if (result.code === 'invalid_discount') {
+      return json(409, {
+        success: false,
+        code: 'invalid_discount',
+        error: 'Zľavový kód už nie je platný. Odstráňte ho prosím a odošlite objednávku znova.',
+      });
+    }
+    if (result.code === 'price_changed') {
+      return json(409, {
+        success: false,
+        code: 'price_changed',
+        error: 'Cena v košíku sa medzičasom zmenila. Obnovte prosím stránku a skontrolujte sumu.',
+      });
+    }
+    return json(400, { success: false, error: 'Objednávku sa nepodarilo vytvoriť.' });
+  }
+
+  // Od tohto bodu sú všetky ceny a názvy z databázy
+  const dbItems = result.items || [];
+  const subtotal = Number(result.subtotal);
+  const totalFromDb = Number(result.total);
+  const shippingPrice = Number(result.shipping_price);
+  const discountPercent = Number(result.discount_percent) || 0;
+  const discountAmount = Number(result.discount_amount) || 0;
+  const appliedCode = result.discount_code || null;
 
   try {
-    // 1. Vytvor objednávku
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        order_number: orderId,
-        customer_name: sanitize(customerName),
-        customer_email: sanitize(customerEmail),
-        customer_phone: sanitize(customerPhone),
-        customer_street: street,
-        customer_city: city,
-        customer_zip: zip,
-        subtotal: Number(subtotal),
-        shipping_price: Number(shippingPrice),
-        total_price: Number(totalPrice),
-        shipping_method: shipping.name,
-        payment_method: shipping.payment,
-        status: 'pending',
-        customer_notes: notes ? sanitize(notes) : null,
-        discount_code: discountCode ? sanitize(String(discountCode)) : null,
-        discount_percent: discountPercent || 0,
-        discount_amount: discountAmount || 0,
-        has_adapter: chosenAdapters.length > 0,
-      })
-      .select()
-      .single();
-
-    if (orderError) {
-      console.error('Order insert error:', orderError);
-      return { statusCode: 500, body: JSON.stringify({ success: false, error: 'Order creation failed' }) };
-    }
-
-    // 2. Vlož order_items
-    const orderItems = [
-      ...items.map((item) => ({
-        order_id: orderData.id,
-        product_id: null,
-        product_name: sanitize(item.name),
-        product_capacity: sanitize(item.capacity || ''),
-        product_color: sanitize(item.color || ''),
-        product_image: sanitize(item.image || ''),
-        quantity: 1,
-        unit_price: Number(item.price),
-        total_price: Number(item.price),
-      })),
-      ...chosenAdapters.map((a) => ({
-        order_id: orderData.id,
-        product_id: null,
-        product_name: a.name,
-        product_capacity: '',
-        product_color: '',
-        product_image: '',
-        quantity: 1,
-        unit_price: a.price,
-        total_price: a.price,
-      })),
-    ];
-
-    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-    if (itemsError) console.error('Order items error:', itemsError);
-
-    // 3. Rezervácie produktov
-    for (const item of items) {
-      if (!item.slug) continue;
-
-      const { data: productData } = await supabase
-        .from('products')
-        .select('id, slug, stock')
-        .eq('slug', item.slug)
-        .maybeSingle();
-
-      if (!productData) continue;
-
-      await supabase.from('reservations').insert({
-        product_id: productData.id,
-        customer_email: sanitize(customerEmail),
-        customer_name: sanitize(customerName),
-        customer_phone: sanitize(customerPhone),
-        status: 'pending',
-        notes: `Objednávka #${orderId}`,
-      });
-
-      if (productData.stock === 1) {
-        await supabase.rpc('reserve_product', { product_slug: item.slug });
-      }
-    }
-
     // 4. Odošli email
     try {
       const transporter = nodemailer.createTransport({
@@ -233,7 +225,7 @@ export const handler = async (event) => {
         },
       });
 
-      const safeProducts = items.map(p => ({
+      const safeProducts = dbItems.map(p => ({
         name: sanitize(p.name),
         capacity: sanitize(p.capacity || ''),
         color: sanitize(p.color || ''),
@@ -254,12 +246,12 @@ export const handler = async (event) => {
         .map(p => `  • ${p.name}${p.capacity ? ' ' + p.capacity : ''}${p.color ? ' – ' + p.color : ''}: €${p.price}`)
         .join('\n');
 
-      const safeSubtotal = Number(subtotal).toFixed(2);
-      const safeShipping = Number(shippingPrice).toFixed(2);
-      const safeTotal = Number(totalPrice).toFixed(2);
-      const safeDiscount = discountAmount ? Number(discountAmount).toFixed(2) : '0.00';
-      const safeDiscountCode = discountCode ? sanitize(String(discountCode)) : null;
-      const safeDiscountPercent = discountPercent || 0;
+      const safeSubtotal = subtotal.toFixed(2);
+      const safeShipping = shippingPrice.toFixed(2);
+      const safeTotal = totalFromDb.toFixed(2);
+      const safeDiscount = discountAmount.toFixed(2);
+      const safeDiscountCode = appliedCode ? sanitize(String(appliedCode)) : null;
+      const safeDiscountPercent = discountPercent;
 
       const discountHtmlBlock = safeDiscountCode ? `
         <div style="background:#e8f5e9;border:2px solid #4caf50;border-radius:10px;padding:15px;margin:16px 0;">
@@ -276,7 +268,7 @@ export const handler = async (event) => {
         : '';
 
       const introText = isPickup
-        ? 'Ďakujeme za vašu objednávku! Telefón pre vás rezervujeme – <strong>nič neplatíte vopred</strong>, zaplatíte až pri prevzatí.'
+        ? 'Ďakujeme za vašu objednávku! Telefón pre vás rezervujeme na <strong>48 hodín</strong> – <strong>nič neplatíte vopred</strong>, zaplatíte až pri prevzatí.'
         : 'Ďakujeme za vašu objednávku! Prosíme o úhradu prevodom <strong>do 48 hodín</strong>.';
 
       const pickupBlockHtml = `
@@ -288,7 +280,8 @@ export const handler = async (event) => {
           <tr><td style="color:#555;padding:6px 0;"><strong>Platba:</strong></td><td style="color:#1b5e20;font-weight:bold;">pri prevzatí</td></tr>
           <tr><td style="color:#555;padding:6px 0;"><strong>Suma:</strong></td><td style="color:#1b5e20;font-weight:bold;font-size:22px;">€${safeTotal}</td></tr>
         </table>
-        <p style="margin:16px 0 0;font-size:13px;color:#555;">📞 Pred príchodom nám prosím zavolajte na <strong>${SHOP_PHONE}</strong>, aby sme vás určite čakali.</p>
+        <p style="margin:16px 0 0;font-size:13px;color:#c62828;"><strong>⏱️ Rezervácia platí 48 hodín.</strong> Ak si telefón dovtedy nevyzdvihnete, rezervácia sa automaticky zruší.</p>
+        <p style="margin:8px 0 0;font-size:13px;color:#555;">📞 Pred príchodom nám prosím zavolajte na <strong>${SHOP_PHONE}</strong>, aby sme vás určite čakali.</p>
         <p style="margin:6px 0 0;"><a href="https://maps.app.goo.gl/GGBewDBR787dkxaC7" style="color:#1976d2;font-size:13px;">📍 Otvoriť v mapách</a></p>
       </div>`;
 
@@ -303,14 +296,14 @@ export const handler = async (event) => {
         <p style="margin:16px 0 0;font-size:13px;color:#777;">⚠️ Uveďte variabilný symbol – objednávku spárujeme podľa neho.</p>
       </div>
       <div style="background:#ffebee;border:1px solid #ef5350;border-radius:10px;padding:16px;margin:16px 0;">
-        <p style="margin:0;color:#c62828;font-size:14px;"><strong>⏱️ Dôležité:</strong> Platba musí byť pripísaná do 48 hodín, inak bude rezervácia zrušená.</p>
+        <p style="margin:0;color:#c62828;font-size:14px;"><strong>⏱️ Dôležité:</strong> Platba musí byť pripísaná do 48 hodín, inak bude rezervácia automaticky zrušená.</p>
       </div>`;
 
       const paymentBlockHtml = isPickup ? pickupBlockHtml : transferBlockHtml;
 
       const nextStepsHtml = (isPickup
         ? [
-            'Telefón máte rezervovaný – vyzdvihnite si ho na adrese Dolná Súča 877',
+            'Telefón máte rezervovaný 48 hodín – vyzdvihnite si ho na adrese Dolná Súča 877',
             'Pred príchodom nám prosím zavolajte',
             'Telefón si na mieste pozriete a vyskúšate',
             'Zaplatíte až pri prevzatí',
@@ -388,8 +381,8 @@ export const handler = async (event) => {
       </div>
       <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px;margin-top:16px;">
         <p style="margin:0;color:#856404;"><strong>⚠️ Akcia:</strong> ${isPickup
-          ? `Osobný odber – zákazník platí pri prevzatí (€${safeTotal}). Priprav telefón a po odovzdaní označ objednávku ako zaplatenú v Supabase. Číslo: ${orderId}`
-          : `Po prijatí platby potvrď objednávku v Supabase Dashboard. VS: ${orderId}`}</p>
+          ? `Osobný odber – zákazník platí pri prevzatí (€${safeTotal}). Po odovzdaní nastav telefónu stock_status = sold_out. Ak si ho do 48 h nevyzdvihne, rezervácia sa zruší automaticky. Číslo: ${orderId}`
+          : `Po prijatí platby nastav telefónu stock_status = sold_out (alebo is_active = false). Bez platby do 48 h sa rezervácia zruší automaticky. VS: ${orderId}`}</p>
       </div>
     </div>
   </div>
@@ -401,7 +394,7 @@ export const handler = async (event) => {
         subject: `✅ Objednávka #${orderId} prijatá – Fixanto`,
         html: customerHtml,
         text: isPickup
-          ? `Objednávka #${orderId} – OSOBNÝ ODBER\nMiesto odberu: ${PICKUP_ADDRESS}\nOtváracie hodiny: ${PICKUP_HOURS}\nPlatba pri prevzatí: €${safeTotal}\nPred príchodom nám prosím zavolajte na ${SHOP_PHONE}.\n\n${productListText}\n\n${discountTextLine}\nFixanto | 0949 344 600 | phoneservissk@gmail.com`
+          ? `Objednávka #${orderId} – OSOBNÝ ODBER\nMiesto odberu: ${PICKUP_ADDRESS}\nOtváracie hodiny: ${PICKUP_HOURS}\nPlatba pri prevzatí: €${safeTotal}\nRezervácia platí 48 hodín.\nPred príchodom nám prosím zavolajte na ${SHOP_PHONE}.\n\n${productListText}\n\n${discountTextLine}\nFixanto | 0949 344 600 | phoneservissk@gmail.com`
           : `Objednávka #${orderId}\nPríjemca: ${RECIPIENT_NAME}\nIBAN: ${IBAN_DISPLAY}\nVS: ${orderId}\nSuma: €${safeTotal}\n\n${productListText}\n\n${discountTextLine}Doprava: ${safeShipping === '0.00' ? 'ZADARMO' : '€' + safeShipping}\nAdresa: ${street}, ${zip} ${city}\n\nFixanto | 0949 344 600 | phoneservissk@gmail.com`,
       });
 
@@ -420,15 +413,20 @@ export const handler = async (event) => {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ success: true, orderId }),
+      body: JSON.stringify({
+        success: true,
+        orderId,
+        subtotal,
+        discountPercent,
+        discountAmount,
+        shippingPrice,
+        totalPrice: totalFromDb,
+      }),
     };
 
   } catch (err) {
-    console.error('create-order error:', err);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ success: false, error: 'Internal server error' }),
-    };
+    // Objednávka je už uložená – chyba mohla nastať len pri e-mailoch
+    console.error('create-order post-processing error:', err);
+    return json(200, { success: true, orderId, totalPrice: totalFromDb });
   }
 };
