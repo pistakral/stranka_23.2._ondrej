@@ -1,10 +1,11 @@
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Zap, Truck, Store, MapPin, Clock } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import Navbar from '../Navbar';
 import OrderSummary from './OrderSummary';
+import { supabase } from '../../lib/supabase';
 import { ADAPTERS, SHIPPING_METHODS, PICKUP, getPhoneType } from './shopOptions';
 import type { ShippingId } from './shopOptions';
 
@@ -21,7 +22,7 @@ const CheckoutHead = () => (
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { cart, totalPrice, clearCart } = useCart();
+  const { cart, totalPrice, clearCart, replaceCart } = useCart();
 
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '',
@@ -37,14 +38,60 @@ export default function Checkout() {
   const [checkingCode, setCheckingCode] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [selectedAdapters, setSelectedAdapters] = useState<string[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  // Pri otvorení pokladne overíme ceny a dostupnosť priamo v databáze.
+  // Ak sa cena medzičasom zmenila, košík sa aktualizuje a zákazník to uvidí.
+  const synced = useRef(false);
+  useEffect(() => {
+    if (synced.current || cart.length === 0) return;
+    synced.current = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('slug, name, price, stock, stock_status, is_active')
+        .in('slug', cart.map((i) => i.id));
+      if (error || !data) return;
+
+      const bySlug = new Map(data.map((p) => [p.slug, p]));
+      const changed: string[] = [];
+      const unavailable: string[] = [];
+      const updated = cart
+        .filter((item) => {
+          const p = bySlug.get(item.id);
+          const ok = p && p.is_active && p.stock_status === 'available' && p.stock > 0;
+          if (!ok) unavailable.push(item.name);
+          return ok;
+        })
+        .map((item) => {
+          const p = bySlug.get(item.id)!;
+          if (Number(p.price) !== Number(item.price)) {
+            changed.push(`${item.name}: €${item.price} → €${Number(p.price)}`);
+            return { ...item, price: Number(p.price) };
+          }
+          return item;
+        });
+
+      if (changed.length || unavailable.length) replaceCart(updated);
+      if (unavailable.length) {
+        setError(`${unavailable.join(', ')} už nie je dostupný – odstránili sme ho z košíka.`);
+      }
+      if (changed.length) setNotice(`Cena sa medzičasom zmenila – ${changed.join(', ')}.`);
+    })();
+  }, [cart, replaceCart]);
 
   if (cart.length === 0) {
     return (
       <>
         <CheckoutHead />
         <Navbar />
-        <div className="min-h-screen pt-32 flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen pt-32 flex items-center justify-center bg-gray-50 px-4">
           <div className="text-center">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-5 max-w-md mx-auto">
+                <p className="font-semibold text-sm sm:text-base">❌ {error}</p>
+              </div>
+            )}
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Košík je prázdny</h1>
             <button onClick={() => navigate('/eshop')}
               className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">
@@ -135,6 +182,7 @@ export default function Checkout() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // Ceny posielame len na porovnanie – server si ich berie z databázy
           customerName: formData.name,
           customerEmail: formData.email,
           customerPhone: formData.phone,
@@ -160,8 +208,23 @@ export default function Checkout() {
         }),
       });
 
-      const result = await res.json();
-      if (!res.ok || !result.success) throw new Error(result.error || 'Nastala chyba. Skúste to prosím znova.');
+      let result: any = {};
+      try { result = await res.json(); } catch { /* server vrátil text */ }
+
+      if (!res.ok || !result.success) {
+        // Telefón si medzitým objednal niekto iný → odstráň ho z košíka
+        if (result.code === 'unavailable' && Array.isArray(result.unavailable)) {
+          replaceCart(cart.filter((item) => !result.unavailable.includes(item.id)));
+        }
+        // Neplatný zľavový kód → zruš ho, aby mohol objednať bez neho
+        if (result.code === 'invalid_discount') {
+          setDiscountCode(''); setDiscountPercent(0); setDiscountApplied(false);
+        }
+        throw new Error(result.error || 'Nastala chyba. Skúste to prosím znova.');
+      }
+
+      // Sumy z databázy (server) majú prednosť pred tým, čo vypočítal prehliadač
+      const serverTotal = typeof result.totalPrice === 'number' ? result.totalPrice : finalTotal;
 
       const orderId = result.orderId;
       localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
@@ -182,10 +245,10 @@ export default function Checkout() {
         shippingMethodId: selectedShipping.id,
         shippingMethod: selectedShipping.name, shippingPrice,
         paymentMethod: selectedShipping.payment,
-        totalPrice: finalTotal,
+        totalPrice: serverTotal,
         discountCode: discountApplied ? discountCode : null,
-        discountPercent: discountApplied ? discountPercent : 0,
-        discountAmount: discountApplied ? discountAmount : 0,
+        discountPercent: typeof result.discountPercent === 'number' ? result.discountPercent : (discountApplied ? discountPercent : 0),
+        discountAmount: typeof result.discountAmount === 'number' ? result.discountAmount : (discountApplied ? discountAmount : 0),
         createdAt: new Date().toISOString(),
       }));
 
@@ -213,6 +276,12 @@ export default function Checkout() {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl mb-5">
               <p className="font-semibold text-sm sm:text-base">❌ {error}</p>
+            </div>
+          )}
+
+          {notice && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl mb-5">
+              <p className="font-semibold text-sm sm:text-base">ℹ️ {notice}</p>
             </div>
           )}
 
@@ -296,7 +365,7 @@ export default function Checkout() {
                         <span>{PICKUP.hours.join(' · ')}</span>
                       </p>
                       <p className="text-xs text-blue-700">
-                        Telefón vám rezervujeme. Pred príchodom nám prosím zavolajte na{' '}
+                        Telefón vám rezervujeme na 48 hodín. Pred príchodom nám prosím zavolajte na{' '}
                         <a href={PICKUP.phoneHref} className="font-bold">{PICKUP.phone}</a>. Platíte až pri prevzatí.
                       </p>
                     </div>
