@@ -112,7 +112,7 @@ export default function ProductGrid() {
   return (
     <>
       <Helmet>
-        <title>E-shop – repasované iPhony a Android telefóny so zárukou | Fixanto</title>
+        <title>E-shop – repasované telefóny | Fixanto.sk</title>
         <meta
           name="description"
           content="E-shop Fixanto: repasované iPhony, Samsung a Xiaomi telefóny otestované v servise v Trenčíne. Záruka 12 mesiacov, 14 dní na vrátenie, doprava zadarmo."
