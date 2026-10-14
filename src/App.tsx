@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { CartProvider } from './contexts/CartContext';
 import Hero from './components/Hero';  // ← Pôvodné Hero
 import Services from './components/Services';
@@ -62,6 +63,16 @@ function App() {
 
   return (
     <CartProvider>
+      {/* Predvolený titulok a popis – platí pre každú stránku, ktorá nemá vlastný <Helmet>.
+          Bez toho by po odchode z produktu ostal na karte prehliadača názov telefónu. */}
+      <Helmet>
+        <title>Servis mobilov TV elektroniky Trenčín | Oprava telefónu televízora | Fixanto 2 roky záruka</title>
+        <meta
+          name="description"
+          content="Profesionálny servis a oprava mobilov iPhone Samsung Xiaomi, televízorov všetkých značiek, notebookov, elektroniky v Trenčíne. Výmena displeja telefónu na počkanie. Servis TV LED podsvietenie. Výkup Apple. 2 roky záruka. Dolná Súča 877."
+        />
+      </Helmet>
+
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/tipy" element={<TipyPage />} />
