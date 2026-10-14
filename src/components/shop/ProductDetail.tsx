@@ -271,7 +271,7 @@ export default function ProductDetail() {
                       <p className="font-black text-green-900 text-sm sm:text-lg leading-tight">DARČEK ZADARMO! 🎁</p>
                       <p className="text-xs sm:text-sm text-green-700 mt-0.5">
                         Nabíjací kábel v hodnote{' '}
-                        <span className="font-black text-green-900">€5</span> k telefónu
+                        <span className="font-black text-green-900">5€</span> k telefónu
                       </p>
                       <p className="text-xs text-green-600 mt-1 opacity-75">
                         * Kábel je plne kompatibilný s telefónom, nemusí ísť o originálne príslušenstvo výrobcu.
