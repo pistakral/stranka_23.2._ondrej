@@ -270,11 +270,11 @@ export default function ProductDetail() {
                     <div className="min-w-0">
                       <p className="font-black text-green-900 text-sm sm:text-lg leading-tight">DARČEK ZADARMO! 🎁</p>
                       <p className="text-xs sm:text-sm text-green-700 mt-0.5">
-                        Ochranný kryt a nabíjací kábel v hodnote{' '}
-                        <span className="font-black text-green-900">€10</span> k telefónu
+                        Nabíjací kábel v hodnote{' '}
+                        <span className="font-black text-green-900">€5</span> k telefónu
                       </p>
                       <p className="text-xs text-green-600 mt-1 opacity-75">
-                        * Príslušenstvo je plne kompatibilné, nemusí ísť o originálne príslušenstvo Apple.
+                        * Kábel je plne kompatibilný s telefónom, nemusí ísť o originálne príslušenstvo výrobcu.
                       </p>
                     </div>
                   </div>
