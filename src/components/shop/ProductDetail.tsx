@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ChevronLeft, ChevronRight, Check, HelpCircle, Gift, ZoomIn } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, HelpCircle, Gift } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { supabase } from '../../lib/supabase';
 import Navbar from '../Navbar';
@@ -110,6 +110,7 @@ export default function ProductDetail() {
       : [product.main_image];
 
   const handleAddToCart = () => {
+    if (!isAvailable) return;
     addToCart({
       id: product.slug,
       name: product.name,
@@ -298,7 +299,12 @@ export default function ProductDetail() {
                     { label: `Trieda: ${product.grade}`, suffix: '✅' },
                     { label: `${product.condition_battery_percent}`, suffix: '⚡' },
                     { label: `Záruka: ${product.warranty}`, suffix: '🛡️' },
-                    { label: `Skladom: ${product.stock} ks`, suffix: '📦' },
+                    {
+                      label: isAvailable
+                        ? `Skladom: ${product.stock} ks`
+                        : product.stock_status === 'reserved' ? 'Momentálne rezervované' : 'Vypredané',
+                      suffix: '📦',
+                    },
                   ].map(({ label, suffix }) => (
                     <div key={label} className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -310,12 +316,21 @@ export default function ProductDetail() {
                 </div>
 
                 {/* Tlačidlo */}
-                <button
-                  onClick={handleAddToCart}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3.5 sm:px-8 sm:py-4 rounded-xl font-black text-base sm:text-lg shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all sm:hover:scale-105 flex items-center justify-center gap-2 sm:gap-3"
-                >
-                  🛒 PRIDAŤ DO KOŠÍKA
-                </button>
+                {isAvailable ? (
+                  <button
+                    onClick={handleAddToCart}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3.5 sm:px-8 sm:py-4 rounded-xl font-black text-base sm:text-lg shadow-2xl hover:from-blue-700 hover:to-blue-800 transition-all sm:hover:scale-105 flex items-center justify-center gap-2 sm:gap-3"
+                  >
+                    🛒 PRIDAŤ DO KOŠÍKA
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="w-full bg-gray-300 text-gray-600 px-4 py-3.5 sm:px-8 sm:py-4 rounded-xl font-black text-base sm:text-lg cursor-not-allowed"
+                  >
+                    {product.stock_status === 'reserved' ? '⏰ REZERVOVANÉ' : '❌ VYPREDANÉ'}
+                  </button>
+                )}
 
                 <p className="text-xs sm:text-sm text-gray-500 text-center mt-3">
                   Doprava zadarmo
