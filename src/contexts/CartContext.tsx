@@ -13,6 +13,7 @@ interface CartContextType {
   cart: Product[];
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
+  replaceCart: (items: Product[]) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -42,14 +43,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (product: Product) => {
     // Check if product already exists in cart
-    const exists = cart.find(item => item.id === product.id);
-    if (!exists) {
-      setCart([...cart, product]);
-    }
+    setCart((prev) => (prev.some((item) => item.id === product.id) ? prev : [...prev, product]));
   };
 
   const removeFromCart = (productId: string) => {
-    setCart(cart.filter(item => item.id !== productId));
+    setCart((prev) => prev.filter((item) => item.id !== productId));
+  };
+
+  // Nahradí celý košík (napr. po aktualizácii cien z databázy)
+  const replaceCart = (items: Product[]) => {
+    setCart(items);
   };
 
   const clearCart = () => {
@@ -57,7 +60,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const totalItems = cart.length;
-  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
+  const totalPrice = cart.reduce((sum, item) => sum + Number(item.price), 0);
 
   return (
     <CartContext.Provider
@@ -65,6 +68,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         cart,
         addToCart,
         removeFromCart,
+        replaceCart,
         clearCart,
         totalItems,
         totalPrice,
